@@ -30,11 +30,19 @@ export interface GameItem {
 export interface Feat extends GameItem {
 	type: 'feat';
 	level: number;
-	category: 'general' | 'skill' | 'class' | 'ancestry' | 'archetype';
+	category: 'general' | 'skill' | 'class' | 'ancestry' | 'archetype' | 'classfeature';
 	prerequisites: string[];
 	actionType?: 'action' | 'reaction' | 'free' | 'passive';
 	actions?: number; // 1, 2, or 3 actions
 }
+
+/**
+ * Class Feature data in our app schema
+ * (Class features are stored as feats with category 'classfeature')
+ */
+export type ClassFeature = Feat & {
+	category: 'classfeature';
+};
 
 /**
  * Ancestry data in our app schema
@@ -160,6 +168,11 @@ export interface Class extends GameItem {
 		general: number[];
 		skill: number[];
 	};
+	classFeatures: Array<{
+		level: number;
+		name: string;
+		uuid: string;
+	}>;
 }
 
 /**
