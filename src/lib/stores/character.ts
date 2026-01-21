@@ -72,6 +72,14 @@ export interface Character {
 	/** Perception proficiency rank */
 	perception: number;
 
+	/** Armor proficiency ranks */
+	armorProficiency: {
+		unarmored: number;
+		light: number;
+		medium: number;
+		heavy: number;
+	};
+
 	/** Selected feats by category and level */
 	feats: {
 		ancestry: Array<{ level: number; featId: string; name: string }>;
@@ -249,6 +257,12 @@ export function createNewCharacter(): Character {
 			will: 0
 		},
 		perception: 0,
+		armorProficiency: {
+			unarmored: 1, // Most characters start trained in unarmored
+			light: 0,
+			medium: 0,
+			heavy: 0
+		},
 		feats: {
 			ancestry: [],
 			class: [],
@@ -387,6 +401,16 @@ function loadFromStorage(): Character {
 						typeId: '',
 						specialization: null
 					}
+				};
+			}
+
+			// Ensure armorProficiency property exists (migration for older characters)
+			if (!parsed.armorProficiency) {
+				parsed.armorProficiency = {
+					unarmored: 1,
+					light: 0,
+					medium: 0,
+					heavy: 0
 				};
 			}
 
