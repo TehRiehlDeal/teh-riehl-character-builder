@@ -1,5 +1,47 @@
 <script lang="ts">
 	import { character } from '$lib/stores/character';
+	import { activeModifiersStore } from '$lib/stores/activeModifiers';
+	import { getEquipmentById } from '$lib/data/repositories/equipmentRepository';
+	import type { Armor } from '$lib/data/types/app';
+	import { onMount } from 'svelte';
+
+	// Armor data state
+	let equippedArmor: Armor | null = $state(null);
+	let armorLoading = $state(true);
+
+	// Load equipped armor data
+	onMount(async () => {
+		if ($character.equipment.armor) {
+			try {
+				const equipment = await getEquipmentById($character.equipment.armor.itemId);
+				if (equipment && equipment.equipmentType === 'armor') {
+					equippedArmor = equipment as Armor;
+				}
+			} catch (error) {
+				console.error('Failed to load armor:', error);
+			}
+		}
+		armorLoading = false;
+	});
+
+	// Watch for armor changes
+	$effect(() => {
+		const armorId = $character.equipment.armor?.itemId;
+		if (armorId) {
+			armorLoading = true;
+			getEquipmentById(armorId).then((equipment) => {
+				if (equipment && equipment.equipmentType === 'armor') {
+					equippedArmor = equipment as Armor;
+				} else {
+					equippedArmor = null;
+				}
+				armorLoading = false;
+			});
+		} else {
+			equippedArmor = null;
+			armorLoading = false;
+		}
+	});
 
 	// Skill definitions with their governing abilities
 	const SKILLS = [
@@ -65,6 +107,67 @@
 		const wisdomMod = getAbilityModifier($character.abilities.wisdom);
 		const proficiencyBonus = getProficiencyBonus($character.perception, $character.level);
 		return wisdomMod + proficiencyBonus;
+	});
+
+	// Calculate Armor Class
+	// AC = 10 + Dexterity Modifier (Capped by worn armor) + Armor Proficiency Bonus + Armor's Item Bonus + Other Bonuses/Penalties
+	const armorClass = $derived.by(() => {
+		let ac = 10;
+
+		// Determine armor category and dex cap
+		const armorCategory = equippedArmor?.category || 'unarmored';
+		const dexCap = equippedArmor?.dexCap ?? 999; // No cap for unarmored by default
+
+		// Get dexterity modifier (capped by armor)
+		const dexMod = getAbilityModifier($character.abilities.dexterity);
+		const cappedDexMod = Math.min(dexMod, dexCap);
+		ac += cappedDexMod;
+
+		// Get armor proficiency bonus
+		const armorProficiencyRank = $character.armorProficiency[armorCategory] || 0;
+		const proficiencyBonus = getProficiencyBonus(armorProficiencyRank, $character.level);
+		ac += proficiencyBonus;
+
+		// Get item bonus and other modifiers from active modifiers
+		const acModifiers = $activeModifiersStore.filter(m => m.selector === 'ac' && m.isActive);
+		for (const mod of acModifiers) {
+			ac += mod.modifier.value;
+		}
+
+		return ac;
+	});
+
+	// Get AC breakdown for tooltip
+	const acBreakdown = $derived.by(() => {
+		const breakdown: string[] = ['Base: 10'];
+
+		const armorCategory = equippedArmor?.category || 'unarmored';
+		const dexCap = equippedArmor?.dexCap ?? 999;
+		const dexMod = getAbilityModifier($character.abilities.dexterity);
+		const cappedDexMod = Math.min(dexMod, dexCap);
+
+		if (cappedDexMod !== 0) {
+			if (dexMod !== cappedDexMod) {
+				breakdown.push(`Dexterity: ${formatModifier(cappedDexMod)} (capped from ${formatModifier(dexMod)})`);
+			} else {
+				breakdown.push(`Dexterity: ${formatModifier(cappedDexMod)}`);
+			}
+		}
+
+		const armorProficiencyRank = $character.armorProficiency[armorCategory] || 0;
+		const proficiencyBonus = getProficiencyBonus(armorProficiencyRank, $character.level);
+		if (proficiencyBonus > 0) {
+			breakdown.push(`${armorCategory.charAt(0).toUpperCase() + armorCategory.slice(1)} Proficiency: ${formatModifier(proficiencyBonus)}`);
+		}
+
+		const acModifiers = $activeModifiersStore.filter(m => m.selector === 'ac' && m.isActive);
+		for (const mod of acModifiers) {
+			if (mod.modifier.value !== 0) {
+				breakdown.push(`${mod.modifier.label}: ${formatModifier(mod.modifier.value)}`);
+			}
+		}
+
+		return breakdown.join('\n');
 	});
 
 	// Format modifier with sign
@@ -155,6 +258,41 @@
 						<span class="stat-ability">Wisdom</span>
 						<span class="stat-modifier" class:positive={perceptionModifier >= 0} class:negative={perceptionModifier < 0}>
 							{formatModifier(perceptionModifier)}
+						</span>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Armor Class -->
+		<section class="content-section" aria-labelledby="armor-class">
+			<h2 id="armor-class" class="section-title">Armor Class</h2>
+			<div class="stat-list">
+				<div class="stat-row">
+					<div class="stat-main">
+						<span class="stat-name">
+							AC
+							{#if equippedArmor}
+								<span class="armor-type">({equippedArmor.name})</span>
+							{:else}
+								<span class="armor-type">(Unarmored)</span>
+							{/if}
+						</span>
+						{#if equippedArmor}
+							{@const armorCategory = equippedArmor.category}
+							{@const proficiencyRank = $character.armorProficiency[armorCategory]}
+							<span class="stat-proficiency proficiency-{proficiencyRank}">
+								{getProficiencyName(proficiencyRank)}
+							</span>
+						{:else}
+							<span class="stat-proficiency proficiency-{$character.armorProficiency.unarmored}">
+								{getProficiencyName($character.armorProficiency.unarmored)}
+							</span>
+						{/if}
+					</div>
+					<div class="stat-details">
+						<span class="stat-ac-value" title={acBreakdown}>
+							{armorClass}
 						</span>
 					</div>
 				</div>
@@ -406,6 +544,25 @@
 
 	.stat-modifier.negative {
 		color: #f03e3e;
+	}
+
+	/* Armor Class specific styles */
+	.armor-type {
+		font-size: 0.875rem;
+		font-weight: 400;
+		color: var(--text-secondary, #666666);
+		font-style: italic;
+		margin-left: 0.5rem;
+	}
+
+	.stat-ac-value {
+		font-size: 1.75rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		min-width: 60px;
+		text-align: right;
+		color: var(--link-color, #5c7cfa);
+		cursor: help;
 	}
 
 	/* Mobile Responsive */
