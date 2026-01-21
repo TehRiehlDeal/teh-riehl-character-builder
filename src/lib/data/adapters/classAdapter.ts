@@ -15,16 +15,42 @@ import type { FoundryClass } from '../types/foundry';
 import type { Class, ProficiencyRank } from '../types/app';
 
 /**
+ * Normalize ability abbreviations to full capitalized names
+ */
+function normalizeAbilityName(abbrev: string): string {
+	const abilityMap: Record<string, string> = {
+		'str': 'Strength',
+		'dex': 'Dexterity',
+		'con': 'Constitution',
+		'int': 'Intelligence',
+		'wis': 'Wisdom',
+		'cha': 'Charisma'
+	};
+
+	const lower = abbrev.toLowerCase();
+	return abilityMap[lower] || abbrev;
+}
+
+/**
  * Transform a Foundry class into our app schema
  */
 export function adaptClass(foundryClass: FoundryClass): Class {
+	// Extract class features from items object
+	const classFeatures = foundryClass.system.items
+		? Object.values(foundryClass.system.items).map((item) => ({
+				level: item.level,
+				name: item.name,
+				uuid: item.uuid
+		  }))
+		: [];
+
 	return {
 		type: 'class',
 		id: foundryClass._id,
 		name: foundryClass.name,
 		description: foundryClass.system.description.value,
 		hp: foundryClass.system.hp,
-		keyAbility: foundryClass.system.keyAbility.value,
+		keyAbility: foundryClass.system.keyAbility.value.map(normalizeAbilityName),
 		proficiencies: {
 			perception: foundryClass.system.perception as ProficiencyRank,
 			fortitude: foundryClass.system.savingThrows.fortitude as ProficiencyRank,
@@ -54,6 +80,7 @@ export function adaptClass(foundryClass: FoundryClass): Class {
 			general: foundryClass.system.generalFeatLevels.value,
 			skill: foundryClass.system.skillFeatLevels.value
 		},
+		classFeatures: classFeatures,
 		traits: foundryClass.system.traits.value,
 		rarity: foundryClass.system.traits.rarity,
 		source: {
