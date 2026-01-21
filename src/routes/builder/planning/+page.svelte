@@ -25,6 +25,10 @@
 	import { onMount } from 'svelte';
 	import Accordion from '$lib/components/common/Accordion.svelte';
 	import PlanningFeatSelector from '$lib/components/planning/PlanningFeatSelector.svelte';
+	import RichDescription from '$lib/components/common/RichDescription.svelte';
+	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
+	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo, resolveSpecializedClassFeature } from '$lib/utils/classFeatureChoices';
+	import type { ClassFeature } from '$lib/data/types/app';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -55,8 +59,9 @@
 	// Generate level progression dynamically based on variant rules
 	const levelProgression = $derived.by(() => {
 		const progression: LevelProgression[] = [];
+		const classFeatures = selectedClass?.classFeatures || [];
 		for (let level = 1; level <= 20; level++) {
-			progression.push(getLevelProgression(level, currentSettings.variantRules));
+			progression.push(getLevelProgression(level, currentSettings.variantRules, classFeatures));
 		}
 		return progression;
 	});
@@ -65,6 +70,11 @@
 	let featSelections = $state<Record<number, { classFeat?: string; freeArchetypeFeat?: string; ancestryFeat?: string; skillFeat?: string; generalFeat?: string }>>({});
 	let abilityBoostSelections = $state<Record<number, string[]>>({});
 	let skillIncreaseSelections = $state<Record<number, string>>({});
+	let classFeatureChoiceSelections = $state<Record<string, string>>({});  // Maps choiceFlag to selected value
+
+	// All class features (for resolving tag-based choices)
+	let allClassFeatures = $state<ClassFeature[]>([]);
+	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
 
 	// Skills list - matches character store structure
 	const SKILLS = [
@@ -108,8 +118,11 @@
 	});
 
 	// Load saved planning selections from character store on mount
-	onMount(() => {
+	onMount(async () => {
 		const char = $character;
+
+		// Load all class features for resolving tag-based choices
+		allClassFeatures = await loadAllClassFeatures();
 
 		// Pre-populate with ACTUAL selected feats from character.feats
 		// This shows what the user has already selected in the Feats tab
@@ -191,6 +204,32 @@
 				}
 			}
 		}
+
+		// Load class feature choice selections
+		if (char.ruleSelections) {
+			// Extract all class feature choice selections
+			// They are stored with the choiceFlag as the key
+			Object.entries(char.ruleSelections).forEach(([key, value]) => {
+				// Skip our planning selections
+				if (!key.startsWith('plan-level-') && typeof value === 'string') {
+					classFeatureChoiceSelections[key] = value;
+				}
+			});
+		}
+
+		// Process class features to build choice info map
+		if (selectedClass) {
+			for (const cf of selectedClass.classFeatures) {
+				// Find the full class feature data
+				const fullClassFeature = allClassFeatures.find(acf => acf.name === cf.name);
+				if (fullClassFeature) {
+					const choiceInfo = await getCompleteChoiceInfo(fullClassFeature, allClassFeatures);
+					if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+						classFeatureChoiceInfo[choiceInfo.choiceFlag] = choiceInfo;
+					}
+				}
+			}
+		}
 	});
 
 	function handleFeatSelection(level: number, featType: 'classFeat' | 'freeArchetypeFeat' | 'ancestryFeat' | 'skillFeat' | 'generalFeat', featName: string) {
@@ -234,6 +273,19 @@
 			ruleSelections: {
 				...char.ruleSelections,
 				[`plan-level-${level}-skill-increase`]: skill
+			}
+		}));
+	}
+
+	function handleClassFeatureChoiceSelection(choiceFlag: string, value: string) {
+		classFeatureChoiceSelections[choiceFlag] = value;
+
+		// Save to character store
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				[choiceFlag]: value
 			}
 		}));
 	}
@@ -326,14 +378,66 @@
 
 				{#if isExpanded}
 					<div class="level-content">
-						<div class="level-features">
-							<div class="features-label">Features:</div>
-							<ul class="features-list">
-								{#each levelPlan.features as feature}
-									<li>{feature}</li>
-								{/each}
-							</ul>
-						</div>
+						<!-- Class Features Section -->
+						{#if levelPlan.classFeatures && levelPlan.classFeatures.length > 0}
+							<div class="class-features-section">
+								<div class="features-label">Class Features:</div>
+								<ul class="class-features-list">
+									{#each levelPlan.classFeatures as classFeature}
+										{@const resolvedFeature = resolveSpecializedClassFeature(classFeature, classFeatureChoiceSelections, allClassFeatures)}
+										{@const fullClassFeature = allClassFeatures.find(acf => acf.name === resolvedFeature.name)}
+										{@const choiceInfo = fullClassFeature ? extractChoiceInfo(fullClassFeature) : null}
+										<li class="class-feature-item">
+											<span class="class-feature-name">
+												<RichDescription
+													content={`@UUID[${resolvedFeature.uuid}]{${resolvedFeature.name}}`}
+												/>
+											</span>
+
+											<!-- Class Feature Choice Selector -->
+											{#if choiceInfo && choiceInfo.hasChoice && choiceInfo.choiceFlag}
+												{@const choices = classFeatureChoiceInfo[choiceInfo.choiceFlag]?.choices || choiceInfo.choices}
+												{@const selectedChoice = classFeatureChoiceSelections[choiceInfo.choiceFlag]}
+												<div class="class-feature-choice">
+													<select
+														class="choice-selector"
+														value={selectedChoice || ''}
+														onchange={(e) => handleClassFeatureChoiceSelection(choiceInfo.choiceFlag!, e.currentTarget.value)}
+													>
+														<option value="">Select {resolvedFeature.name}...</option>
+														{#each choices as choice}
+															<option value={choice.value}>{choice.label}</option>
+														{/each}
+													</select>
+													{#if selectedChoice && choiceInfo.choiceType === 'tag-based'}
+														{@const selectedFeature = choices.find(c => c.value === selectedChoice)}
+														{#if selectedFeature && selectedFeature.description}
+															<div class="choice-description">
+																<RichDescription
+																	content={selectedFeature.description}
+																/>
+															</div>
+														{/if}
+													{/if}
+												</div>
+											{/if}
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+
+						<!-- General Features List -->
+						{#if levelPlan.features && levelPlan.features.length > 0}
+							<div class="level-features">
+								<div class="features-label">Progression:</div>
+								<ul class="features-list">
+									{#each levelPlan.features as feature}
+										<li>{feature}</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
 
 						<div class="level-selections">
 					<!-- Class Feat -->
@@ -653,6 +757,69 @@
 	.features-list li {
 		margin-bottom: 0.25rem;
 		font-size: 0.9375rem;
+	}
+
+	/* Class Features Section */
+	.class-features-section {
+		margin-bottom: 1rem;
+		padding: 0.75rem;
+		background-color: rgba(92, 124, 250, 0.05);
+		border-left: 3px solid var(--link-color, #5c7cfa);
+		border-radius: 4px;
+	}
+
+	.class-features-list {
+		margin: 0;
+		padding-left: 1.5rem;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.class-feature-item {
+		margin-bottom: 0.5rem;
+		font-size: 0.9375rem;
+		line-height: 1.5;
+	}
+
+	.class-feature-name {
+		font-weight: 500;
+	}
+
+	.class-feature-choice {
+		margin-top: 0.5rem;
+		padding-left: 1rem;
+	}
+
+	.choice-selector {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-size: 0.9375rem;
+		font-family: inherit;
+		background-color: var(--surface-1, #ffffff);
+		color: var(--text-primary, #1a1a1a);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.choice-selector:hover {
+		border-color: var(--link-color, #5c7cfa);
+	}
+
+	.choice-selector:focus {
+		outline: none;
+		border-color: var(--link-color, #5c7cfa);
+		box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.1);
+	}
+
+	.choice-description {
+		margin-top: 0.75rem;
+		padding: 0.75rem;
+		background-color: rgba(92, 124, 250, 0.03);
+		border-left: 2px solid var(--link-color, #5c7cfa);
+		border-radius: 4px;
+		font-size: 0.875rem;
+		line-height: 1.6;
 	}
 
 	.level-selections {
