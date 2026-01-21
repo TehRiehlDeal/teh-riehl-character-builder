@@ -91,6 +91,16 @@ export function hasSkillIncrease(level: number): boolean {
 }
 
 /**
+ * Class feature reference
+ */
+export interface ClassFeatureRef {
+	name: string;
+	uuid: string;
+	hasChoice?: boolean; // Whether this class feature requires a choice
+	choiceFlag?: string; // The flag name for storing the choice (e.g., "researchField")
+}
+
+/**
  * Get complete progression data for a level
  */
 export interface LevelProgression {
@@ -99,12 +109,17 @@ export interface LevelProgression {
 	abilityBoosts: number;
 	skillIncrease: boolean;
 	features: string[];
+	classFeatures: ClassFeatureRef[]; // Class features gained at this level
 }
 
 /**
  * Generate progression data for a level
  */
-export function getLevelProgression(level: number, variantRules?: VariantRules): LevelProgression {
+export function getLevelProgression(
+	level: number,
+	variantRules?: VariantRules,
+	allClassFeatures?: Array<{ level: number; name: string; uuid: string }>
+): LevelProgression {
 	const featSlots = getFeatSlotsForLevel(level, variantRules);
 	const abilityBoosts = getAbilityBoostCount(level, variantRules);
 	const skillIncrease = hasSkillIncrease(level);
@@ -144,11 +159,20 @@ export function getLevelProgression(level: number, variantRules?: VariantRules):
 		features.push('Skill increase');
 	}
 
+	// Extract class features for this level
+	const classFeatures: ClassFeatureRef[] = allClassFeatures
+		? allClassFeatures.filter((cf) => cf.level === level).map((cf) => ({
+				name: cf.name,
+				uuid: cf.uuid
+		  }))
+		: [];
+
 	return {
 		level,
 		featSlots,
 		abilityBoosts,
 		skillIncrease,
-		features
+		features,
+		classFeatures
 	};
 }
