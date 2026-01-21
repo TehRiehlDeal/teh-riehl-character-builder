@@ -110,18 +110,30 @@
 			currentChar.saves.reflex === 0 &&
 			currentChar.saves.will === 0;
 
-		// If saves aren't set, apply them from the class
-		if (savesNotSet && selectedClass && selectedClass.proficiencies) {
+		// Check if armor proficiencies are default (only unarmored trained)
+		const armorProfsNotSet = currentChar.armorProficiency.unarmored === 1 &&
+			currentChar.armorProficiency.light === 0 &&
+			currentChar.armorProficiency.medium === 0 &&
+			currentChar.armorProficiency.heavy === 0;
+
+		// If saves or armor proficiencies aren't set, apply them from the class
+		if ((savesNotSet || armorProfsNotSet) && selectedClass && selectedClass.proficiencies) {
 			// Capture selectedClass in a variable to narrow the type for the callback
 			const classProfs = selectedClass.proficiencies;
 			character.update((char) => ({
 				...char,
-				saves: {
+				saves: savesNotSet ? {
 					fortitude: classProfs.fortitude,
 					reflex: classProfs.reflex,
 					will: classProfs.will
-				},
-				perception: classProfs.perception
+				} : char.saves,
+				perception: savesNotSet ? classProfs.perception : char.perception,
+				armorProficiency: armorProfsNotSet ? {
+					unarmored: classProfs.defenses.unarmored,
+					light: classProfs.defenses.light,
+					medium: classProfs.defenses.medium,
+					heavy: classProfs.defenses.heavy
+				} : char.armorProficiency
 			}));
 		}
 	});
@@ -383,6 +395,13 @@
 			},
 			// Apply class perception proficiency
 			perception: cls.proficiencies.perception,
+			// Apply class armor proficiencies
+			armorProficiency: {
+				unarmored: cls.proficiencies.defenses.unarmored,
+				light: cls.proficiencies.defenses.light,
+				medium: cls.proficiencies.defenses.medium,
+				heavy: cls.proficiencies.defenses.heavy
+			},
 			// Apply class HP per level
 			hp: {
 				...char.hp,
@@ -408,6 +427,12 @@
 	const needsKeyAbilitySelection = $derived.by(() => {
 		if (!selectedClass) return false;
 		return selectedClass.keyAbility.length > 1;
+	});
+
+	// Check if class gets a feat at level 1
+	const getsClassFeatAtLevel1 = $derived.by(() => {
+		if (!selectedClass) return false;
+		return selectedClass.featSlots.class.includes(1);
 	});
 
 	function handleFreeBoostsChange(boosts: (string | null)[]) {
@@ -990,7 +1015,7 @@
 							</div>
 						{/if}
 
-						{#if selectedKeyAbility || !needsKeyAbilitySelection}
+						{#if getsClassFeatAtLevel1 && (selectedKeyAbility || !needsKeyAbilitySelection)}
 							<div class="subsection">
 								<h3 class="subsection-title">Class Feat</h3>
 								<p class="subsection-description">
