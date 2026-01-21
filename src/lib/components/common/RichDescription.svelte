@@ -110,6 +110,8 @@
 			// Handle different compendium types
 			if (compendiumType === 'feats-srd') {
 				await loadAndShowFeat(itemId);
+			} else if (compendiumType === 'classfeatures') {
+				await loadAndShowClassFeature(itemId);
 			} else if (compendiumType === 'spells-srd') {
 				await loadAndShowSpell(itemId);
 			} else if (compendiumType === 'ancestries') {
@@ -155,6 +157,36 @@
 			}
 		} catch (error) {
 			console.error('Failed to load feat:', error);
+		} finally {
+			loadingContent = false;
+		}
+	}
+
+	// Load class feature data and show modal (class features are feats with category 'classfeature')
+	async function loadAndShowClassFeature(classFeatureId: string) {
+		loadingContent = true;
+		try {
+			// Import classfeature repository
+			const { loadAllClassFeatures } = await import('$lib/data/repositories/classFeatureRepository');
+			const allClassFeatures = await loadAllClassFeatures();
+
+			// Convert the slug back to a searchable form
+			const searchName = classFeatureId.split('.').pop()?.replace(/-/g, ' ') || classFeatureId;
+
+			const classFeature = allClassFeatures.find(cf =>
+				cf.name.toLowerCase() === searchName.toLowerCase() ||
+				cf.id === classFeatureId
+			);
+
+			if (classFeature) {
+				// Class features are feats with category 'classfeature', so we can use the feat modal
+				selectedFeat = classFeature;
+				featModalOpen = true;
+			} else {
+				console.warn(`Class feature not found: ${classFeatureId}`);
+			}
+		} catch (error) {
+			console.error('Failed to load class feature:', error);
 		} finally {
 			loadingContent = false;
 		}
