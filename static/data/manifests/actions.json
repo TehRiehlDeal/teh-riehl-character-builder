@@ -1,0 +1,3290 @@
+{
+  "category": "actions",
+  "generated": "2026-01-19T06:52:28.029Z",
+  "count": 469,
+  "entries": [
+    {
+      "id": "c40APnn4a7bWhtcZ",
+      "name": "A Challenge for Heroes",
+      "type": "action",
+      "level": 0,
+      "path": "a-challenge-for-heroes.json"
+    },
+    {
+      "id": "kAwE9YqU6GH1cD7W",
+      "name": "A Moment Unending",
+      "type": "action",
+      "level": 0,
+      "path": "a-moment-unending.json"
+    },
+    {
+      "id": "BRR0HS8yRhgBfipz",
+      "name": "A Quick Glimpse Beyond",
+      "type": "action",
+      "level": 0,
+      "path": "a-quick-glimpse-beyond.json"
+    },
+    {
+      "id": "S9PZFOVe7zhORkUc",
+      "name": "Absorb into the Aegis",
+      "type": "action",
+      "level": 0,
+      "path": "absorb-into-the-aegis.json"
+    },
+    {
+      "id": "VAcxOCFQLb3Bap7K",
+      "name": "Accept Echo",
+      "type": "action",
+      "level": 0,
+      "path": "accept-echo.json"
+    },
+    {
+      "id": "FzZAYGib08aEq5P2",
+      "name": "Accidental Shot",
+      "type": "action",
+      "level": 0,
+      "path": "accidental-shot.json"
+    },
+    {
+      "id": "2KV87ponbWXgGIhZ",
+      "name": "Act Together",
+      "type": "action",
+      "level": 0,
+      "path": "act-together.json"
+    },
+    {
+      "id": "PpfkUdNMckFE22WI",
+      "name": "Activate Resonant Reflection",
+      "type": "action",
+      "level": 0,
+      "path": "activate-resonant-reflection.json"
+    },
+    {
+      "id": "PWNi3h0F9EsttE2p",
+      "name": "Administer Ambient Magic",
+      "type": "action",
+      "level": 0,
+      "path": "administer-ambient-magic.json"
+    },
+    {
+      "id": "9Nmz5114UB87n7Aj",
+      "name": "Affix a Fulu",
+      "type": "action",
+      "level": 0,
+      "path": "affix-a-fulu.json"
+    },
+    {
+      "id": "UAaQk93a30nx0nYY",
+      "name": "Affix a Talisman",
+      "type": "action",
+      "level": 0,
+      "path": "affix-a-talisman.json"
+    },
+    {
+      "id": "akmQzZoNhyfCKFpL",
+      "name": "Airy Step",
+      "type": "action",
+      "level": 0,
+      "path": "airy-step.json"
+    },
+    {
+      "id": "ZJ8KJp5mZYgzPJYN",
+      "name": "Amassed Assault",
+      "type": "action",
+      "level": 0,
+      "path": "amassed-assault.json"
+    },
+    {
+      "id": "Or6RLXeoZkN8CLdi",
+      "name": "Amulet's Abeyance",
+      "type": "action",
+      "level": 0,
+      "path": "amulets-abeyance.json"
+    },
+    {
+      "id": "8aIe57gXJ94mPpW4",
+      "name": "Anadi Venom",
+      "type": "action",
+      "level": 0,
+      "path": "anadi-venom.json"
+    },
+    {
+      "id": "xpsD4DsYHKXCB4ac",
+      "name": "Anchor",
+      "type": "action",
+      "level": 0,
+      "path": "anchor.json"
+    },
+    {
+      "id": "HbejhIywqIufrmVM",
+      "name": "Arcane Cascade",
+      "type": "action",
+      "level": 0,
+      "path": "arcane-cascade.json"
+    },
+    {
+      "id": "8b63qGzqSUENQgOT",
+      "name": "Armor Up!",
+      "type": "action",
+      "level": 0,
+      "path": "armor-up.json"
+    },
+    {
+      "id": "cCCOjU9ihfrn0spp",
+      "name": "Arrow Splits Arrow",
+      "type": "action",
+      "level": 0,
+      "path": "arrow-splits-arrow.json"
+    },
+    {
+      "id": "lAvEK4yNL3Y7pVmr",
+      "name": "Assume a Role",
+      "type": "action",
+      "level": 0,
+      "path": "assume-a-role.json"
+    },
+    {
+      "id": "9sXQf1SyppS5B6O1",
+      "name": "Automaton Aim",
+      "type": "action",
+      "level": 0,
+      "path": "automaton-aim.json"
+    },
+    {
+      "id": "ePfdZYZRmycMpSWU",
+      "name": "Avoid Dire Fate",
+      "type": "action",
+      "level": 0,
+      "path": "avoid-dire-fate.json"
+    },
+    {
+      "id": "IE2nThCmoyhQA0Jn",
+      "name": "Avoid Notice",
+      "type": "action",
+      "level": 0,
+      "path": "avoid-notice.json"
+    },
+    {
+      "id": "b3h3QqvwS5fnaiu1",
+      "name": "Banshee Cry",
+      "type": "action",
+      "level": 0,
+      "path": "banshee-cry.json"
+    },
+    {
+      "id": "oAWNluJaMlaGysXA",
+      "name": "Barbed Quills",
+      "type": "action",
+      "level": 0,
+      "path": "barbed-quills.json"
+    },
+    {
+      "id": "nTBrvt2b9wngyr0i",
+      "name": "Base Kinesis",
+      "type": "action",
+      "level": 0,
+      "path": "base-kinesis.json"
+    },
+    {
+      "id": "HCl3pzVefiv9ZKQW",
+      "name": "Aid",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/aid.json"
+    },
+    {
+      "id": "qm7xptMSozAinnPS",
+      "name": "Arrest a Fall",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/arrest-a-fall.json"
+    },
+    {
+      "id": "UWdRX1VelipCzrCg",
+      "name": "Avert Gaze",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/avert-gaze.json"
+    },
+    {
+      "id": "H6v1VgowHaKHnVlG",
+      "name": "Burrow",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/burrow.json"
+    },
+    {
+      "id": "Tj055UcNm6UEgtCg",
+      "name": "Crawl",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/crawl.json"
+    },
+    {
+      "id": "A72nHGUtNXgY5Ey9",
+      "name": "Delay",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/delay.json"
+    },
+    {
+      "id": "AjLSHZSWQ90exdLo",
+      "name": "Dismiss",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/dismiss.json"
+    },
+    {
+      "id": "HYNhdaPtF1QmQbR3",
+      "name": "Drop Prone",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/drop-prone.json"
+    },
+    {
+      "id": "SkZAQRkLLkmBQNB9",
+      "name": "Escape",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/escape.json"
+    },
+    {
+      "id": "cS9nfDRGD83bNU1p",
+      "name": "Fly",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/fly.json"
+    },
+    {
+      "id": "3yoajuKjwHZ9ApUY",
+      "name": "Grab an Edge",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/grab-an-edge.json"
+    },
+    {
+      "id": "pvQ5rY2zrtPI614F",
+      "name": "Interact",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/interact.json"
+    },
+    {
+      "id": "d5I6018Mci2SWokk",
+      "name": "Leap",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/leap.json"
+    },
+    {
+      "id": "PM5jvValFkbFH3TV",
+      "name": "Mount",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/mount.json"
+    },
+    {
+      "id": "sn2hIy1iIJX9Vpgj",
+      "name": "Point Out",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/point-out.json"
+    },
+    {
+      "id": "xjGwis0uaC2305pm",
+      "name": "Raise a Shield",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/raise-a-shield.json"
+    },
+    {
+      "id": "dLgAMt3TbkmLkUqE",
+      "name": "Ready",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/ready.json"
+    },
+    {
+      "id": "wQYmDStjdjn0I26t",
+      "name": "Release",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/release.json"
+    },
+    {
+      "id": "BlAOM2X92SI6HMtJ",
+      "name": "Seek",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/seek.json"
+    },
+    {
+      "id": "1xRFPTFtWtGJ9ELw",
+      "name": "Sense Motive",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/sense-motive.json"
+    },
+    {
+      "id": "OdIUybJ3ddfL7wzj",
+      "name": "Stand",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/stand.json"
+    },
+    {
+      "id": "UHpkTuCtyaPqiCAB",
+      "name": "Step",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/step.json"
+    },
+    {
+      "id": "Bcxarzksqt9ezrs6",
+      "name": "Stride",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/stride.json"
+    },
+    {
+      "id": "VjxZFuUXrCU94MWR",
+      "name": "Strike",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/strike.json"
+    },
+    {
+      "id": "3f5DMFu8fPiqHpRg",
+      "name": "Sustain",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/sustain.json"
+    },
+    {
+      "id": "ust1jJSCZQUhBZIz",
+      "name": "Take Cover",
+      "type": "action",
+      "level": 0,
+      "path": "basic-actions/take-cover.json"
+    },
+    {
+      "id": "dCuvfq3r2K9wXY9g",
+      "name": "Basic Finisher",
+      "type": "action",
+      "level": 0,
+      "path": "basic-finisher.json"
+    },
+    {
+      "id": "ukt9Dr4qmj9pUQII",
+      "name": "Bear Allies' Burdens",
+      "type": "action",
+      "level": 0,
+      "path": "bear-allies-burdens.json"
+    },
+    {
+      "id": "cx0juTYewwBmrYWv",
+      "name": "Beast's Charge",
+      "type": "action",
+      "level": 0,
+      "path": "beasts-charge.json"
+    },
+    {
+      "id": "3cuTA58ObXhuFX2r",
+      "name": "Bend Time",
+      "type": "action",
+      "level": 0,
+      "path": "bend-time.json"
+    },
+    {
+      "id": "CCMemaB1RoVa0aOu",
+      "name": "Bestial Clarity",
+      "type": "action",
+      "level": 0,
+      "path": "bestial-clarity.json"
+    },
+    {
+      "id": "9X80J5RN21Uoaeiw",
+      "name": "Binding Vow",
+      "type": "action",
+      "level": 0,
+      "path": "binding-vow.json"
+    },
+    {
+      "id": "k6ML9SPMxaGJyjqO",
+      "name": "Bite and Sting",
+      "type": "action",
+      "level": 0,
+      "path": "bite-and-sting.json"
+    },
+    {
+      "id": "XotRIv6tKRtuAGAF",
+      "name": "Blazing Conflagration",
+      "type": "action",
+      "level": 0,
+      "path": "blazing-conflagration.json"
+    },
+    {
+      "id": "scCEnY6IhU59uekX",
+      "name": "Bless Ally",
+      "type": "action",
+      "level": 0,
+      "path": "bless-ally.json"
+    },
+    {
+      "id": "Y6ee2ZvIE2fzzvAY",
+      "name": "Blinding of the Needle",
+      "type": "action",
+      "level": 0,
+      "path": "blinding-of-the-needle.json"
+    },
+    {
+      "id": "a47Npi5XHXo47y49",
+      "name": "Blizzard Evasion",
+      "type": "action",
+      "level": 0,
+      "path": "blizzard-evasion.json"
+    },
+    {
+      "id": "AOWwwXVDWwliFlWj",
+      "name": "Blood Feast",
+      "type": "action",
+      "level": 0,
+      "path": "blood-feast.json"
+    },
+    {
+      "id": "bG91dbtbgOnw7Ofx",
+      "name": "Board",
+      "type": "action",
+      "level": 0,
+      "path": "board.json"
+    },
+    {
+      "id": "vZltxwRNvF5khf9a",
+      "name": "Boarding Assault",
+      "type": "action",
+      "level": 0,
+      "path": "boarding-assault.json"
+    },
+    {
+      "id": "4d6QSFBP4lMUYrVK",
+      "name": "Bond with Spirit",
+      "type": "action",
+      "level": 0,
+      "path": "bond-with-spirit.json"
+    },
+    {
+      "id": "ZL5o9c4jV5fRwTGR",
+      "name": "Break Free",
+      "type": "action",
+      "level": 0,
+      "path": "break-free.json"
+    },
+    {
+      "id": "Y9XUwC8ihxZCfndG",
+      "name": "Break the Sun's Legs",
+      "type": "action",
+      "level": 0,
+      "path": "break-the-suns-legs.json"
+    },
+    {
+      "id": "NYR2IdfUiHevdt1V",
+      "name": "Break Them Down",
+      "type": "action",
+      "level": 0,
+      "path": "break-them-down.json"
+    },
+    {
+      "id": "Xg57qG1rOfSSobke",
+      "name": "Breath Weapon (Riding Drake)",
+      "type": "action",
+      "level": 0,
+      "path": "breath-weapon-riding-drake.json"
+    },
+    {
+      "id": "Vr3w3t028ZKDg0mO",
+      "name": "Breath Weapon",
+      "type": "action",
+      "level": 0,
+      "path": "breath-weapon.json"
+    },
+    {
+      "id": "IGPbMkKjnlFW1w1a",
+      "name": "Bribe Contact",
+      "type": "action",
+      "level": 0,
+      "path": "bribe-contact.json"
+    },
+    {
+      "id": "SMF1hTWPHtmlS8Cd",
+      "name": "Bullet Dancer Stance",
+      "type": "action",
+      "level": 0,
+      "path": "bullet-dancer-stance.json"
+    },
+    {
+      "id": "TXqTIwNGULs3j6CH",
+      "name": "Bullying Press",
+      "type": "action",
+      "level": 0,
+      "path": "bullying-press.json"
+    },
+    {
+      "id": "ZhVJ7EUTJngrIO2Z",
+      "name": "Burn out of Time",
+      "type": "action",
+      "level": 0,
+      "path": "burn-out-of-time.json"
+    },
+    {
+      "id": "Fha8jFmfkOPxAsrZ",
+      "name": "Calculate Threats",
+      "type": "action",
+      "level": 0,
+      "path": "calculate-threats.json"
+    },
+    {
+      "id": "8kGpUUUSX1sB2OqQ",
+      "name": "Call Companion",
+      "type": "action",
+      "level": 0,
+      "path": "call-companion.json"
+    },
+    {
+      "id": "ESMIHOOahLQoqxW1",
+      "name": "Call Gun",
+      "type": "action",
+      "level": 0,
+      "path": "call-gun.json"
+    },
+    {
+      "id": "8w6esW689NNbbq3i",
+      "name": "Call on Ancient Blood",
+      "type": "action",
+      "level": 0,
+      "path": "call-on-ancient-blood.json"
+    },
+    {
+      "id": "k5TASjIxghvGCy7g",
+      "name": "Call to Axis",
+      "type": "action",
+      "level": 0,
+      "path": "call-to-axis.json"
+    },
+    {
+      "id": "mk6rzaAzsBBRGJnh",
+      "name": "Call Upon the Brightness",
+      "type": "action",
+      "level": 0,
+      "path": "call-upon-the-brightness.json"
+    },
+    {
+      "id": "jTfJzj1yfmPLsxmj",
+      "name": "Captivating Charm",
+      "type": "action",
+      "level": 0,
+      "path": "captivating-charm.json"
+    },
+    {
+      "id": "aBQ8ajvEBByv45yz",
+      "name": "Cast a Spell",
+      "type": "action",
+      "level": 0,
+      "path": "cast-a-spell.json"
+    },
+    {
+      "id": "2424g94rpoiN1IPh",
+      "name": "Catharsis",
+      "type": "action",
+      "level": 0,
+      "path": "catharsis.json"
+    },
+    {
+      "id": "34E7k2YRcsOU5uyl",
+      "name": "Change Shape",
+      "type": "action",
+      "level": 0,
+      "path": "change-shape.json"
+    },
+    {
+      "id": "s4s40hJr5uRLOqix",
+      "name": "Change Tradition Focus",
+      "type": "action",
+      "level": 0,
+      "path": "change-tradition-focus.json"
+    },
+    {
+      "id": "g8QrV39TmZfkbXgE",
+      "name": "Channel Elements",
+      "type": "action",
+      "level": 0,
+      "path": "channel-elements.json"
+    },
+    {
+      "id": "YjrM5G8Up0wv6x0u",
+      "name": "Chaotic Destiny",
+      "type": "action",
+      "level": 0,
+      "path": "chaotic-destiny.json"
+    },
+    {
+      "id": "uOlyklPCUWLtCaYI",
+      "name": "Chassis Deflection",
+      "type": "action",
+      "level": 0,
+      "path": "chassis-deflection.json"
+    },
+    {
+      "id": "zs4ZMcH9oFSCgkBx",
+      "name": "Claw Stance",
+      "type": "action",
+      "level": 0,
+      "path": "claw-stance.json"
+    },
+    {
+      "id": "ZhKXvnw7ND2hQ2pp",
+      "name": "Cleanse Soul Path",
+      "type": "action",
+      "level": 0,
+      "path": "cleanse-soul-path.json"
+    },
+    {
+      "id": "tw1KDRPdBAkg5DlS",
+      "name": "Clear a Path",
+      "type": "action",
+      "level": 0,
+      "path": "clear-a-path.json"
+    },
+    {
+      "id": "25WDi1cVUrW92sUj",
+      "name": "Clue In",
+      "type": "action",
+      "level": 0,
+      "path": "clue-in.json"
+    },
+    {
+      "id": "PE1jm9lBveujj2md",
+      "name": "Cobble Together",
+      "type": "action",
+      "level": 0,
+      "path": "cobble-together.json"
+    },
+    {
+      "id": "mbOa48mQCqj86lVw",
+      "name": "Coiling Serpents",
+      "type": "action",
+      "level": 0,
+      "path": "coiling-serpents.json"
+    },
+    {
+      "id": "LWrR6UiGm3eCAALJ",
+      "name": "Collect Spirit Remnant",
+      "type": "action",
+      "level": 0,
+      "path": "collect-spirit-remnant.json"
+    },
+    {
+      "id": "yM20ZnvmNxu9qMDV",
+      "name": "Compose Missive",
+      "type": "action",
+      "level": 0,
+      "path": "compose-missive.json"
+    },
+    {
+      "id": "BKnN9la3WNrRgZ6n",
+      "name": "Conduct Energy",
+      "type": "action",
+      "level": 0,
+      "path": "conduct-energy.json"
+    },
+    {
+      "id": "K878asDgf1EF0B9S",
+      "name": "Confident Finisher",
+      "type": "action",
+      "level": 0,
+      "path": "confident-finisher.json"
+    },
+    {
+      "id": "KC6o1cvbr45xnMei",
+      "name": "Conjure Bullet",
+      "type": "action",
+      "level": 0,
+      "path": "conjure-bullet.json"
+    },
+    {
+      "id": "1If9lLVoZdO8woVg",
+      "name": "Consume Flesh",
+      "type": "action",
+      "level": 0,
+      "path": "consume-flesh.json"
+    },
+    {
+      "id": "mech0dhb4eKbCAu0",
+      "name": "Coughing Dragon",
+      "type": "action",
+      "level": 0,
+      "path": "coughing-dragon.json"
+    },
+    {
+      "id": "gBhWEy3ToxQeCLQm",
+      "name": "Covered Reload",
+      "type": "action",
+      "level": 0,
+      "path": "covered-reload.json"
+    },
+    {
+      "id": "iBf9uGn5LOHkWpZ6",
+      "name": "Craft Disharmonic Instrument",
+      "type": "action",
+      "level": 0,
+      "path": "craft-disharmonic-instrument.json"
+    },
+    {
+      "id": "I75R9NSfsVrit6cU",
+      "name": "Cram",
+      "type": "action",
+      "level": 0,
+      "path": "cram.json"
+    },
+    {
+      "id": "Cu7P7NB3XH67mi1N",
+      "name": "Crash Against Me",
+      "type": "action",
+      "level": 0,
+      "path": "crash-against-me.json"
+    },
+    {
+      "id": "NT1rtY5DFJGsR5QR",
+      "name": "Create Familiar Fulu",
+      "type": "action",
+      "level": 0,
+      "path": "create-familiar-fulu.json"
+    },
+    {
+      "id": "Oh6H1fuXC6jK4Hcp",
+      "name": "Cycle Elemental Stance",
+      "type": "action",
+      "level": 0,
+      "path": "cycle-elemental-stance.json"
+    },
+    {
+      "id": "cczvLO5r7QuHaXwx",
+      "name": "Dampening Harmonics",
+      "type": "action",
+      "level": 0,
+      "path": "dampening-harmonics.json"
+    },
+    {
+      "id": "1ejGup6ouh9t9S96",
+      "name": "Dancing Dodge",
+      "type": "action",
+      "level": 0,
+      "path": "dancing-dodge.json"
+    },
+    {
+      "id": "5LW1k5DUkzbbYuYL",
+      "name": "Daydream Trance",
+      "type": "action",
+      "level": 0,
+      "path": "daydream-trance.json"
+    },
+    {
+      "id": "0LwQufKtXfRda0BR",
+      "name": "Dazzle Seeker",
+      "type": "action",
+      "level": 0,
+      "path": "dazzle-seeker.json"
+    },
+    {
+      "id": "6iGoVnEJuBHJqgpi",
+      "name": "Death Drone",
+      "type": "action",
+      "level": 0,
+      "path": "death-drone.json"
+    },
+    {
+      "id": "bp0Up04x3dzGK5bB",
+      "name": "Debilitating Strike",
+      "type": "action",
+      "level": 0,
+      "path": "debilitating-strike.json"
+    },
+    {
+      "id": "1LDOfV8jEka09eXr",
+      "name": "Deceptive Sidestep",
+      "type": "action",
+      "level": 0,
+      "path": "deceptive-sidestep.json"
+    },
+    {
+      "id": "Qj36ramjkoKE8kzJ",
+      "name": "Decompose",
+      "type": "action",
+      "level": 0,
+      "path": "decompose.json"
+    },
+    {
+      "id": "ZUAaBIAntZhFQixm",
+      "name": "Deconstruct",
+      "type": "action",
+      "level": 0,
+      "path": "deconstruct.json"
+    },
+    {
+      "id": "5V49l0K460CcvBOO",
+      "name": "Defend Life",
+      "type": "action",
+      "level": 0,
+      "path": "defend-life.json"
+    },
+    {
+      "id": "cYtYKa1gDEl7y2N0",
+      "name": "Defend",
+      "type": "action",
+      "level": 0,
+      "path": "defend.json"
+    },
+    {
+      "id": "r5Uth6yvCoE4tr9z",
+      "name": "Destructive Vengeance",
+      "type": "action",
+      "level": 0,
+      "path": "destructive-vengeance.json"
+    },
+    {
+      "id": "Yb0C1uLzeHrVLl7a",
+      "name": "Detect Magic",
+      "type": "action",
+      "level": 0,
+      "path": "detect-magic.json"
+    },
+    {
+      "id": "m0f2B7G9eaaTmhFL",
+      "name": "Devise a Stratagem",
+      "type": "action",
+      "level": 0,
+      "path": "devise-a-stratagem.json"
+    },
+    {
+      "id": "3sgY9afTTBhZXE8V",
+      "name": "Devour Ambient Magic",
+      "type": "action",
+      "level": 0,
+      "path": "devour-ambient-magic.json"
+    },
+    {
+      "id": "cYdz2grcOcRt4jk6",
+      "name": "Disable a Device",
+      "type": "action",
+      "level": 0,
+      "path": "disable-a-device.json"
+    },
+    {
+      "id": "jl1euufxNpAhVt26",
+      "name": "Disarming Interception",
+      "type": "action",
+      "level": 0,
+      "path": "disarming-interception.json"
+    },
+    {
+      "id": "JLPY5hl4qiJ1zLi1",
+      "name": "Discover",
+      "type": "action",
+      "level": 0,
+      "path": "discover.json"
+    },
+    {
+      "id": "Fe487XZBdqEI2InL",
+      "name": "Dispelling Bullet",
+      "type": "action",
+      "level": 0,
+      "path": "dispelling-bullet.json"
+    },
+    {
+      "id": "s2RrhZx1f1X4YnYV",
+      "name": "Divert Lightning",
+      "type": "action",
+      "level": 0,
+      "path": "divert-lightning.json"
+    },
+    {
+      "id": "uMFB3uw8WTWL0LZD",
+      "name": "Draconic Frenzy",
+      "type": "action",
+      "level": 0,
+      "path": "draconic-frenzy.json"
+    },
+    {
+      "id": "oanRfXGLnBm6mMVg",
+      "name": "Dragon Breath",
+      "type": "action",
+      "level": 0,
+      "path": "dragon-breath.json"
+    },
+    {
+      "id": "v82XtjAVN4ffgVVR",
+      "name": "Drain Bonded Item",
+      "type": "action",
+      "level": 0,
+      "path": "drain-bonded-item.json"
+    },
+    {
+      "id": "rmnhzmJqfzEVnz1h",
+      "name": "Drain Familiar",
+      "type": "action",
+      "level": 0,
+      "path": "drain-familiar.json"
+    },
+    {
+      "id": "JPHWzD2soqjffeSU",
+      "name": "Drain Life",
+      "type": "action",
+      "level": 0,
+      "path": "drain-life.json"
+    },
+    {
+      "id": "JxuXTJIKRwmYn08D",
+      "name": "Drain Realm",
+      "type": "action",
+      "level": 0,
+      "path": "drain-realm.json"
+    },
+    {
+      "id": "GKIKJNInDev72qai",
+      "name": "Drape Ambient Magic",
+      "type": "action",
+      "level": 0,
+      "path": "drape-ambient-magic.json"
+    },
+    {
+      "id": "YMhmebfXAoOFXeSB",
+      "name": "Drifter's Wake",
+      "type": "action",
+      "level": 0,
+      "path": "drifters-wake.json"
+    },
+    {
+      "id": "49F65W6VwuXhmv8K",
+      "name": "Drink Blood",
+      "type": "action",
+      "level": 0,
+      "path": "drink-blood.json"
+    },
+    {
+      "id": "D91jQs0wleU5ml4K",
+      "name": "Drink from the Chalice",
+      "type": "action",
+      "level": 0,
+      "path": "drink-from-the-chalice.json"
+    },
+    {
+      "id": "vZwa0PZLQvm3X5ME",
+      "name": "Drink of my Foes",
+      "type": "action",
+      "level": 0,
+      "path": "drink-of-my-foes.json"
+    },
+    {
+      "id": "uS3qDAgOkZ7b8ERL",
+      "name": "Drive",
+      "type": "action",
+      "level": 0,
+      "path": "drive.json"
+    },
+    {
+      "id": "xGqOIheAOV12RGU4",
+      "name": "Dueling Counter",
+      "type": "action",
+      "level": 0,
+      "path": "dueling-counter.json"
+    },
+    {
+      "id": "KyKXp599tK9BgodC",
+      "name": "Dutiful Retaliation",
+      "type": "action",
+      "level": 0,
+      "path": "dutiful-retaliation.json"
+    },
+    {
+      "id": "DS9sDOWkXrz2xmHi",
+      "name": "Eldritch Shot",
+      "type": "action",
+      "level": 0,
+      "path": "eldritch-shot.json"
+    },
+    {
+      "id": "6lbr0Jnv0zMB5uGb",
+      "name": "Elemental Blast",
+      "type": "action",
+      "level": 0,
+      "path": "elemental-blast.json"
+    },
+    {
+      "id": "V4HToYPQlkw8AW50",
+      "name": "Embrace of Destiny",
+      "type": "action",
+      "level": 0,
+      "path": "embrace-of-destiny.json"
+    },
+    {
+      "id": "fL7FhTBcKxMzLBAs",
+      "name": "Empty Vessel",
+      "type": "action",
+      "level": 0,
+      "path": "empty-vessel.json"
+    },
+    {
+      "id": "e2ePMDa7ixbLRryj",
+      "name": "Encouraging Words",
+      "type": "action",
+      "level": 0,
+      "path": "encouraging-words.json"
+    },
+    {
+      "id": "7qjfYsLNTr17Aftf",
+      "name": "Energy Emanation",
+      "type": "action",
+      "level": 0,
+      "path": "energy-emanation.json"
+    },
+    {
+      "id": "TSDbyYRQwhIyY2Oq",
+      "name": "Energy Shot",
+      "type": "action",
+      "level": 0,
+      "path": "energy-shot.json"
+    },
+    {
+      "id": "PaQL7cyry64nx9CG",
+      "name": "Enlightenment in Adversity",
+      "type": "action",
+      "level": 0,
+      "path": "enlightenment-in-adversity.json"
+    },
+    {
+      "id": "QWAWf8NDKpo1mzLE",
+      "name": "Enter Seat Of Power",
+      "type": "action",
+      "level": 0,
+      "path": "enter-seat-of-power.json"
+    },
+    {
+      "id": "djULKW76BbSoN3zb",
+      "name": "Enter Spirit Trance",
+      "type": "action",
+      "level": 0,
+      "path": "enter-spirit-trance.json"
+    },
+    {
+      "id": "5bCZGpp9yFHXDz1j",
+      "name": "Entity's Resurgence",
+      "type": "action",
+      "level": 0,
+      "path": "entitys-resurgence.json"
+    },
+    {
+      "id": "BrCbXsCUIFYfu26E",
+      "name": "Entreat Pact",
+      "type": "action",
+      "level": 0,
+      "path": "entreat-pact.json"
+    },
+    {
+      "id": "s4V7JWSMF9JPJAeX",
+      "name": "Envenom",
+      "type": "action",
+      "level": 0,
+      "path": "envenom.json"
+    },
+    {
+      "id": "wfUIsKBxCBfXi1TF",
+      "name": "Erupting Spurs",
+      "type": "action",
+      "level": 0,
+      "path": "erupting-spurs.json"
+    },
+    {
+      "id": "jftNJjBNxp2cleoi",
+      "name": "Expeditious Inspection",
+      "type": "action",
+      "level": 0,
+      "path": "expeditious-inspection.json"
+    },
+    {
+      "id": "IV8sgoLO6ShD3DCJ",
+      "name": "Expel Maelstrom",
+      "type": "action",
+      "level": 0,
+      "path": "expel-maelstrom.json"
+    },
+    {
+      "id": "naKVqd8POxcnGclz",
+      "name": "Explode",
+      "type": "action",
+      "level": 0,
+      "path": "explode.json"
+    },
+    {
+      "id": "fodJ3zuwQsYnBbtk",
+      "name": "Exploit Vulnerability",
+      "type": "action",
+      "level": 0,
+      "path": "exploit-vulnerability.json"
+    },
+    {
+      "id": "low5ORd87QeA9Oug",
+      "name": "Extract Element",
+      "type": "action",
+      "level": 0,
+      "path": "extract-element.json"
+    },
+    {
+      "id": "AJeLwbQBt1YH3S6v",
+      "name": "Fade Into Daydreams",
+      "type": "action",
+      "level": 0,
+      "path": "fade-into-daydreams.json"
+    },
+    {
+      "id": "gU93T2UqxLsX9gyF",
+      "name": "Fated Not to Die",
+      "type": "action",
+      "level": 0,
+      "path": "fated-not-to-die.json"
+    },
+    {
+      "id": "PdEJEiPUP0FDaBki",
+      "name": "Feed the Masses",
+      "type": "action",
+      "level": 0,
+      "path": "feed-the-masses.json"
+    },
+    {
+      "id": "K3hd3w20M707t6Iq",
+      "name": "Feral Swing",
+      "type": "action",
+      "level": 0,
+      "path": "feral-swing.json"
+    },
+    {
+      "id": "FomdyTNeKcV1dQMx",
+      "name": "Fey Jump",
+      "type": "action",
+      "level": 0,
+      "path": "fey-jump.json"
+    },
+    {
+      "id": "TMBXArwICQRJdwT6",
+      "name": "Fey's Fortune",
+      "type": "action",
+      "level": 0,
+      "path": "feys-fortune.json"
+    },
+    {
+      "id": "tNrBIYct9l1lrW1I",
+      "name": "Field of Roots",
+      "type": "action",
+      "level": 0,
+      "path": "field-of-roots.json"
+    },
+    {
+      "id": "hi56uHG1aAb84Zzu",
+      "name": "Fight with Fear",
+      "type": "action",
+      "level": 0,
+      "path": "fight-with-fear.json"
+    },
+    {
+      "id": "jbmXxq56swDYw8hy",
+      "name": "Final Spite",
+      "type": "action",
+      "level": 0,
+      "path": "final-spite.json"
+    },
+    {
+      "id": "EHa0owz6mccnmSBf",
+      "name": "Final Surge",
+      "type": "action",
+      "level": 0,
+      "path": "final-surge.json"
+    },
+    {
+      "id": "e5JscXqvBUC867oo",
+      "name": "Find Fault",
+      "type": "action",
+      "level": 0,
+      "path": "find-fault.json"
+    },
+    {
+      "id": "4IxCKbGaEM9nUhld",
+      "name": "Finish The Job",
+      "type": "action",
+      "level": 0,
+      "path": "finish-the-job.json"
+    },
+    {
+      "id": "UEkGL7uAGYDPFNfK",
+      "name": "Fire in the Hole",
+      "type": "action",
+      "level": 0,
+      "path": "fire-in-the-hole.json"
+    },
+    {
+      "id": "ITWUi1r8Z7EtChkB",
+      "name": "Flash of Grandeur",
+      "type": "action",
+      "level": 0,
+      "path": "flash-of-grandeur.json"
+    },
+    {
+      "id": "ObFY26oKlreyVIUm",
+      "name": "Fleeting Arc through Heaven and Earth",
+      "type": "action",
+      "level": 0,
+      "path": "fleeting-arc-through-heaven-and-earth.json"
+    },
+    {
+      "id": "04VQuQih77pxX06q",
+      "name": "Fling Magic",
+      "type": "action",
+      "level": 0,
+      "path": "fling-magic.json"
+    },
+    {
+      "id": "6xWX8Ey5ShAyj1HO",
+      "name": "Flowing Spirit Strike",
+      "type": "action",
+      "level": 0,
+      "path": "flowing-spirit-strike.json"
+    },
+    {
+      "id": "nbfNETdpee8CVM17",
+      "name": "Flurry of Blows",
+      "type": "action",
+      "level": 0,
+      "path": "flurry-of-blows.json"
+    },
+    {
+      "id": "dypCcXb9mwVbg6xD",
+      "name": "Flyby Attack",
+      "type": "action",
+      "level": 0,
+      "path": "flyby-attack.json"
+    },
+    {
+      "id": "tfa4Sh7wcxCEqL29",
+      "name": "Follow the Expert",
+      "type": "action",
+      "level": 0,
+      "path": "follow-the-expert.json"
+    },
+    {
+      "id": "r0qPSxLoa1xRSWYL",
+      "name": "Forced Pact",
+      "type": "action",
+      "level": 0,
+      "path": "forced-pact.json"
+    },
+    {
+      "id": "VOEWhPQfN3lvHivK",
+      "name": "Foresight",
+      "type": "action",
+      "level": 0,
+      "path": "foresight.json"
+    },
+    {
+      "id": "7dq6bpYvLArJ5odx",
+      "name": "Forge Documents",
+      "type": "action",
+      "level": 0,
+      "path": "forge-documents.json"
+    },
+    {
+      "id": "KvVdGkUi0iJwapvD",
+      "name": "Fortify Camp",
+      "type": "action",
+      "level": 0,
+      "path": "fortify-camp.json"
+    },
+    {
+      "id": "Ei4T4aQx0a5EdBhm",
+      "name": "Fracture Mountains",
+      "type": "action",
+      "level": 0,
+      "path": "fracture-mountains.json"
+    },
+    {
+      "id": "06frwOOuo4HJtivl",
+      "name": "Furious Strike",
+      "type": "action",
+      "level": 0,
+      "path": "furious-strike.json"
+    },
+    {
+      "id": "MLchOIG6uLvzK3r0",
+      "name": "Gain Contact",
+      "type": "action",
+      "level": 0,
+      "path": "gain-contact.json"
+    },
+    {
+      "id": "jtuWJa6Iyyd3gkVv",
+      "name": "Gallop",
+      "type": "action",
+      "level": 0,
+      "path": "gallop.json"
+    },
+    {
+      "id": "O1iircZOOCo42r9Y",
+      "name": "Ghost Shot",
+      "type": "action",
+      "level": 0,
+      "path": "ghost-shot.json"
+    },
+    {
+      "id": "tzuYnmYCvA3zrj6w",
+      "name": "Giant-Felling Comet",
+      "type": "action",
+      "level": 0,
+      "path": "giant-felling-comet.json"
+    },
+    {
+      "id": "tuZnRWHixLArvaIf",
+      "name": "Glimpse of Redemption",
+      "type": "action",
+      "level": 0,
+      "path": "glimpse-of-redemption.json"
+    },
+    {
+      "id": "Yfl6q6Pi42FttDRE",
+      "name": "Glimpse Vulnerability",
+      "type": "action",
+      "level": 0,
+      "path": "glimpse-vulnerability.json"
+    },
+    {
+      "id": "izvfZ561JTdeyh6i",
+      "name": "Goblin Jubilee",
+      "type": "action",
+      "level": 0,
+      "path": "goblin-jubilee.json"
+    },
+    {
+      "id": "BCp3tn2HATUOUEdQ",
+      "name": "Gossip",
+      "type": "action",
+      "level": 0,
+      "path": "gossip.json"
+    },
+    {
+      "id": "rI2MSXR1MQzgQUO7",
+      "name": "Grim Swagger",
+      "type": "action",
+      "level": 0,
+      "path": "grim-swagger.json"
+    },
+    {
+      "id": "5tOovJGK2TQIBHUZ",
+      "name": "Grow",
+      "type": "action",
+      "level": 0,
+      "path": "grow.json"
+    },
+    {
+      "id": "EuoCFSHTzi0VOfuf",
+      "name": "Harrow the Fiend",
+      "type": "action",
+      "level": 0,
+      "path": "harrow-the-fiend.json"
+    },
+    {
+      "id": "GrzbczH9S3SHPiIQ",
+      "name": "Harvest Blood",
+      "type": "action",
+      "level": 0,
+      "path": "harvest-blood.json"
+    },
+    {
+      "id": "h4Tzdhqfryp5m2fO",
+      "name": "Harvest Heartsliver",
+      "type": "action",
+      "level": 0,
+      "path": "harvest-heartsliver.json"
+    },
+    {
+      "id": "JtEzSceixS0WA8wn",
+      "name": "Heaven Rains an Ending",
+      "type": "action",
+      "level": 0,
+      "path": "heaven-rains-an-ending.json"
+    },
+    {
+      "id": "CJnA1wEg2kA5BXfe",
+      "name": "Heavy is the Crown",
+      "type": "action",
+      "level": 0,
+      "path": "heavy-is-the-crown.json"
+    },
+    {
+      "id": "yXk0G8l0leaqHh1U",
+      "name": "Host Spirit",
+      "type": "action",
+      "level": 0,
+      "path": "host-spirit.json"
+    },
+    {
+      "id": "JYi4MnsdFu618hPm",
+      "name": "Hunt Prey",
+      "type": "action",
+      "level": 0,
+      "path": "hunt-prey.json"
+    },
+    {
+      "id": "Yrc21SgKRWOMNo7C",
+      "name": "Hunt the Razer's Pawn",
+      "type": "action",
+      "level": 0,
+      "path": "hunt-the-razers-pawn.json"
+    },
+    {
+      "id": "JuqmIAnkL9hVGai8",
+      "name": "Hustle",
+      "type": "action",
+      "level": 0,
+      "path": "hustle.json"
+    },
+    {
+      "id": "wKPtG0pzARZLGHZT",
+      "name": "I Defy You!",
+      "type": "action",
+      "level": 0,
+      "path": "i-defy-you.json"
+    },
+    {
+      "id": "dnaPJfA0CDLNrWcW",
+      "name": "Implement's Interruption",
+      "type": "action",
+      "level": 0,
+      "path": "implements-interruption.json"
+    },
+    {
+      "id": "WKEFnxUH0CkM8bWq",
+      "name": "Impromptu Investment",
+      "type": "action",
+      "level": 0,
+      "path": "impromptu-investment.json"
+    },
+    {
+      "id": "Xc5MLIbT5OPhnFIJ",
+      "name": "Indomitable Act",
+      "type": "action",
+      "level": 0,
+      "path": "indomitable-act.json"
+    },
+    {
+      "id": "HFv62jIK98S2xw4x",
+      "name": "Influence Rumor",
+      "type": "action",
+      "level": 0,
+      "path": "influence-rumor.json"
+    },
+    {
+      "id": "6Oe9dg3Lu10slyeC",
+      "name": "Influence",
+      "type": "action",
+      "level": 0,
+      "path": "influence.json"
+    },
+    {
+      "id": "lgpJoFrkzfkjAzeV",
+      "name": "Inscribe Shadow Pamor",
+      "type": "action",
+      "level": 0,
+      "path": "inscribe-shadow-pamor.json"
+    },
+    {
+      "id": "ZXvJGxMJc0HRpcQh",
+      "name": "Inspired Stratagem",
+      "type": "action",
+      "level": 0,
+      "path": "inspired-stratagem.json"
+    },
+    {
+      "id": "rSpCV0leurp2Bg2d",
+      "name": "Instinctive Obfuscation",
+      "type": "action",
+      "level": 0,
+      "path": "instinctive-obfuscation.json"
+    },
+    {
+      "id": "HAmGozJwLAal5v82",
+      "name": "Intensify Vulnerability",
+      "type": "action",
+      "level": 0,
+      "path": "intensify-vulnerability.json"
+    },
+    {
+      "id": "0MZ5tFUYKGMq21NV",
+      "name": "Intercession Spell",
+      "type": "action",
+      "level": 0,
+      "path": "intercession-spell.json"
+    },
+    {
+      "id": "Uq2qy9aGNQ5JcPI1",
+      "name": "Into the Fray",
+      "type": "action",
+      "level": 0,
+      "path": "into-the-fray.json"
+    },
+    {
+      "id": "travkW5KLTnIUt9Y",
+      "name": "Inured to Death",
+      "type": "action",
+      "level": 0,
+      "path": "inured-to-death.json"
+    },
+    {
+      "id": "lvqPQDdWT2DDO0k2",
+      "name": "Invest an Item",
+      "type": "action",
+      "level": 0,
+      "path": "invest-an-item.json"
+    },
+    {
+      "id": "EwgTZBWsc8qKaViP",
+      "name": "Investigate",
+      "type": "action",
+      "level": 0,
+      "path": "investigate.json"
+    },
+    {
+      "id": "Ul4I0ER6pj3U5eAk",
+      "name": "Invigorating Fear",
+      "type": "action",
+      "level": 0,
+      "path": "invigorating-fear.json"
+    },
+    {
+      "id": "Aq2mXT2hLlstFL5C",
+      "name": "Invoke Celestial Privilege",
+      "type": "action",
+      "level": 0,
+      "path": "invoke-celestial-privilege.json"
+    },
+    {
+      "id": "M8RCbthRhB4bxO9t",
+      "name": "Iron Command",
+      "type": "action",
+      "level": 0,
+      "path": "iron-command.json"
+    },
+    {
+      "id": "hFRHPBj6wjAayNtW",
+      "name": "Jinx",
+      "type": "action",
+      "level": 0,
+      "path": "jinx.json"
+    },
+    {
+      "id": "wt6jdjjje16Nx34f",
+      "name": "Jumping Jenny",
+      "type": "action",
+      "level": 0,
+      "path": "jumping-jenny.json"
+    },
+    {
+      "id": "ako5zZwC6o26cfCQ",
+      "name": "Lantern Beam",
+      "type": "action",
+      "level": 0,
+      "path": "lantern-beam.json"
+    },
+    {
+      "id": "aVGNaNgG6cYNRp5A",
+      "name": "Lantern Strobe",
+      "type": "action",
+      "level": 0,
+      "path": "lantern-strobe.json"
+    },
+    {
+      "id": "yUjuLbBMflVum8Yn",
+      "name": "Launch Fireworks",
+      "type": "action",
+      "level": 0,
+      "path": "launch-fireworks.json"
+    },
+    {
+      "id": "x1qSEkzHAviQ5jry",
+      "name": "Lay Down Arms",
+      "type": "action",
+      "level": 0,
+      "path": "lay-down-arms.json"
+    },
+    {
+      "id": "yOtu5X3qWfjuX8Vy",
+      "name": "Learn Name",
+      "type": "action",
+      "level": 0,
+      "path": "learn-name.json"
+    },
+    {
+      "id": "egXlMyYLBthoQSgh",
+      "name": "Liar's Hidden Blade",
+      "type": "action",
+      "level": 0,
+      "path": "liars-hidden-blade.json"
+    },
+    {
+      "id": "IX1VlVCL5sFTptEE",
+      "name": "Liberating Step",
+      "type": "action",
+      "level": 0,
+      "path": "liberating-step.json"
+    },
+    {
+      "id": "Iuq8CeNqv3a0oWfQ",
+      "name": "Life Block",
+      "type": "action",
+      "level": 0,
+      "path": "life-block.json"
+    },
+    {
+      "id": "9MJcQEMVVrmMyGyq",
+      "name": "Living Fortification",
+      "type": "action",
+      "level": 0,
+      "path": "living-fortification.json"
+    },
+    {
+      "id": "DXIZ4DHGxhZiWNWb",
+      "name": "Long-Term Rest",
+      "type": "action",
+      "level": 0,
+      "path": "long-term-rest.json"
+    },
+    {
+      "id": "RxIPBjodIRm7Pd6W",
+      "name": "Lucky Break",
+      "type": "action",
+      "level": 0,
+      "path": "lucky-break.json"
+    },
+    {
+      "id": "n5vwBnLSlIXL9ptp",
+      "name": "Manifest Eidolon",
+      "type": "action",
+      "level": 0,
+      "path": "manifest-eidolon.json"
+    },
+    {
+      "id": "IfWF56KiSFQbNmHj",
+      "name": "Manifest Realm",
+      "type": "action",
+      "level": 0,
+      "path": "manifest-realm.json"
+    },
+    {
+      "id": "KMKuJ0onVS72t9Fv",
+      "name": "Manifest Soulforged Armament",
+      "type": "action",
+      "level": 0,
+      "path": "manifest-soulforged-armament.json"
+    },
+    {
+      "id": "Ba9EuLV1I2b1ue9P",
+      "name": "Map the Area",
+      "type": "action",
+      "level": 0,
+      "path": "map-the-area.json"
+    },
+    {
+      "id": "AZt0m0EHRmtDCd5s",
+      "name": "Marathon Dash",
+      "type": "action",
+      "level": 0,
+      "path": "marathon-dash.json"
+    },
+    {
+      "id": "orjJjLdm4XNAcFi8",
+      "name": "Mark for Death",
+      "type": "action",
+      "level": 0,
+      "path": "mark-for-death.json"
+    },
+    {
+      "id": "jD8RW5PdLI6snlsO",
+      "name": "Mark the Center",
+      "type": "action",
+      "level": 0,
+      "path": "mark-the-center.json"
+    },
+    {
+      "id": "Rlp7ND33yYfxiEWi",
+      "name": "Master Strike",
+      "type": "action",
+      "level": 0,
+      "path": "master-strike.json"
+    },
+    {
+      "id": "74iat04PtfG8gn2Q",
+      "name": "Mighty Rage",
+      "type": "action",
+      "level": 0,
+      "path": "mighty-rage.json"
+    },
+    {
+      "id": "CPTolKAF55p7D7Sn",
+      "name": "Mirror-Trickery",
+      "type": "action",
+      "level": 0,
+      "path": "mirror-trickery.json"
+    },
+    {
+      "id": "Mh4Vdg6gu8g8RAjh",
+      "name": "Mirror's Reflection",
+      "type": "action",
+      "level": 0,
+      "path": "mirrors-reflection.json"
+    },
+    {
+      "id": "I9k9qe4gOT8UVK4e",
+      "name": "Mist Blending",
+      "type": "action",
+      "level": 0,
+      "path": "mist-blending.json"
+    },
+    {
+      "id": "00LNVSCbwJ8pszwE",
+      "name": "Mutagenic Flashback",
+      "type": "action",
+      "level": 0,
+      "path": "mutagenic-flashback.json"
+    },
+    {
+      "id": "ur4AfegC9RqRgy3e",
+      "name": "Mystic Aegis",
+      "type": "action",
+      "level": 0,
+      "path": "mystic-aegis.json"
+    },
+    {
+      "id": "fsR3X4c3p19W8RB2",
+      "name": "Name Drop",
+      "type": "action",
+      "level": 0,
+      "path": "name-drop.json"
+    },
+    {
+      "id": "JdpUaQeNwoVr2VHL",
+      "name": "No Scar but This",
+      "type": "action",
+      "level": 0,
+      "path": "no-scar-but-this.json"
+    },
+    {
+      "id": "rlGVQku78DGoOl9V",
+      "name": "Nudging Whisper",
+      "type": "action",
+      "level": 0,
+      "path": "nudging-whisper.json"
+    },
+    {
+      "id": "BKMxC0ZvdYfdhx7C",
+      "name": "Objection",
+      "type": "action",
+      "level": 0,
+      "path": "objection.json"
+    },
+    {
+      "id": "7wQe43fSCG9DSWdj",
+      "name": "Offer Story",
+      "type": "action",
+      "level": 0,
+      "path": "offer-story.json"
+    },
+    {
+      "id": "2r4BY90F9PLFai3c",
+      "name": "Once Bitten",
+      "type": "action",
+      "level": 0,
+      "path": "once-bitten.json"
+    },
+    {
+      "id": "IEBBHnI7wWRt44KG",
+      "name": "One Moment till Glory",
+      "type": "action",
+      "level": 0,
+      "path": "one-moment-till-glory.json"
+    },
+    {
+      "id": "Tlrde2xh7AhesXNB",
+      "name": "One Shot, One Kill",
+      "type": "action",
+      "level": 0,
+      "path": "one-shot-one-kill.json"
+    },
+    {
+      "id": "8r9ePG6BnrnO6YE1",
+      "name": "Only You and I",
+      "type": "action",
+      "level": 0,
+      "path": "only-you-and-i.json"
+    },
+    {
+      "id": "EfjoIuDmtUn4yiow",
+      "name": "Opportune Riposte",
+      "type": "action",
+      "level": 0,
+      "path": "opportune-riposte.json"
+    },
+    {
+      "id": "bUgSKcdHyEKbtXhl",
+      "name": "Opportunistic Accusation",
+      "type": "action",
+      "level": 0,
+      "path": "opportunistic-accusation.json"
+    },
+    {
+      "id": "QGeA2sPtDdryTpWw",
+      "name": "Overawe Crowd",
+      "type": "action",
+      "level": 0,
+      "path": "overawe-crowd.json"
+    },
+    {
+      "id": "3D9kGfwg4LUZBR9A",
+      "name": "Overdrive",
+      "type": "action",
+      "level": 0,
+      "path": "overdrive.json"
+    },
+    {
+      "id": "ZJcc7KGOEsYvN6SE",
+      "name": "Overload Vision",
+      "type": "action",
+      "level": 0,
+      "path": "overload-vision.json"
+    },
+    {
+      "id": "zUWj4zmBNWOTzeFJ",
+      "name": "Overwhelming Combination",
+      "type": "action",
+      "level": 0,
+      "path": "overwhelming-combination.json"
+    },
+    {
+      "id": "oAGawsNqr6FfMrSG",
+      "name": "Pacifying Infusion",
+      "type": "action",
+      "level": 0,
+      "path": "pacifying-infusion.json"
+    },
+    {
+      "id": "ZC4SuXmL79N9VVIW",
+      "name": "Patron's Claim",
+      "type": "action",
+      "level": 0,
+      "path": "patrons-claim.json"
+    },
+    {
+      "id": "VBwNo2Wbfd4n4Y3g",
+      "name": "Patron's Presence",
+      "type": "action",
+      "level": 0,
+      "path": "patrons-presence.json"
+    },
+    {
+      "id": "2EE4aF4SZpYf0R6H",
+      "name": "Pick a Lock",
+      "type": "action",
+      "level": 0,
+      "path": "pick-a-lock.json"
+    },
+    {
+      "id": "bCDMuu3tE4d6KHrJ",
+      "name": "Pistolero's Retort",
+      "type": "action",
+      "level": 0,
+      "path": "pistoleros-retort.json"
+    },
+    {
+      "id": "ri6ZVR7nhFOvZfVa",
+      "name": "Pitch-Perfect Projection",
+      "type": "action",
+      "level": 0,
+      "path": "pitch-perfect-projection.json"
+    },
+    {
+      "id": "cfQb0mBbyrjhyGf5",
+      "name": "Plant Thirty Barbs",
+      "type": "action",
+      "level": 0,
+      "path": "plant-thirty-barbs.json"
+    },
+    {
+      "id": "XiiR6WwfTcwIUvHG",
+      "name": "Plummeting Roll",
+      "type": "action",
+      "level": 0,
+      "path": "plummeting-roll.json"
+    },
+    {
+      "id": "xccOiNL2W1EtfUYl",
+      "name": "Pointed Question",
+      "type": "action",
+      "level": 0,
+      "path": "pointed-question.json"
+    },
+    {
+      "id": "CIqiFw9rqYnuzggq",
+      "name": "Practical Research",
+      "type": "action",
+      "level": 0,
+      "path": "practical-research.json"
+    },
+    {
+      "id": "wnZhAUiYcs2mv8sZ",
+      "name": "Primal Howl",
+      "type": "action",
+      "level": 0,
+      "path": "primal-howl.json"
+    },
+    {
+      "id": "kbUymGTjbesOKsV6",
+      "name": "Primal Roar",
+      "type": "action",
+      "level": 0,
+      "path": "primal-roar.json"
+    },
+    {
+      "id": "vdnuczo4ktS7ow7N",
+      "name": "Prophecy's Pawn",
+      "type": "action",
+      "level": 0,
+      "path": "prophecys-pawn.json"
+    },
+    {
+      "id": "Ma93dpT4K7JbP9gu",
+      "name": "Prove Peace",
+      "type": "action",
+      "level": 0,
+      "path": "prove-peace.json"
+    },
+    {
+      "id": "iTx0vXAhiS4lKwEi",
+      "name": "Psychic Defense",
+      "type": "action",
+      "level": 0,
+      "path": "psychic-defense.json"
+    },
+    {
+      "id": "jZQoAHmGJvi53NRR",
+      "name": "Psychometric Assessment",
+      "type": "action",
+      "level": 0,
+      "path": "psychometric-assessment.json"
+    },
+    {
+      "id": "xTK2zsWFyxSJvYbX",
+      "name": "Pursue a Lead",
+      "type": "action",
+      "level": 0,
+      "path": "pursue-a-lead.json"
+    },
+    {
+      "id": "yzNJgwzV9XqEhKc6",
+      "name": "Quick Alchemy",
+      "type": "action",
+      "level": 0,
+      "path": "quick-alchemy.json"
+    },
+    {
+      "id": "a9PzINjFTO5GvAJN",
+      "name": "Quick-Tempered",
+      "type": "action",
+      "level": 0,
+      "path": "quick-tempered.json"
+    },
+    {
+      "id": "QHFMeJGzFWj2QczA",
+      "name": "Quick Tincture",
+      "type": "action",
+      "level": 0,
+      "path": "quick-tincture.json"
+    },
+    {
+      "id": "MrTULCUsE9naPxXg",
+      "name": "Race the Skies",
+      "type": "action",
+      "level": 0,
+      "path": "race-the-skies.json"
+    },
+    {
+      "id": "RADNqsvAt4gP9FOX",
+      "name": "Raconteur's Reload",
+      "type": "action",
+      "level": 0,
+      "path": "raconteurs-reload.json"
+    },
+    {
+      "id": "Ah5g9pDwWF9b9VW9",
+      "name": "Rage",
+      "type": "action",
+      "level": 0,
+      "path": "rage.json"
+    },
+    {
+      "id": "MLOkyKi1Y3N6y56Q",
+      "name": "Raise Neck",
+      "type": "action",
+      "level": 0,
+      "path": "raise-neck.json"
+    },
+    {
+      "id": "0VwLAKI7QP6mib88",
+      "name": "Raise Slabs",
+      "type": "action",
+      "level": 0,
+      "path": "raise-slabs.json"
+    },
+    {
+      "id": "IBEbFlMmDbGsrN4G",
+      "name": "Raise the Walls",
+      "type": "action",
+      "level": 0,
+      "path": "raise-the-walls.json"
+    },
+    {
+      "id": "xJEkXFJgEfEida27",
+      "name": "Rally",
+      "type": "action",
+      "level": 0,
+      "path": "rally.json"
+    },
+    {
+      "id": "FkfWKq9jhhPzKAbb",
+      "name": "Rampaging Ferocity",
+      "type": "action",
+      "level": 0,
+      "path": "rampaging-ferocity.json"
+    },
+    {
+      "id": "CLX9WEYXdntl2wrt",
+      "name": "Reactive Falsehood",
+      "type": "action",
+      "level": 0,
+      "path": "reactive-falsehood.json"
+    },
+    {
+      "id": "KAVf7AmRnbCAHrkT",
+      "name": "Reactive Strike",
+      "type": "action",
+      "level": 0,
+      "path": "reactive-strike.json"
+    },
+    {
+      "id": "24k7qCV8S95yYK3y",
+      "name": "Reap the Field",
+      "type": "action",
+      "level": 0,
+      "path": "reap-the-field.json"
+    },
+    {
+      "id": "OqKYkzbc7NEWmJWB",
+      "name": "Rearrange Bones",
+      "type": "action",
+      "level": 0,
+      "path": "rearrange-bones.json"
+    },
+    {
+      "id": "DYn1igFjCGJEiP22",
+      "name": "Recall Ammunition",
+      "type": "action",
+      "level": 0,
+      "path": "recall-ammunition.json"
+    },
+    {
+      "id": "kRxWINkrHUPSHHYq",
+      "name": "Recall the Teachings",
+      "type": "action",
+      "level": 0,
+      "path": "recall-the-teachings.json"
+    },
+    {
+      "id": "lH3mlvs1rCyXw6iY",
+      "name": "Recall Under Pressure",
+      "type": "action",
+      "level": 0,
+      "path": "recall-under-pressure.json"
+    },
+    {
+      "id": "5p2AMqM9bOVnhwPT",
+      "name": "Recenter",
+      "type": "action",
+      "level": 0,
+      "path": "recenter.json"
+    },
+    {
+      "id": "rqT4LMH7qbfyScBi",
+      "name": "Reclaim Destiny",
+      "type": "action",
+      "level": 0,
+      "path": "reclaim-destiny.json"
+    },
+    {
+      "id": "QIrJJ1pl4H6DctaQ",
+      "name": "Reconnoiter",
+      "type": "action",
+      "level": 0,
+      "path": "reconnoiter.json"
+    },
+    {
+      "id": "OSefkMgojBLqmRDh",
+      "name": "Refocus",
+      "type": "action",
+      "level": 0,
+      "path": "refocus.json"
+    },
+    {
+      "id": "I08t3hnpMZSRX5Ug",
+      "name": "Rejoin in Flight",
+      "type": "action",
+      "level": 0,
+      "path": "rejoin-in-flight.json"
+    },
+    {
+      "id": "jSC5AYEfliOPpO3H",
+      "name": "Reloading Strike",
+      "type": "action",
+      "level": 0,
+      "path": "reloading-strike.json"
+    },
+    {
+      "id": "OQaFzDtVEOMWizJJ",
+      "name": "Repeat a Spell",
+      "type": "action",
+      "level": 0,
+      "path": "repeat-a-spell.json"
+    },
+    {
+      "id": "SN3sVsU7rD2eBfkf",
+      "name": "Repel Ambient Magic",
+      "type": "action",
+      "level": 0,
+      "path": "repel-ambient-magic.json"
+    },
+    {
+      "id": "t5nBkpjroaq7QBGK",
+      "name": "Research",
+      "type": "action",
+      "level": 0,
+      "path": "research.json"
+    },
+    {
+      "id": "On5CQjX4euWqToly",
+      "name": "Resist Elf Magic",
+      "type": "action",
+      "level": 0,
+      "path": "resist-elf-magic.json"
+    },
+    {
+      "id": "XeZwXzR1KBlJF770",
+      "name": "Resist Magic",
+      "type": "action",
+      "level": 0,
+      "path": "resist-magic.json"
+    },
+    {
+      "id": "jjxxWxnlEqWjTUur",
+      "name": "Restorative Teleportation",
+      "type": "action",
+      "level": 0,
+      "path": "restorative-teleportation.json"
+    },
+    {
+      "id": "XkrN7gxdRXTYYBkX",
+      "name": "Restore the Mind",
+      "type": "action",
+      "level": 0,
+      "path": "restore-the-mind.json"
+    },
+    {
+      "id": "24PSsn1SKpUwYA1X",
+      "name": "Retraining",
+      "type": "action",
+      "level": 0,
+      "path": "retraining.json"
+    },
+    {
+      "id": "EAP98XaChJEbgKcK",
+      "name": "Retributive Strike",
+      "type": "action",
+      "level": 0,
+      "path": "retributive-strike.json"
+    },
+    {
+      "id": "SNjmjFw30KQxIP4A",
+      "name": "Rewrite Fate",
+      "type": "action",
+      "level": 0,
+      "path": "rewrite-fate.json"
+    },
+    {
+      "id": "ublVm5gmCIm3eRdQ",
+      "name": "Ring Bell",
+      "type": "action",
+      "level": 0,
+      "path": "ring-bell.json"
+    },
+    {
+      "id": "mBqZ2IahMT9Jvo7k",
+      "name": "Ringing Challenge",
+      "type": "action",
+      "level": 0,
+      "path": "ringing-challenge.json"
+    },
+    {
+      "id": "SowCo0BXngrpatgn",
+      "name": "Royal Grace",
+      "type": "action",
+      "level": 0,
+      "path": "royal-grace.json"
+    },
+    {
+      "id": "lID4rJHAVZB6tavf",
+      "name": "Run Over",
+      "type": "action",
+      "level": 0,
+      "path": "run-over.json"
+    },
+    {
+      "id": "b6CanpXyUKJgxEwq",
+      "name": "Salt Wound",
+      "type": "action",
+      "level": 0,
+      "path": "salt-wound.json"
+    },
+    {
+      "id": "EcDcowQ8vS6cEfXd",
+      "name": "Scout Location",
+      "type": "action",
+      "level": 0,
+      "path": "scout-location.json"
+    },
+    {
+      "id": "kV3XM0YJeS2KCSOb",
+      "name": "Scout",
+      "type": "action",
+      "level": 0,
+      "path": "scout.json"
+    },
+    {
+      "id": "XH133DE3daobeav1",
+      "name": "Screaming Skull",
+      "type": "action",
+      "level": 0,
+      "path": "screaming-skull.json"
+    },
+    {
+      "id": "TiNDYUGlMmxzxBYU",
+      "name": "Search",
+      "type": "action",
+      "level": 0,
+      "path": "search.json"
+    },
+    {
+      "id": "iEYZ5PAim5Cvbila",
+      "name": "Secure Disguises",
+      "type": "action",
+      "level": 0,
+      "path": "secure-disguises.json"
+    },
+    {
+      "id": "nSTMF6kYIt6rXhJx",
+      "name": "Seething Frenzy",
+      "type": "action",
+      "level": 0,
+      "path": "seething-frenzy.json"
+    },
+    {
+      "id": "enQieRrITuEQZxx2",
+      "name": "Selfish Shield",
+      "type": "action",
+      "level": 0,
+      "path": "selfish-shield.json"
+    },
+    {
+      "id": "uWTQxEOj2pl45Kns",
+      "name": "Sense Weakness",
+      "type": "action",
+      "level": 0,
+      "path": "sense-weakness.json"
+    },
+    {
+      "id": "vvYsE7OiSSCXhPdr",
+      "name": "Set Explosives",
+      "type": "action",
+      "level": 0,
+      "path": "set-explosives.json"
+    },
+    {
+      "id": "vFaNE7s7vFs9BxJW",
+      "name": "Set Free",
+      "type": "action",
+      "level": 0,
+      "path": "set-free.json"
+    },
+    {
+      "id": "EhLvRWFKhZ3HtrZO",
+      "name": "Settle Emotions",
+      "type": "action",
+      "level": 0,
+      "path": "settle-emotions.json"
+    },
+    {
+      "id": "VCUz5EnBUJF07j1a",
+      "name": "Sever Conduit",
+      "type": "action",
+      "level": 0,
+      "path": "sever-conduit.json"
+    },
+    {
+      "id": "XFdTDDAPO7U0r4Et",
+      "name": "Sever Four Dragonfly Wings",
+      "type": "action",
+      "level": 0,
+      "path": "sever-four-dragonfly-wings.json"
+    },
+    {
+      "id": "VQ5OxaDKE0lCj8Mr",
+      "name": "Shadow Step",
+      "type": "action",
+      "level": 0,
+      "path": "shadow-step.json"
+    },
+    {
+      "id": "wGTHH6v25CDavO6g",
+      "name": "Shake It Off",
+      "type": "action",
+      "level": 0,
+      "path": "shake-it-off.json"
+    },
+    {
+      "id": "MY6z2b4GPhAD2Eoa",
+      "name": "Share Life",
+      "type": "action",
+      "level": 0,
+      "path": "share-life.json"
+    },
+    {
+      "id": "3ZzoI9MTtJFd1Kjl",
+      "name": "Share Senses",
+      "type": "action",
+      "level": 0,
+      "path": "share-senses.json"
+    },
+    {
+      "id": "Xj3LvT3I78cVwzer",
+      "name": "Shatter Glass",
+      "type": "action",
+      "level": 0,
+      "path": "shatter-glass.json"
+    },
+    {
+      "id": "uruoG0PuuA0CqEG7",
+      "name": "Shed Spirit",
+      "type": "action",
+      "level": 0,
+      "path": "shed-spirit.json"
+    },
+    {
+      "id": "rU3CE5niG8vHc5x4",
+      "name": "Shed the Mortal Skin",
+      "type": "action",
+      "level": 0,
+      "path": "shed-the-mortal-skin.json"
+    },
+    {
+      "id": "yOk8s1pftOe5I9Sg",
+      "name": "Shielding Wave",
+      "type": "action",
+      "level": 0,
+      "path": "shielding-wave.json"
+    },
+    {
+      "id": "9cGJBXSJW6EpgibP",
+      "name": "Shift Immanence",
+      "type": "action",
+      "level": 0,
+      "path": "shift-immanence.json"
+    },
+    {
+      "id": "A4L90h7FIgO5EyBx",
+      "name": "Siegebreaker",
+      "type": "action",
+      "level": 0,
+      "path": "siegebreaker.json"
+    },
+    {
+      "id": "MHLuKy4nQO2Z4Am1",
+      "name": "Administer First Aid",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/administer-first-aid.json"
+    },
+    {
+      "id": "M76ycLAqHoAgbcej",
+      "name": "Balance",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/balance.json"
+    },
+    {
+      "id": "OizxuPb44g3eHPFh",
+      "name": "Borrow an Arcane Spell",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/borrow-an-arcane-spell.json"
+    },
+    {
+      "id": "pprgrYQ1QnIDGZiy",
+      "name": "Climb",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/climb.json"
+    },
+    {
+      "id": "tHCqgwjtQtzNqVvd",
+      "name": "Coerce",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/coerce.json"
+    },
+    {
+      "id": "q9nbyIF0PEBqMtYe",
+      "name": "Command an Animal",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/command-an-animal.json"
+    },
+    {
+      "id": "qVNVSmsgpKFGk9hV",
+      "name": "Conceal an Object",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/conceal-an-object.json"
+    },
+    {
+      "id": "SB7cMECVtE06kByk",
+      "name": "Cover Tracks",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/cover-tracks.json"
+    },
+    {
+      "id": "rmwa3OyhTZ2i2AHl",
+      "name": "Craft",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/craft.json"
+    },
+    {
+      "id": "GkmbTGfg8KcgynOA",
+      "name": "Create a Diversion",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/create-a-diversion.json"
+    },
+    {
+      "id": "ftG89SjTSa9DYDOD",
+      "name": "Create Forgery",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/create-forgery.json"
+    },
+    {
+      "id": "d9gbpiQjChYDYA2L",
+      "name": "Decipher Writing",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/decipher-writing.json"
+    },
+    {
+      "id": "2u915NdUyQan6uKF",
+      "name": "Demoralize",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/demoralize.json"
+    },
+    {
+      "id": "Dt6B1slsBy8ipJu9",
+      "name": "Disarm",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/disarm.json"
+    },
+    {
+      "id": "QyzlsLrqM0EEwd7j",
+      "name": "Earn Income",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/earn-income.json"
+    },
+    {
+      "id": "QNAVeNKtHA0EUw4X",
+      "name": "Feint",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/feint.json"
+    },
+    {
+      "id": "SjmKHgI7a5Z9JzBx",
+      "name": "Force Open",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/force-open.json"
+    },
+    {
+      "id": "plBGdZhqq5JBl1D8",
+      "name": "Gather Information",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/gather-information.json"
+    },
+    {
+      "id": "PMbdMWc2QroouFGD",
+      "name": "Grapple",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/grapple.json"
+    },
+    {
+      "id": "XMcnh4cSI32tljXa",
+      "name": "Hide",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/hide.json"
+    },
+    {
+      "id": "2HJ4yuEFY1Cast4h",
+      "name": "High Jump",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/high-jump.json"
+    },
+    {
+      "id": "Q4kdWVOf2ztIBFg1",
+      "name": "Identify Alchemy",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/identify-alchemy.json"
+    },
+    {
+      "id": "eReSHVEPCsdkSL4G",
+      "name": "Identify Magic",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/identify-magic.json"
+    },
+    {
+      "id": "AJstokjdG6iDjVjE",
+      "name": "Impersonate",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/impersonate.json"
+    },
+    {
+      "id": "Q5iIYCFdqJFM31GW",
+      "name": "Learn a Spell",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/learn-a-spell.json"
+    },
+    {
+      "id": "ewwCglB7XOPLUz72",
+      "name": "Lie",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/lie.json"
+    },
+    {
+      "id": "JUvAvruz7yRQXfz2",
+      "name": "Long Jump",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/long-jump.json"
+    },
+    {
+      "id": "OX4fy22hQgUHDr0q",
+      "name": "Make an Impression",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/make-an-impression.json"
+    },
+    {
+      "id": "Qf1ylAbdVi1rkc8M",
+      "name": "Maneuver in Flight",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/maneuver-in-flight.json"
+    },
+    {
+      "id": "ijZ0DDFpMkWqaShd",
+      "name": "Palm an Object",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/palm-an-object.json"
+    },
+    {
+      "id": "EEDElIyin4z60PXx",
+      "name": "Perform",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/perform.json"
+    },
+    {
+      "id": "1OagaWtBpVXExToo",
+      "name": "Recall Knowledge",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/recall-knowledge.json"
+    },
+    {
+      "id": "bT3skovyLUtP22ME",
+      "name": "Repair",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/repair.json"
+    },
+    {
+      "id": "lOE4yjUnETTdaf2T",
+      "name": "Reposition",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/reposition.json"
+    },
+    {
+      "id": "DCb62iCBrJXy0Ik6",
+      "name": "Request",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/request.json"
+    },
+    {
+      "id": "fJImDBQfqfjKJOhk",
+      "name": "Sense Direction",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/sense-direction.json"
+    },
+    {
+      "id": "7blmbDrQFNfdT731",
+      "name": "Shove",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/shove.json"
+    },
+    {
+      "id": "VMozDqMMuK5kpoX4",
+      "name": "Sneak",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/sneak.json"
+    },
+    {
+      "id": "kMcV8e5EZUxa6evt",
+      "name": "Squeeze",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/squeeze.json"
+    },
+    {
+      "id": "RDXXE7wMrSPCLv5k",
+      "name": "Steal",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/steal.json"
+    },
+    {
+      "id": "49y9Ec4bDii8pcD3",
+      "name": "Subsist",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/subsist.json"
+    },
+    {
+      "id": "c8TGiZ48ygoSPofx",
+      "name": "Swim",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/swim.json"
+    },
+    {
+      "id": "EA5vuSgJfiHH7plD",
+      "name": "Track",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/track.json"
+    },
+    {
+      "id": "TC7OcDa7JlWbqMaN",
+      "name": "Treat Disease",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/treat-disease.json"
+    },
+    {
+      "id": "KjoCEEmPGTeFE4hh",
+      "name": "Treat Poison",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/treat-poison.json"
+    },
+    {
+      "id": "1kGNdIIhuglAjIp9",
+      "name": "Treat Wounds",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/treat-wounds.json"
+    },
+    {
+      "id": "ge56Lu1xXVFYUnLP",
+      "name": "Trip",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/trip.json"
+    },
+    {
+      "id": "21WIfSu7Xd7uKqV8",
+      "name": "Tumble Through",
+      "type": "action",
+      "level": 0,
+      "path": "skill-actions/tumble-through.json"
+    },
+    {
+      "id": "exuTl8tvVlewxVGJ",
+      "name": "Skirt the Underworld",
+      "type": "action",
+      "level": 0,
+      "path": "skirt-the-underworld.json"
+    },
+    {
+      "id": "JpcegMRqdizrkG0m",
+      "name": "Slayer's Identification",
+      "type": "action",
+      "level": 0,
+      "path": "slayers-identification.json"
+    },
+    {
+      "id": "pTHMZLqWDJ3lkan9",
+      "name": "Smoke Blending",
+      "type": "action",
+      "level": 0,
+      "path": "smoke-blending.json"
+    },
+    {
+      "id": "mVscmsZWWcVACdU5",
+      "name": "Soaring Flight",
+      "type": "action",
+      "level": 0,
+      "path": "soaring-flight.json"
+    },
+    {
+      "id": "tHHpBREXDaafK3TF",
+      "name": "Spasm of the Berserker",
+      "type": "action",
+      "level": 0,
+      "path": "spasm-of-the-berserker.json"
+    },
+    {
+      "id": "plLX3yDcKo2YiJ0j",
+      "name": "Speed of Arms",
+      "type": "action",
+      "level": 0,
+      "path": "speed-of-arms.json"
+    },
+    {
+      "id": "3MiV0maH8imtnVwS",
+      "name": "Spell-Woven Shot",
+      "type": "action",
+      "level": 0,
+      "path": "spell-woven-shot.json"
+    },
+    {
+      "id": "VNuOwXIHafSLHvsZ",
+      "name": "Spellsling",
+      "type": "action",
+      "level": 0,
+      "path": "spellsling.json"
+    },
+    {
+      "id": "QDW9H8XLIjuW2fE4",
+      "name": "Spellstrike",
+      "type": "action",
+      "level": 0,
+      "path": "spellstrike.json"
+    },
+    {
+      "id": "hPZQ5vA9QHEPtjFW",
+      "name": "Spin Tale",
+      "type": "action",
+      "level": 0,
+      "path": "spin-tale.json"
+    },
+    {
+      "id": "6OZfIjiPjWTIe7Pr",
+      "name": "Spinning Crush",
+      "type": "action",
+      "level": 0,
+      "path": "spinning-crush.json"
+    },
+    {
+      "id": "am7GMqh4t7m7bbaW",
+      "name": "Spirit Sanctification",
+      "type": "action",
+      "level": 0,
+      "path": "spirit-sanctification.json"
+    },
+    {
+      "id": "SPtzUNatWJvTK61y",
+      "name": "Spirit's Mercy",
+      "type": "action",
+      "level": 0,
+      "path": "spirits-mercy.json"
+    },
+    {
+      "id": "GmqHs4NEhAjqyAze",
+      "name": "Spiritual Aid",
+      "type": "action",
+      "level": 0,
+      "path": "spiritual-aid.json"
+    },
+    {
+      "id": "dwA0wfUaRf4aT0eB",
+      "name": "Spit Ambient Magic",
+      "type": "action",
+      "level": 0,
+      "path": "spit-ambient-magic.json"
+    },
+    {
+      "id": "Ssp7CCGMJhcAfeYw",
+      "name": "Spread Realm",
+      "type": "action",
+      "level": 0,
+      "path": "spread-realm.json"
+    },
+    {
+      "id": "DFRLID6lIRw7CzOT",
+      "name": "Spring the Trap",
+      "type": "action",
+      "level": 0,
+      "path": "spring-the-trap.json"
+    },
+    {
+      "id": "M4ALaFXoQDJGxSsI",
+      "name": "Starlit Transformation",
+      "type": "action",
+      "level": 0,
+      "path": "starlit-transformation.json"
+    },
+    {
+      "id": "D2PNfIw7U6Ks0VY4",
+      "name": "Steel Your Resolve",
+      "type": "action",
+      "level": 0,
+      "path": "steel-your-resolve.json"
+    },
+    {
+      "id": "GPd3hmyUSbcSBj39",
+      "name": "Stellar Misfortune",
+      "type": "action",
+      "level": 0,
+      "path": "stellar-misfortune.json"
+    },
+    {
+      "id": "PTEiTXsObvtke43x",
+      "name": "Stitching Strike",
+      "type": "action",
+      "level": 0,
+      "path": "stitching-strike.json"
+    },
+    {
+      "id": "k5S2a2a6o2GS5l01",
+      "name": "Stonestrike Stance",
+      "type": "action",
+      "level": 0,
+      "path": "stonestrike-stance.json"
+    },
+    {
+      "id": "9gDMkIfDifh61yLz",
+      "name": "Stop",
+      "type": "action",
+      "level": 0,
+      "path": "stop.json"
+    },
+    {
+      "id": "VPl4pifKcq7ecK87",
+      "name": "Stridulating Song",
+      "type": "action",
+      "level": 0,
+      "path": "stridulating-song.json"
+    },
+    {
+      "id": "oaJeGdGPmHiNT5mP",
+      "name": "Strike, Breathe, Rend",
+      "type": "action",
+      "level": 0,
+      "path": "strike-breathe-rend.json"
+    },
+    {
+      "id": "sL1J8cFwpy1lI359",
+      "name": "Study",
+      "type": "action",
+      "level": 0,
+      "path": "study.json"
+    },
+    {
+      "id": "NdMSHDtV9G7MbdP2",
+      "name": "Survive the Wilds",
+      "type": "action",
+      "level": 0,
+      "path": "survive-the-wilds.json"
+    },
+    {
+      "id": "UqUDWO0TuSzEAKpw",
+      "name": "Sustain an Effect",
+      "type": "action",
+      "level": 0,
+      "path": "sustain-an-effect.json"
+    },
+    {
+      "id": "E48YTUyreo1kc9GM",
+      "name": "Swarm Forth",
+      "type": "action",
+      "level": 0,
+      "path": "swarm-forth.json"
+    },
+    {
+      "id": "cyl7y8GcGjd8ENC7",
+      "name": "Swift Choreography",
+      "type": "action",
+      "level": 0,
+      "path": "swift-choreography.json"
+    },
+    {
+      "id": "Gu0QsFvWoR9EP5SE",
+      "name": "Swirl Crimson Shroud",
+      "type": "action",
+      "level": 0,
+      "path": "swirl-crimson-shroud.json"
+    },
+    {
+      "id": "KInVpdfrxg0AqjRt",
+      "name": "Tactical Retreat",
+      "type": "action",
+      "level": 0,
+      "path": "tactical-retreat.json"
+    },
+    {
+      "id": "ev8OHpBO3xq3Zt08",
+      "name": "Tail Toxin",
+      "type": "action",
+      "level": 0,
+      "path": "tail-toxin.json"
+    },
+    {
+      "id": "qc0VsZ0UesnurUUB",
+      "name": "Take a Breather",
+      "type": "action",
+      "level": 0,
+      "path": "take-a-breather.json"
+    },
+    {
+      "id": "aHE92WSosMDewe33",
+      "name": "Take a Taste",
+      "type": "action",
+      "level": 0,
+      "path": "take-a-taste.json"
+    },
+    {
+      "id": "yh9O9BQjwWrAIiuf",
+      "name": "Take Control",
+      "type": "action",
+      "level": 0,
+      "path": "take-control.json"
+    },
+    {
+      "id": "IR95FFdO7MtC8C0E",
+      "name": "Talon Stance",
+      "type": "action",
+      "level": 0,
+      "path": "talon-stance.json"
+    },
+    {
+      "id": "gxtq81VAhpmNvEgA",
+      "name": "Tap Ley Line",
+      "type": "action",
+      "level": 0,
+      "path": "tap-ley-line.json"
+    },
+    {
+      "id": "jsEBrm8SPcsokJLw",
+      "name": "Tap the Past",
+      "type": "action",
+      "level": 0,
+      "path": "tap-the-past.json"
+    },
+    {
+      "id": "Q8H3lBgiUyGvZYTM",
+      "name": "Telekinetic Assault",
+      "type": "action",
+      "level": 0,
+      "path": "telekinetic-assault.json"
+    },
+    {
+      "id": "W87FYSsY21BFQWNU",
+      "name": "Tell Me More",
+      "type": "action",
+      "level": 0,
+      "path": "tell-me-more.json"
+    },
+    {
+      "id": "EeM0Czaep7G5ZSh5",
+      "name": "Ten Paces",
+      "type": "action",
+      "level": 0,
+      "path": "ten-paces.json"
+    },
+    {
+      "id": "5HZ4cYDowUw2oUbZ",
+      "name": "Tenacious Stance",
+      "type": "action",
+      "level": 0,
+      "path": "tenacious-stance.json"
+    },
+    {
+      "id": "YpuEmI1fJBZD3kMc",
+      "name": "Tendril Strike",
+      "type": "action",
+      "level": 0,
+      "path": "tendril-strike.json"
+    },
+    {
+      "id": "kUME7DMhhHH6eIiH",
+      "name": "That's My Number",
+      "type": "action",
+      "level": 0,
+      "path": "thats-my-number.json"
+    },
+    {
+      "id": "cx5tBTy6weK6YSw9",
+      "name": "Thermal Eruption",
+      "type": "action",
+      "level": 0,
+      "path": "thermal-eruption.json"
+    },
+    {
+      "id": "9kIvFxA5V9rvNWiH",
+      "name": "Thoughtful Reload",
+      "type": "action",
+      "level": 0,
+      "path": "thoughtful-reload.json"
+    },
+    {
+      "id": "W4M8L9WepGLamlHs",
+      "name": "Threatening Approach",
+      "type": "action",
+      "level": 0,
+      "path": "threatening-approach.json"
+    },
+    {
+      "id": "6SAdjml3OZw0BZnn",
+      "name": "Thundering Roar",
+      "type": "action",
+      "level": 0,
+      "path": "thundering-roar.json"
+    },
+    {
+      "id": "gohBPHf4dxi4PkBk",
+      "name": "Timely Dodge",
+      "type": "action",
+      "level": 0,
+      "path": "timely-dodge.json"
+    },
+    {
+      "id": "Ypwa9HIw7uXdt25D",
+      "name": "Topple the Pillar of Heaven",
+      "type": "action",
+      "level": 0,
+      "path": "topple-the-pillar-of-heaven.json"
+    },
+    {
+      "id": "WpCs3QmPVn8SRbXy",
+      "name": "Touch and Go",
+      "type": "action",
+      "level": 0,
+      "path": "touch-and-go.json"
+    },
+    {
+      "id": "kKKHwVUnroKuAnOt",
+      "name": "Toxic Skin",
+      "type": "action",
+      "level": 0,
+      "path": "toxic-skin.json"
+    },
+    {
+      "id": "Rp7gcG6Mxasurr8o",
+      "name": "Toxic Touch",
+      "type": "action",
+      "level": 0,
+      "path": "toxic-touch.json"
+    },
+    {
+      "id": "97jWk4XbIrGQK4Cp",
+      "name": "Transform Ammunition",
+      "type": "action",
+      "level": 0,
+      "path": "transform-ammunition.json"
+    },
+    {
+      "id": "Z8aa6afUterlfh5i",
+      "name": "Travel",
+      "type": "action",
+      "level": 0,
+      "path": "travel.json"
+    },
+    {
+      "id": "kWrks0NxMQH39JHD",
+      "name": "Trench Digging",
+      "type": "action",
+      "level": 0,
+      "path": "trench-digging.json"
+    },
+    {
+      "id": "pn557VVMaNJyq0jX",
+      "name": "True Shapeshift",
+      "type": "action",
+      "level": 0,
+      "path": "true-shapeshift.json"
+    },
+    {
+      "id": "5g0gCXJnUVipYtW0",
+      "name": "Turn Aside Ambient Magic",
+      "type": "action",
+      "level": 0,
+      "path": "turn-aside-ambient-magic.json"
+    },
+    {
+      "id": "cwBsPU24715fUCub",
+      "name": "Ultimatum of Liberation",
+      "type": "action",
+      "level": 0,
+      "path": "ultimatum-of-liberation.json"
+    },
+    {
+      "id": "7GeguyqyD1TjoC4r",
+      "name": "Unleash Psyche",
+      "type": "action",
+      "level": 0,
+      "path": "unleash-psyche.json"
+    },
+    {
+      "id": "mpFTlTGmPBKXMq2C",
+      "name": "Unleash Realm",
+      "type": "action",
+      "level": 0,
+      "path": "unleash-realm.json"
+    },
+    {
+      "id": "KofrLYBif2QKyiqe",
+      "name": "Unwavering Resilience",
+      "type": "action",
+      "level": 0,
+      "path": "unwavering-resilience.json"
+    },
+    {
+      "id": "F0JgJR2rXKOg9k1z",
+      "name": "Upstage",
+      "type": "action",
+      "level": 0,
+      "path": "upstage.json"
+    },
+    {
+      "id": "B7wDxyjX66JkiCOV",
+      "name": "Venom Draw",
+      "type": "action",
+      "level": 0,
+      "path": "venom-draw.json"
+    },
+    {
+      "id": "JAka1VWMPGOm5JpR",
+      "name": "Verdant Rest",
+      "type": "action",
+      "level": 0,
+      "path": "verdant-rest.json"
+    },
+    {
+      "id": "iJLzVonevhsi2uPs",
+      "name": "Visions of Sin",
+      "type": "action",
+      "level": 0,
+      "path": "visions-of-sin.json"
+    },
+    {
+      "id": "vO0Y1dVjNfbDyT4S",
+      "name": "Vital Shot",
+      "type": "action",
+      "level": 0,
+      "path": "vital-shot.json"
+    },
+    {
+      "id": "7pdG8l9POMK76Lf2",
+      "name": "Warding Sign",
+      "type": "action",
+      "level": 0,
+      "path": "warding-sign.json"
+    },
+    {
+      "id": "eBgO5gp5kKhGtmk9",
+      "name": "Water Transfer",
+      "type": "action",
+      "level": 0,
+      "path": "water-transfer.json"
+    },
+    {
+      "id": "tu5viJZT4zFE1sYn",
+      "name": "Whirlwind Maul",
+      "type": "action",
+      "level": 0,
+      "path": "whirlwind-maul.json"
+    },
+    {
+      "id": "ncdryKskPwHMgHFh",
+      "name": "Wicked Thorns",
+      "type": "action",
+      "level": 0,
+      "path": "wicked-thorns.json"
+    },
+    {
+      "id": "UyMkWfVqdabLTgkH",
+      "name": "Wind Them Up",
+      "type": "action",
+      "level": 0,
+      "path": "wind-them-up.json"
+    },
+    {
+      "id": "N6U02s9qJKQIvmQd",
+      "name": "Wish for Luck",
+      "type": "action",
+      "level": 0,
+      "path": "wish-for-luck.json"
+    },
+    {
+      "id": "OJ9cIvPukPT0rppR",
+      "name": "Wyrm's Breath",
+      "type": "action",
+      "level": 0,
+      "path": "wyrms-breath.json"
+    }
+  ]
+}

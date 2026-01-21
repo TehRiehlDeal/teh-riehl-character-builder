@@ -1,0 +1,1370 @@
+<script lang="ts">
+	import { character } from '$lib/stores/character';
+	import { getBuilderDataContext } from '$lib/contexts/builderDataContext.svelte';
+	import type { Ancestry, Heritage, Background, Class, Feat } from '$lib/data/types/app';
+	import AncestrySelector from '$lib/components/wizard/AncestrySelector.svelte';
+	import HeritageSelector from '$lib/components/wizard/HeritageSelector.svelte';
+	import BackgroundSelector from '$lib/components/wizard/BackgroundSelector.svelte';
+	import ClassSelector from '$lib/components/wizard/ClassSelector.svelte';
+	import AbilityBoostSelector from '$lib/components/wizard/AbilityBoostSelector.svelte';
+	import AbilityScoreManager from '$lib/components/wizard/AbilityScoreManager.svelte';
+	import SkillSelector from '$lib/components/wizard/SkillSelector.svelte';
+	import FeatPicker from '$lib/components/features/FeatPicker.svelte';
+
+	// Get shared data from context (loaded once in layout)
+	const builderData = getBuilderDataContext();
+
+	let selectedAncestry: Ancestry | null = $state(null);
+	let selectedHeritage: Heritage | null = $state(null);
+	let selectedBackground: Background | null = $state(null);
+	let selectedClass: Class | null = $state(null);
+	let ancestryAbilityBoosts: (string | null)[] = $state([]);
+	let backgroundAbilityBoosts: (string | null)[] = $state([null, null]);
+	let selectedKeyAbility: string | null = $state(null);
+	let freeAbilityBoosts: (string | null)[] = $state([null, null, null, null]);
+	let trainedSkills: string[] = $state([]);
+	let heritageChoices: Record<string, string> = $state({}); // Key: flag name, Value: selected value
+	let hasRestoredData = $state(false);
+
+	// Restore character selections reactively when data becomes available
+	$effect(() => {
+		// Wait for critical data to load
+		if (builderData.criticalDataLoading || hasRestoredData) return;
+		if (builderData.ancestries.length === 0) return;
+
+		const currentChar = $character;
+
+		// Restore Phase 1 selections (ancestries, backgrounds, classes)
+		if (currentChar.ancestry.name && !selectedAncestry) {
+			selectedAncestry = builderData.ancestries.find((a) => a.name === currentChar.ancestry.name) || null;
+		}
+		if (currentChar.background.name && !selectedBackground) {
+			selectedBackground =
+				builderData.backgrounds.find((b) => b.name === currentChar.background.name) || null;
+		}
+		if (currentChar.class.name && !selectedClass) {
+			selectedClass = builderData.classes.find((c) => c.name === currentChar.class.name) || null;
+		}
+		if (currentChar.class.keyAbility && !selectedKeyAbility) {
+			selectedKeyAbility = currentChar.class.keyAbility;
+		}
+
+		// Restore ancestry ability boosts
+		if (currentChar.ruleSelections && selectedAncestry && ancestryAbilityBoosts.length === 0) {
+			const freeBoosts = selectedAncestry.boosts.filter((b) => b.free || b.options.length > 1);
+			const ancestryBoosts: (string | null)[] = new Array(freeBoosts.length).fill(null);
+			for (let i = 0; i < freeBoosts.length; i++) {
+				const saved = currentChar.ruleSelections[`ancestry-boost-${i}`];
+				ancestryBoosts[i] = typeof saved === 'string' ? saved : null;
+			}
+			if (ancestryBoosts.some((b) => b !== null)) {
+				ancestryAbilityBoosts = ancestryBoosts;
+			}
+		}
+
+		// Restore background ability boosts
+		if (currentChar.ruleSelections && selectedBackground) {
+			const bgBoosts: (string | null)[] = [
+				(typeof currentChar.ruleSelections['background-boost-0'] === 'string' ? currentChar.ruleSelections['background-boost-0'] : null),
+				(typeof currentChar.ruleSelections['background-boost-1'] === 'string' ? currentChar.ruleSelections['background-boost-1'] : null)
+			];
+			if (bgBoosts.some((b) => b !== null)) {
+				backgroundAbilityBoosts = bgBoosts;
+			}
+		}
+
+		// Restore free ability boosts and trained skills
+		if (currentChar.ruleSelections) {
+			const boosts: (string | null)[] = [
+				(typeof currentChar.ruleSelections['free-boost-0'] === 'string' ? currentChar.ruleSelections['free-boost-0'] : null),
+				(typeof currentChar.ruleSelections['free-boost-1'] === 'string' ? currentChar.ruleSelections['free-boost-1'] : null),
+				(typeof currentChar.ruleSelections['free-boost-2'] === 'string' ? currentChar.ruleSelections['free-boost-2'] : null),
+				(typeof currentChar.ruleSelections['free-boost-3'] === 'string' ? currentChar.ruleSelections['free-boost-3'] : null)
+			];
+			if (boosts.some((b) => b !== null)) {
+				freeAbilityBoosts = boosts;
+			}
+
+			// Restore trained skills
+			if (currentChar.ruleSelections['trained-skills']) {
+				const skills = currentChar.ruleSelections['trained-skills'];
+				if (typeof skills === 'string') {
+					trainedSkills = skills.split(',').filter(Boolean);
+				} else if (Array.isArray(skills)) {
+					trainedSkills = skills;
+				}
+			}
+		}
+
+		hasRestoredData = true;
+	});
+
+	// Re-apply class proficiencies if they're missing (migration for older characters)
+	$effect(() => {
+		if (!selectedClass) return;
+
+		const currentChar = $character;
+
+		// Check if saves are all 0 (meaning they weren't set from class)
+		const savesNotSet = currentChar.saves.fortitude === 0 &&
+			currentChar.saves.reflex === 0 &&
+			currentChar.saves.will === 0;
+
+		// If saves aren't set, apply them from the class
+		if (savesNotSet && selectedClass && selectedClass.proficiencies) {
+			// Capture selectedClass in a variable to narrow the type for the callback
+			const classProfs = selectedClass.proficiencies;
+			character.update((char) => ({
+				...char,
+				saves: {
+					fortitude: classProfs.fortitude,
+					reflex: classProfs.reflex,
+					will: classProfs.will
+				},
+				perception: classProfs.perception
+			}));
+		}
+	});
+
+	// Re-apply skill proficiencies from trained skills (migration for older characters)
+	$effect(() => {
+		if (trainedSkills.length === 0) return;
+
+		const currentChar = $character;
+
+		// Check if all skills are 0 (meaning they weren't set)
+		const allSkillsUntrained = Object.values(currentChar.skills).every(rank => rank === 0);
+
+		// If all skills are untrained but we have trained skills selected, apply them
+		if (allSkillsUntrained) {
+			character.update((char) => {
+				const updatedSkills = { ...char.skills };
+
+				// Set selected skills to trained (rank 1)
+				trainedSkills.forEach(skill => {
+					const skillKey = skill.toLowerCase();
+					if (updatedSkills.hasOwnProperty(skillKey)) {
+						updatedSkills[skillKey] = 1;
+					}
+				});
+
+				return {
+					...char,
+					skills: updatedSkills
+				};
+			});
+		}
+	});
+
+	// Restore heritage selections when heritage data loads
+	$effect(() => {
+		if (builderData.heritagesLoading) return;
+		if (builderData.heritages.length === 0) return;
+
+		const currentChar = $character;
+
+		// Restore heritage selection
+		if (currentChar.ancestry.heritage && !selectedHeritage) {
+			selectedHeritage =
+				builderData.heritages.find((h) => h.name === currentChar.ancestry.heritage) || null;
+		}
+
+		// Restore heritage choices
+		if (selectedHeritage && currentChar.ruleSelections && Object.keys(heritageChoices).length === 0) {
+			const choices: Record<string, string> = {};
+			for (const key in currentChar.ruleSelections) {
+				if (key.startsWith('heritage-')) {
+					const flag = key.replace('heritage-', '');
+					const value = currentChar.ruleSelections[key];
+					if (typeof value === 'string') {
+						choices[flag] = value;
+					}
+				}
+			}
+			if (Object.keys(choices).length > 0) {
+				heritageChoices = choices;
+			}
+		}
+	});
+
+	// Filter heritages based on selected ancestry
+	const availableHeritages = $derived.by(() => {
+		if (!selectedAncestry) return [];
+		const ancestry = selectedAncestry;
+		return builderData.heritages.filter((h) => h.ancestry === ancestry.name);
+	});
+
+	// Filter ancestry feats based on selected ancestry
+	// Uses pre-filtered ancestry feats from context for better performance
+	const ancestryFeats = $derived.by(() => {
+		if (!selectedAncestry) return [];
+		const ancestrySlug = selectedAncestry.name.toLowerCase();
+		const charLevel = $character.level;
+		return builderData.getAncestryFeats().filter(
+			(feat) =>
+				feat.level <= charLevel &&
+				feat.traits.includes(ancestrySlug)
+		);
+	});
+
+	// Filter class feats based on selected class
+	// Uses pre-filtered class feats from context for better performance
+	const classFeats = $derived.by(() => {
+		if (!selectedClass) return [];
+		const classSlug = selectedClass.name.toLowerCase();
+		const charLevel = $character.level;
+		return builderData.getClassFeats().filter(
+			(feat) =>
+				feat.level <= charLevel &&
+				feat.traits.includes(classSlug)
+		);
+	});
+
+	function handleAncestrySelect(ancestry: Ancestry) {
+		selectedAncestry = ancestry;
+		selectedHeritage = null; // Reset heritage when ancestry changes
+
+		// Initialize ancestry ability boosts array (for free/choice boosts)
+		const freeBoosts = ancestry.boosts.filter((b) => b.free || b.options.length > 1);
+		ancestryAbilityBoosts = new Array(freeBoosts.length).fill(null);
+
+		// Update character store
+		character.update((char) => ({
+			...char,
+			ancestry: {
+				id: ancestry.id,
+				name: ancestry.name,
+				heritage: null
+			},
+			abilities: {
+				...char.abilities
+				// Ability boosts will be applied in the ability score section
+			}
+		}));
+	}
+
+	function handleAncestryAbilityBoost(index: number, ability: string) {
+		// Create a new array to trigger reactivity
+		const newBoosts = [...ancestryAbilityBoosts];
+		newBoosts[index] = ability;
+		ancestryAbilityBoosts = newBoosts;
+
+		// Update character store with rule selections
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				[`ancestry-boost-${index}`]: ability
+			}
+		}));
+	}
+
+	function handleHeritageSelect(heritage: Heritage) {
+		selectedHeritage = heritage;
+
+		// Reset heritage choices when changing heritage
+		heritageChoices = {};
+
+		// Update character store
+		character.update((char) => ({
+			...char,
+			ancestry: {
+				...char.ancestry,
+				heritage: heritage.name
+			}
+		}));
+	}
+
+	function handleHeritageChoiceSelect(flag: string, value: string) {
+		// Update local state with new array reference for reactivity
+		heritageChoices = {
+			...heritageChoices,
+			[flag]: value
+		};
+
+		// Update character store
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				[`heritage-${flag}`]: value
+			}
+		}));
+	}
+
+	function handleAncestryFeatSelect(feat: Feat) {
+		// Remove existing level 1 ancestry feat if any
+		const existingFeat = $character.feats.ancestry.find((f) => f.level === 1);
+		if (existingFeat) {
+			character.removeFeat('ancestry', existingFeat.featId);
+		}
+
+		// Add new feat at level 1
+		character.addFeat('ancestry', 1, feat.id, feat.name);
+	}
+
+	function handleClassFeatSelect(feat: Feat) {
+		// Remove existing level 1 class feat if any
+		const existingFeat = $character.feats.class.find((f) => f.level === 1);
+		if (existingFeat) {
+			character.removeFeat('class', existingFeat.featId);
+		}
+
+		// Add new feat at level 1
+		character.addFeat('class', 1, feat.id, feat.name);
+	}
+
+	function handleBackgroundSelect(background: Background) {
+		selectedBackground = background;
+		backgroundAbilityBoosts = [null, null]; // Reset ability boosts
+
+		// Update character store
+		character.update((char) => ({
+			...char,
+			background: {
+				id: background.id,
+				name: background.name
+			}
+		}));
+	}
+
+	function handleBackgroundAbilityBoost(index: number, ability: string) {
+		backgroundAbilityBoosts[index] = ability;
+
+		// Update character store with rule selections
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				[`background-boost-${index}`]: ability
+			}
+		}));
+	}
+
+	// Ability name mapping from short form to full name
+	const abilityNameMap: Record<string, string> = {
+		str: 'Strength',
+		dex: 'Dexterity',
+		con: 'Constitution',
+		int: 'Intelligence',
+		wis: 'Wisdom',
+		cha: 'Charisma'
+	};
+
+	// Get available abilities for a background boost
+	function getAvailableAbilities(boost: { index: number; options: string[]; free: boolean }): string[] {
+		// If it's a free boost (all 6 options), return all abilities
+		if (boost.free || boost.options.length === 6) {
+			return ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
+		}
+
+		// Otherwise map the short form options to full names
+		return boost.options.map((opt) => abilityNameMap[opt.toLowerCase()] || opt);
+	}
+
+	function handleClassSelect(cls: Class) {
+		selectedClass = cls;
+		selectedKeyAbility = null; // Reset key ability when class changes
+
+		// Update character store with class information and proficiencies
+		character.update((char) => ({
+			...char,
+			class: {
+				id: cls.id,
+				name: cls.name,
+				subclass: null,
+				keyAbility: null
+			},
+			// Apply class saving throw proficiencies
+			saves: {
+				fortitude: cls.proficiencies.fortitude,
+				reflex: cls.proficiencies.reflex,
+				will: cls.proficiencies.will
+			},
+			// Apply class perception proficiency
+			perception: cls.proficiencies.perception,
+			// Apply class HP per level
+			hp: {
+				...char.hp,
+				max: cls.hp + Math.floor((char.abilities.constitution - 10) / 2)
+			}
+		}));
+	}
+
+	function handleKeyAbilitySelect(ability: string) {
+		selectedKeyAbility = ability;
+
+		// Update character store
+		character.update((char) => ({
+			...char,
+			class: {
+				...char.class,
+				keyAbility: ability
+			}
+		}));
+	}
+
+	// Check if key ability needs to be selected
+	const needsKeyAbilitySelection = $derived.by(() => {
+		if (!selectedClass) return false;
+		return selectedClass.keyAbility.length > 1;
+	});
+
+	function handleFreeBoostsChange(boosts: (string | null)[]) {
+		freeAbilityBoosts = boosts;
+
+		// Update character store with free boost selections
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				'free-boost-0': boosts[0] || '',
+				'free-boost-1': boosts[1] || '',
+				'free-boost-2': boosts[2] || '',
+				'free-boost-3': boosts[3] || ''
+			}
+		}));
+	}
+
+	function handleTrainedSkillsChange(skills: string[]) {
+		trainedSkills = skills;
+
+		// Update character store with skill proficiencies
+		character.update((char) => {
+			// Create updated skills object with trained proficiencies
+			const updatedSkills = { ...char.skills };
+
+			// Reset all skills to untrained first
+			Object.keys(updatedSkills).forEach(key => {
+				updatedSkills[key] = 0;
+			});
+
+			// Set selected skills to trained (rank 1)
+			skills.forEach(skill => {
+				const skillKey = skill.toLowerCase();
+				updatedSkills[skillKey] = 1;
+			});
+
+			return {
+				...char,
+				skills: updatedSkills,
+				ruleSelections: {
+					...char.ruleSelections,
+					'trained-skills': skills.join(',')
+				}
+			};
+		});
+	}
+
+	function handleResetAll() {
+		// Confirm before resetting
+		const confirmed = confirm(
+			'Are you sure you want to reset all character creation choices? This action cannot be undone.'
+		);
+
+		if (!confirmed) return;
+
+		// Reset all local state
+		selectedAncestry = null;
+		selectedHeritage = null;
+		selectedBackground = null;
+		selectedClass = null;
+		ancestryAbilityBoosts = [];
+		backgroundAbilityBoosts = [null, null];
+		selectedKeyAbility = null;
+		freeAbilityBoosts = [null, null, null, null];
+		trainedSkills = [];
+		heritageChoices = {};
+
+		// Reset character store to default state
+		character.update((char) => ({
+			...char,
+			name: '',
+			level: 1,
+			ancestry: {
+				id: '',
+				name: '',
+				heritage: null
+			},
+			background: {
+				id: '',
+				name: ''
+			},
+			class: {
+				id: '',
+				name: '',
+				subclass: null,
+				keyAbility: null
+			},
+			ruleSelections: {},
+			feats: {
+				ancestry: [],
+				class: [],
+				general: [],
+				skill: []
+			}
+		}));
+
+		// Reset the hasRestoredData flag so restoration doesn't interfere
+		hasRestoredData = false;
+	}
+
+	// Calculate final ability scores for skill modifier calculations
+	const calculatedAbilityScores = $derived.by(() => {
+		const BASE_SCORE = 10;
+		const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
+
+		const scores: Record<string, number> = {};
+
+		for (const ability of ABILITIES) {
+			let score = BASE_SCORE;
+
+			// Apply ancestry boosts
+			if (selectedAncestry && selectedAncestry.boosts) {
+				// Apply fixed boosts (single option)
+				for (const boost of selectedAncestry.boosts) {
+					if (!boost.free && boost.options.length === 1) {
+						// Fixed boost to a specific ability
+						const boostAbility = boost.options[0].toLowerCase();
+						const normalizedAbility = ability.toLowerCase();
+						if (
+							boostAbility === normalizedAbility ||
+							boostAbility === normalizedAbility.substring(0, 3)
+						) {
+							score += 2;
+						}
+					}
+				}
+
+				// Apply selected free/choice boosts
+				const ancestryBoosts = ancestryAbilityBoosts.filter((b) => b === ability).length;
+				score += ancestryBoosts * 2;
+			}
+
+			// Apply ancestry flaws
+			if (selectedAncestry && selectedAncestry.flaws) {
+				for (const flaw of selectedAncestry.flaws) {
+					// Flaws are typically fixed to one ability
+					const flawAbility = flaw.options[0].toLowerCase();
+					const normalizedAbility = ability.toLowerCase();
+					if (
+						flawAbility === normalizedAbility ||
+						flawAbility === normalizedAbility.substring(0, 3)
+					) {
+						score -= 2;
+					}
+				}
+			}
+
+			// Apply background boosts
+			const bgBoosts = backgroundAbilityBoosts.filter((b) => b === ability).length;
+			score += bgBoosts * 2;
+
+			// Apply class key ability boost
+			if (selectedKeyAbility === ability) {
+				score += 2;
+			}
+
+			// Apply free boosts
+			const freeBoosts = freeAbilityBoosts.filter((b) => b === ability).length;
+			score += freeBoosts * 2;
+
+			scores[ability] = score;
+		}
+
+		return scores;
+	});
+
+	// Update character abilities whenever calculated scores change
+	$effect(() => {
+		const scores = calculatedAbilityScores;
+
+		// Update the character store with calculated ability scores
+		character.update((char) => ({
+			...char,
+			abilities: {
+				strength: scores['Strength'] || 10,
+				dexterity: scores['Dexterity'] || 10,
+				constitution: scores['Constitution'] || 10,
+				intelligence: scores['Intelligence'] || 10,
+				wisdom: scores['Wisdom'] || 10,
+				charisma: scores['Charisma'] || 10
+			}
+		}));
+	});
+
+	// Derive heritage skills from heritage choices
+	const heritageSkills = $derived.by(() => {
+		const skills: string[] = [];
+
+		// Check if heritage has skill choices and if they're selected
+		if (selectedHeritage && selectedHeritage.benefits.choices.length > 0) {
+			for (const choice of selectedHeritage.benefits.choices) {
+				if (choice.config === 'skills' && choice.flag) {
+					const selectedSkill = heritageChoices[choice.flag];
+					if (selectedSkill) {
+						// Capitalize the skill name to match the expected format
+						const capitalizedSkill = selectedSkill.charAt(0).toUpperCase() + selectedSkill.slice(1);
+						skills.push(capitalizedSkill);
+					}
+				}
+			}
+		}
+
+		return skills;
+	});
+
+	// Helper to get readable label from prompt (handles Foundry localization keys)
+	function getChoicePromptLabel(prompt: string, config?: string, itemType?: string): string {
+		// If it's a Foundry localization key (starts with PF2E.), provide fallback
+		if (prompt && prompt.startsWith('PF2E.')) {
+			if (config === 'skills') {
+				return 'Choose a Skill';
+			}
+			if (itemType === 'feat') {
+				return 'Choose a Feat';
+			}
+			// Add more config-specific fallbacks as needed
+			return 'Make a Choice';
+		}
+		return prompt || 'Make a Choice';
+	}
+
+	// Filter feats based on heritage choice criteria
+	// Optimized to use pre-filtered feat arrays from context
+	function filterFeatsForChoice(filter: string[]): Feat[] {
+		if (!filter || filter.length === 0) return builderData.feats;
+
+		// Determine which pre-filtered array to start with based on category filter
+		let baseFeats = builderData.feats;
+		let categoryFilter: string | null = null;
+
+		// Extract category filter first to use cached arrays
+		for (const condition of filter) {
+			if (condition.startsWith('item:category:')) {
+				categoryFilter = condition.replace('item:category:', '');
+				break;
+			}
+		}
+
+		// Use pre-filtered arrays for better performance
+		if (categoryFilter === 'general') {
+			baseFeats = builderData.getGeneralFeats();
+		} else if (categoryFilter === 'class') {
+			baseFeats = builderData.getClassFeats();
+		} else if (categoryFilter === 'ancestry') {
+			baseFeats = builderData.getAncestryFeats();
+		} else if (categoryFilter === 'skill') {
+			baseFeats = builderData.getSkillFeats();
+		}
+
+		// Apply remaining filters
+		return baseFeats.filter((feat) => {
+			for (const condition of filter) {
+				// Skip category filter as we already applied it
+				if (condition.startsWith('item:category:')) continue;
+
+				// Parse filter format: "item:property:value"
+				if (condition.startsWith('item:trait:')) {
+					const traitValue = condition.replace('item:trait:', '');
+					if (!feat.traits.includes(traitValue)) return false;
+				} else if (condition.startsWith('item:level:')) {
+					const levelValue = parseInt(condition.replace('item:level:', ''), 10);
+					if (feat.level > levelValue) return false;
+				}
+			}
+			return true;
+		});
+	}
+</script>
+
+<svelte:head>
+	<title>General - Character Builder</title>
+</svelte:head>
+
+<div class="page-content">
+	<header class="page-header">
+		<div class="header-content">
+			<div class="header-text">
+				<h1 class="page-title">General Information</h1>
+				<p class="page-description">
+					Set your character's name, ancestry, background, and class.
+				</p>
+			</div>
+			<button
+				type="button"
+				class="reset-button"
+				onclick={handleResetAll}
+				aria-label="Reset all character creation choices"
+				title="Reset all choices"
+			>
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path
+						d="M3 12C3 7.02944 7.02944 3 12 3C14.3887 3 16.5656 3.92064 18.2072 5.42551M21 12C21 16.9706 16.9706 21 12 21C9.61133 21 7.43436 20.0794 5.79282 18.5745"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+					/>
+					<path
+						d="M3 7V12H8M21 17V12H16"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				<span class="reset-text">Reset All</span>
+			</button>
+		</div>
+	</header>
+
+	<div class="content-sections">
+		<section class="content-section" aria-labelledby="character-basics">
+			<h2 id="character-basics" class="section-title">Character Basics</h2>
+			<div class="section-body">
+				<div class="form-field">
+					<label for="character-name" class="field-label">Character Name</label>
+					<input
+						id="character-name"
+						type="text"
+						bind:value={$character.name}
+						placeholder="Enter character name"
+						class="text-input"
+					/>
+				</div>
+
+				<div class="form-field">
+					<label for="character-level" class="field-label">Level</label>
+					<input
+						id="character-level"
+						type="number"
+						bind:value={$character.level}
+						min="1"
+						max="20"
+						class="number-input"
+					/>
+				</div>
+			</div>
+		</section>
+
+		<section class="content-section" aria-labelledby="ancestry-selection">
+			<h2 id="ancestry-selection" class="section-title">Ancestry</h2>
+			<div class="section-body">
+				{#if builderData.criticalDataLoading}
+					<p class="loading-text">Loading ancestries...</p>
+				{:else if builderData.ancestries.length > 0}
+					<AncestrySelector
+						ancestries={builderData.ancestries}
+						selectedAncestry={selectedAncestry}
+						onSelect={handleAncestrySelect}
+					/>
+
+					{#if selectedAncestry}
+						{@const freeBoosts = selectedAncestry.boosts.filter((b) => b.free || b.options.length > 1)}
+						{#if freeBoosts.length > 0}
+							<div class="subsection">
+								<h3 class="subsection-title">Ability Boosts</h3>
+								<p class="subsection-description">
+									Choose your ability boosts from your ancestry. Some ancestries provide specific
+									ability boosts, while others let you choose freely.
+								</p>
+
+								<div class="ability-boost-grid">
+									{#each freeBoosts as boost, index}
+									{@const availableAbilities = getAvailableAbilities({ ...boost, index })}
+									{#if availableAbilities.length > 0}
+										<AbilityBoostSelector
+											label="Boost {index + 1}"
+											description={availableAbilities.length === 1
+												? 'This boost is predetermined by your ancestry'
+												: 'Choose any ability score to boost'}
+											{availableAbilities}
+											selectedAbility={ancestryAbilityBoosts[index]}
+											onSelect={(ability) => handleAncestryAbilityBoost(index, ability)}
+											required={true}
+										/>
+									{/if}
+									{/each}
+								</div>
+							</div>
+						{/if}
+
+						<div class="subsection">
+							{#if builderData.heritagesLoading}
+								<div class="loading-container">
+									<p class="loading-text">Loading heritages...</p>
+									<p class="loading-subtext">This will only take a moment</p>
+								</div>
+							{:else}
+								<HeritageSelector
+									heritages={availableHeritages}
+									selectedHeritage={selectedHeritage}
+									onSelect={handleHeritageSelect}
+								/>
+							{/if}
+						</div>
+
+						{#if selectedHeritage && selectedHeritage.benefits.choices.length > 0}
+							<div class="subsection">
+								<h3 class="subsection-title">Heritage Choices</h3>
+								<p class="subsection-description">
+									Your heritage grants you special choices. Make your selections below.
+								</p>
+								{#each selectedHeritage.benefits.choices as choice, index}
+									{#if choice.config === 'skills' && choice.flag}
+										<div class="heritage-choice">
+											<label for="heritage-skill-{choice.flag}" class="choice-label">
+												{getChoicePromptLabel(choice.prompt, choice.config)}:
+											</label>
+											<select
+												id="heritage-skill-{choice.flag}"
+												class="choice-select"
+												value={heritageChoices[choice.flag] || ''}
+												onchange={(e) => handleHeritageChoiceSelect(choice.flag!, e.currentTarget.value)}
+											>
+												<option value="">-- Select a skill --</option>
+												{#each choice.choices as skillChoice}
+													<option value={skillChoice.value}>
+														{skillChoice.label}
+													</option>
+												{/each}
+											</select>
+										</div>
+									{:else if choice.itemType === 'feat' && choice.flag}
+										<div class="heritage-choice">
+											<label for="heritage-feat-{choice.flag}" class="choice-label">
+												{getChoicePromptLabel(choice.prompt, choice.config, choice.itemType)}:
+											</label>
+											{#if builderData.featsLoading}
+												<select id="heritage-feat-{choice.flag}" class="choice-select" disabled>
+													<option value="">Loading feats...</option>
+												</select>
+											{:else}
+												{@const availableFeats = filterFeatsForChoice(choice.filter || [])}
+												<select
+													id="heritage-feat-{choice.flag}"
+													class="choice-select"
+													value={heritageChoices[choice.flag] || ''}
+													onchange={(e) => handleHeritageChoiceSelect(choice.flag!, e.currentTarget.value)}
+												>
+													<option value="">-- Select a feat --</option>
+													{#each availableFeats as feat}
+														<option value="Compendium.pf2e.feats-srd.Item.{feat.id}">
+															{feat.name}
+															{#if feat.level > 0}(Level {feat.level}){/if}
+														</option>
+													{/each}
+												</select>
+											{/if}
+										</div>
+									{:else}
+										<!-- Other choice types can be added here in the future -->
+										<div class="heritage-choice">
+											<label for="heritage-choice-{index}" class="choice-label">
+												{getChoicePromptLabel(choice.prompt, choice.config, choice.itemType)}:
+											</label>
+											<select
+												id="heritage-choice-{index}"
+												class="choice-select"
+												value={heritageChoices[choice.flag || `choice-${index}`] || ''}
+												onchange={(e) => handleHeritageChoiceSelect(choice.flag || `choice-${index}`, e.currentTarget.value)}
+											>
+												<option value="">-- Select an option --</option>
+												{#each choice.choices as optionChoice}
+													<option value={optionChoice.value}>
+														{optionChoice.label}
+													</option>
+												{/each}
+											</select>
+										</div>
+									{/if}
+								{/each}
+							</div>
+						{/if}
+
+						{#if selectedHeritage}
+							<div class="subsection">
+								<h3 class="subsection-title">Ancestry Feat</h3>
+								<p class="subsection-description">
+									Choose an ancestry feat. This represents special training or abilities from your
+									heritage.
+								</p>
+								{#if builderData.featsLoading}
+									<div class="loading-container">
+										<p class="loading-text">Loading feats...</p>
+										<p class="loading-subtext">Ancestry and class feats are loading in the background</p>
+									</div>
+								{:else}
+									<div class="feat-picker-container">
+										<FeatPicker
+											feats={ancestryFeats}
+											selectedFeatId={$character.feats.ancestry[0]?.featId}
+											characterLevel={$character.level}
+											filterCategory="ancestry"
+											filterLevel={1}
+											onSelect={handleAncestryFeatSelect}
+										/>
+									</div>
+								{/if}
+							</div>
+						{/if}
+					{/if}
+				{:else}
+					<p class="error-text">Failed to load ancestries. Please try again.</p>
+				{/if}
+			</div>
+		</section>
+
+		<section class="content-section" aria-labelledby="background-selection">
+			<h2 id="background-selection" class="section-title">Background</h2>
+			<div class="section-body">
+				{#if builderData.criticalDataLoading}
+					<p class="loading-text">Loading backgrounds...</p>
+				{:else if builderData.backgrounds.length > 0}
+					<BackgroundSelector
+						backgrounds={builderData.backgrounds}
+						{selectedBackground}
+						onSelect={handleBackgroundSelect}
+					/>
+
+					{#if selectedBackground}
+						<div class="subsection">
+							<h3 class="subsection-title">Ability Boosts</h3>
+							<p class="subsection-description">
+								Choose your ability boosts from your background. Some backgrounds provide specific
+								ability boosts, while others let you choose freely.
+							</p>
+
+							{#if selectedBackground.boosts && selectedBackground.boosts.length > 0}
+								<div class="ability-boost-grid">
+									{#each selectedBackground.boosts as boost, index}
+									{@const availableAbilities = getAvailableAbilities(boost)}
+									{#if availableAbilities.length > 0}
+										<AbilityBoostSelector
+											label="Boost {index + 1}"
+											description={availableAbilities.length === 1
+												? 'This boost is predetermined by your background'
+												: 'Choose any ability score to boost'}
+											{availableAbilities}
+											selectedAbility={backgroundAbilityBoosts[index]}
+											onSelect={(ability) => handleBackgroundAbilityBoost(index, ability)}
+											required={true}
+										/>
+									{/if}
+								{/each}
+							</div>
+						{/if}
+						</div>
+					{/if}
+				{:else}
+					<p class="error-text">Failed to load backgrounds. Please try again.</p>
+				{/if}
+			</div>
+		</section>
+
+		<section class="content-section" aria-labelledby="class-selection">
+			<h2 id="class-selection" class="section-title">Class</h2>
+			<div class="section-body">
+				{#if builderData.criticalDataLoading}
+					<p class="loading-text">Loading classes...</p>
+				{:else if builderData.classes.length > 0}
+					<ClassSelector classes={builderData.classes} {selectedClass} onSelect={handleClassSelect} />
+
+					{#if selectedClass}
+						{#if needsKeyAbilitySelection}
+							<div class="subsection">
+								<h3 class="subsection-title">Key Ability</h3>
+								<p class="subsection-description">
+									Choose your key ability. At 1st level, your class gives you an ability boost to
+									your chosen key ability.
+								</p>
+
+								<AbilityBoostSelector
+									label="Select Key Ability"
+									description="This determines which ability score receives your class boost"
+									availableAbilities={selectedClass.keyAbility}
+									selectedAbility={selectedKeyAbility}
+									onSelect={handleKeyAbilitySelect}
+									required={true}
+								/>
+							</div>
+						{/if}
+
+						{#if selectedKeyAbility || !needsKeyAbilitySelection}
+							<div class="subsection">
+								<h3 class="subsection-title">Class Feat</h3>
+								<p class="subsection-description">
+									Choose a class feat. This represents specialized training in your class.
+								</p>
+								{#if builderData.featsLoading}
+									<div class="loading-container">
+										<p class="loading-text">Loading feats...</p>
+										<p class="loading-subtext">Ancestry and class feats are loading in the background</p>
+									</div>
+								{:else}
+									<div class="feat-picker-container">
+										<FeatPicker
+											feats={classFeats}
+											selectedFeatId={$character.feats.class[0]?.featId}
+											characterLevel={$character.level}
+											filterCategory="class"
+											filterLevel={1}
+											onSelect={handleClassFeatSelect}
+										/>
+									</div>
+								{/if}
+							</div>
+						{/if}
+					{/if}
+				{:else}
+					<p class="error-text">Failed to load classes. Please try again.</p>
+				{/if}
+			</div>
+		</section>
+
+		<section class="content-section" aria-labelledby="ability-scores">
+			<h2 id="ability-scores" class="section-title">Ability Scores</h2>
+			<div class="section-body">
+				<AbilityScoreManager
+					ancestry={selectedAncestry}
+					background={selectedBackground}
+					selectedClass={selectedClass}
+					keyAbility={selectedKeyAbility}
+					ancestryBoosts={ancestryAbilityBoosts}
+					backgroundBoosts={backgroundAbilityBoosts}
+					freeBoosts={freeAbilityBoosts}
+					onFreeBoostsChange={handleFreeBoostsChange}
+				/>
+			</div>
+		</section>
+
+		<section class="content-section" aria-labelledby="skills">
+			<h2 id="skills" class="section-title">Skills</h2>
+			<div class="section-body">
+				<SkillSelector
+					background={selectedBackground}
+					selectedClass={selectedClass}
+					level={$character.level}
+					abilityScores={calculatedAbilityScores}
+					{trainedSkills}
+					{heritageSkills}
+					onTrainedSkillsChange={handleTrainedSkillsChange}
+				/>
+			</div>
+		</section>
+	</div>
+</div>
+
+<style>
+	.page-content {
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.page-header {
+		margin-bottom: 2rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.header-content {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1.5rem;
+	}
+
+	.header-text {
+		flex: 1;
+	}
+
+	.page-title {
+		font-size: 2rem;
+		font-weight: 700;
+		margin: 0 0 0.5rem 0;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.page-description {
+		font-size: 1.125rem;
+		margin: 0;
+		color: var(--text-secondary, #666666);
+	}
+
+	.reset-button {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1.25rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		white-space: nowrap;
+	}
+
+	.reset-button:hover {
+		background-color: #f03e3e;
+		border-color: #f03e3e;
+		color: white;
+	}
+
+	.reset-button:focus-visible {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	.reset-button:active {
+		transform: scale(0.98);
+	}
+
+	.reset-button svg {
+		flex-shrink: 0;
+	}
+
+	.content-sections {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+
+	.content-section {
+		background-color: var(--surface-2, #f5f5f5);
+		border-radius: 8px;
+		padding: 1.5rem;
+	}
+
+	.section-title {
+		font-size: 1.5rem;
+		font-weight: 600;
+		margin: 0 0 1rem 0;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.section-body {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	/* Form fields */
+	.form-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.field-label {
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		font-size: 0.9375rem;
+	}
+
+	.text-input,
+	.number-input {
+		padding: 0.75rem 1rem;
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-size: 1rem;
+		font-family: inherit;
+		background-color: var(--surface-1, #ffffff);
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.text-input:focus,
+	.number-input:focus {
+		outline: none;
+		border-color: var(--focus-color, #5c7cfa);
+	}
+
+	.number-input {
+		width: 120px;
+	}
+
+	/* Subsections */
+	.subsection {
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--border-color, #e0e0e0);
+	}
+
+	.subsection-title {
+		margin: 0 0 0.5rem 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.subsection-description {
+		margin: 0 0 1rem 0;
+		color: var(--text-secondary, #666666);
+		line-height: 1.6;
+	}
+
+	.feat-picker-container {
+		background-color: var(--surface-1, #ffffff);
+		border-radius: 8px;
+		padding: 1rem;
+	}
+
+	.ability-boost-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.heritage-choice {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.choice-label {
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		font-size: 0.9375rem;
+	}
+
+	.choice-select {
+		padding: 0.75rem;
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		background-color: var(--surface-1, #ffffff);
+		color: var(--text-primary, #1a1a1a);
+		font-size: 1rem;
+		font-family: inherit;
+		cursor: pointer;
+		transition: border-color var(--transition-fast);
+	}
+
+	.choice-select:hover {
+		border-color: var(--link-color, #5c7cfa);
+	}
+
+	.choice-select:focus {
+		outline: none;
+		border-color: var(--link-color, #5c7cfa);
+		box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.1);
+	}
+
+	.choice-select:disabled {
+		background-color: var(--surface-2, #f5f5f5);
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	.loading-container {
+		background-color: var(--surface-1, #ffffff);
+		border-radius: 8px;
+		padding: 2rem;
+		text-align: center;
+		position: relative;
+	}
+
+	.loading-container::before {
+		content: '';
+		display: inline-block;
+		width: 24px;
+		height: 24px;
+		margin-bottom: 1rem;
+		border: 3px solid var(--border-color, #e0e0e0);
+		border-top-color: var(--link-color, #5c7cfa);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* States */
+	.loading-text,
+	.error-text {
+		margin: 0;
+		padding: 2rem;
+		text-align: center;
+		font-style: italic;
+	}
+
+	.loading-text {
+		color: var(--text-secondary, #666666);
+	}
+
+	.loading-subtext {
+		margin: 0.5rem 0 0 0;
+		padding: 0;
+		color: var(--text-tertiary, #999999);
+		font-size: 0.875rem;
+		font-style: normal;
+	}
+
+	.error-text {
+		color: #f03e3e;
+	}
+
+	@media (max-width: 768px) {
+		.page-title {
+			font-size: 1.75rem;
+		}
+
+		.page-description {
+			font-size: 1rem;
+		}
+
+		.section-title {
+			font-size: 1.25rem;
+		}
+
+		.content-section {
+			padding: 1.25rem;
+		}
+
+		.header-content {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.reset-button {
+			justify-content: center;
+		}
+
+		.reset-text {
+			display: inline;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.reset-text {
+			display: none;
+		}
+
+		.reset-button {
+			width: 48px;
+			padding: 0.75rem;
+			justify-content: center;
+			align-self: flex-end;
+		}
+
+		.header-content {
+			flex-direction: row;
+			align-items: flex-start;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reset-button {
+			transition: none;
+		}
+
+		.reset-button:active {
+			transform: none;
+		}
+	}
+</style>

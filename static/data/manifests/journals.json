@@ -1,0 +1,21 @@
+{
+  "category": "journals",
+  "generated": "2026-01-19T23:06:00.000Z",
+  "count": 2,
+  "entries": [
+    {
+      "id": "45SK8rdbbxvEHfMn",
+      "name": "Ancestries",
+      "type": "journal",
+      "level": 0,
+      "path": "ancestries.json"
+    },
+    {
+      "id": "kzxu2dI7tFxYKqFD",
+      "name": "Classes",
+      "type": "journal",
+      "level": 0,
+      "path": "classes.json"
+    }
+  ]
+}

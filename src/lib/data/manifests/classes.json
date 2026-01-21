@@ -1,0 +1,196 @@
+{
+  "category": "classes",
+  "generated": "2026-01-19T07:01:11.687Z",
+  "count": 27,
+  "entries": [
+    {
+      "id": "XwfcJuskrhI9GIjX",
+      "name": "Alchemist",
+      "type": "class",
+      "level": 0,
+      "path": "alchemist.json"
+    },
+    {
+      "id": "9KiqZVG9r5g8mC4V",
+      "name": "Animist",
+      "type": "class",
+      "level": 0,
+      "path": "animist.json"
+    },
+    {
+      "id": "YDRiP7uVvr9WRhOI",
+      "name": "Barbarian",
+      "type": "class",
+      "level": 0,
+      "path": "barbarian.json"
+    },
+    {
+      "id": "3gweRQ5gn7szIWAv",
+      "name": "Bard",
+      "type": "class",
+      "level": 0,
+      "path": "bard.json"
+    },
+    {
+      "id": "x8iwnpdLbfcoZkHA",
+      "name": "Champion",
+      "type": "class",
+      "level": 0,
+      "path": "champion.json"
+    },
+    {
+      "id": "EizrWvUPMS67Pahd",
+      "name": "Cleric",
+      "type": "class",
+      "level": 0,
+      "path": "cleric.json"
+    },
+    {
+      "id": "Oyee5Ds9uwYLEkD0",
+      "name": "Commander",
+      "type": "class",
+      "level": 0,
+      "path": "commander.json"
+    },
+    {
+      "id": "7s57JDCaiYYCAdFx",
+      "name": "Druid",
+      "type": "class",
+      "level": 0,
+      "path": "druid.json"
+    },
+    {
+      "id": "vZ0jL7pwthV2pm4A",
+      "name": "Exemplar",
+      "type": "class",
+      "level": 0,
+      "path": "exemplar.json"
+    },
+    {
+      "id": "8zn3cD6GSmoo1LW4",
+      "name": "Fighter",
+      "type": "class",
+      "level": 0,
+      "path": "fighter.json"
+    },
+    {
+      "id": "1L7geK3aoosye3Xj",
+      "name": "Guardian",
+      "type": "class",
+      "level": 0,
+      "path": "guardian.json"
+    },
+    {
+      "id": "Z9li154CPNmun29Q",
+      "name": "Gunslinger",
+      "type": "class",
+      "level": 0,
+      "path": "gunslinger.json"
+    },
+    {
+      "id": "30qVs46dVNflgQNx",
+      "name": "Inventor",
+      "type": "class",
+      "level": 0,
+      "path": "inventor.json"
+    },
+    {
+      "id": "4wrSCyX6akmyo7Wj",
+      "name": "Investigator",
+      "type": "class",
+      "level": 0,
+      "path": "investigator.json"
+    },
+    {
+      "id": "RggQN3bX5SEcsffR",
+      "name": "Kineticist",
+      "type": "class",
+      "level": 0,
+      "path": "kineticist.json"
+    },
+    {
+      "id": "HQBA9Yx2s8ycvz3C",
+      "name": "Magus",
+      "type": "class",
+      "level": 0,
+      "path": "magus.json"
+    },
+    {
+      "id": "YPxpk9JbMnKjbNLc",
+      "name": "Monk",
+      "type": "class",
+      "level": 0,
+      "path": "monk.json"
+    },
+    {
+      "id": "pWHx4SXcft9O2udP",
+      "name": "Oracle",
+      "type": "class",
+      "level": 0,
+      "path": "oracle.json"
+    },
+    {
+      "id": "Inq4gH3P5PYjSQbD",
+      "name": "Psychic",
+      "type": "class",
+      "level": 0,
+      "path": "psychic.json"
+    },
+    {
+      "id": "Yix76sfxrIlltSTJ",
+      "name": "Ranger",
+      "type": "class",
+      "level": 0,
+      "path": "ranger.json"
+    },
+    {
+      "id": "LO9STvskJemPkiAI",
+      "name": "Rogue",
+      "type": "class",
+      "level": 0,
+      "path": "rogue.json"
+    },
+    {
+      "id": "15Yc1r6s9CEhSTMe",
+      "name": "Sorcerer",
+      "type": "class",
+      "level": 0,
+      "path": "sorcerer.json"
+    },
+    {
+      "id": "YtOm245r8GFSFYeD",
+      "name": "Summoner",
+      "type": "class",
+      "level": 0,
+      "path": "summoner.json"
+    },
+    {
+      "id": "uJ5aCzlw34GGdWjp",
+      "name": "Swashbuckler",
+      "type": "class",
+      "level": 0,
+      "path": "swashbuckler.json"
+    },
+    {
+      "id": "Y5GsHqzCzJlKka6x",
+      "name": "Thaumaturge",
+      "type": "class",
+      "level": 0,
+      "path": "thaumaturge.json"
+    },
+    {
+      "id": "bYDXk9HUMKOuym9h",
+      "name": "Witch",
+      "type": "class",
+      "level": 0,
+      "path": "witch.json"
+    },
+    {
+      "id": "RwjIZzIxzPpUglnK",
+      "name": "Wizard",
+      "type": "class",
+      "level": 0,
+      "path": "wizard.json"
+    }
+  ]
+}

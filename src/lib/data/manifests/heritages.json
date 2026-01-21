@@ -1,0 +1,2254 @@
+{
+  "category": "heritages",
+  "generated": "2026-01-19T07:01:11.670Z",
+  "count": 321,
+  "entries": [
+    {
+      "id": "7gGcpQMqnZhBDZLI",
+      "name": "Adaptive Anadi",
+      "type": "heritage",
+      "level": 0,
+      "path": "anadi/adaptive-anadi.json"
+    },
+    {
+      "id": "daaXga11ov9YQVNq",
+      "name": "Polychromatic Anadi",
+      "type": "heritage",
+      "level": 0,
+      "path": "anadi/polychromatic-anadi.json"
+    },
+    {
+      "id": "cwOUw7kofcAiY01I",
+      "name": "Snaring Anadi",
+      "type": "heritage",
+      "level": 0,
+      "path": "anadi/snaring-anadi.json"
+    },
+    {
+      "id": "WxcbLvufI6JBpLt0",
+      "name": "Spindly Anadi",
+      "type": "heritage",
+      "level": 0,
+      "path": "anadi/spindly-anadi.json"
+    },
+    {
+      "id": "kTlJqhC7ZSE8P8lu",
+      "name": "Venomous Anadi",
+      "type": "heritage",
+      "level": 0,
+      "path": "anadi/venomous-anadi.json"
+    },
+    {
+      "id": "VgL18yU7pysdoZZG",
+      "name": "Artisan Android",
+      "type": "heritage",
+      "level": 0,
+      "path": "android/artisan-android.json"
+    },
+    {
+      "id": "Mmezbef0c1fbJaVV",
+      "name": "Impersonator Android",
+      "type": "heritage",
+      "level": 0,
+      "path": "android/impersonator-android.json"
+    },
+    {
+      "id": "MQx7miBXUmOHycqJ",
+      "name": "Laborer Android",
+      "type": "heritage",
+      "level": 0,
+      "path": "android/laborer-android.json"
+    },
+    {
+      "id": "BjuZKA7lzFSjKbif",
+      "name": "Polyglot Android",
+      "type": "heritage",
+      "level": 0,
+      "path": "android/polyglot-android.json"
+    },
+    {
+      "id": "RuQSx0QsirIKxwKY",
+      "name": "Warrior Android",
+      "type": "heritage",
+      "level": 0,
+      "path": "android/warrior-android.json"
+    },
+    {
+      "id": "4BczMv4EnLcgrEJE",
+      "name": "Coral Athamaru",
+      "type": "heritage",
+      "level": 0,
+      "path": "athamaru/coral-athamaru.json"
+    },
+    {
+      "id": "yEQSw61sNRvgPy4T",
+      "name": "Hopeful Athamaru",
+      "type": "heritage",
+      "level": 0,
+      "path": "athamaru/hopeful-athamaru.json"
+    },
+    {
+      "id": "1w4npGmPzgdZw3Na",
+      "name": "Kaleidoscopic Athamaru",
+      "type": "heritage",
+      "level": 0,
+      "path": "athamaru/kaleidoscopic-athamaru.json"
+    },
+    {
+      "id": "CkrTRdLfDDDUOCqP",
+      "name": "Quilled Athamaru",
+      "type": "heritage",
+      "level": 0,
+      "path": "athamaru/quilled-athamaru.json"
+    },
+    {
+      "id": "2kMltxs2rmxRSxfV",
+      "name": "Hunter Automaton",
+      "type": "heritage",
+      "level": 0,
+      "path": "automaton/hunter-automaton.json"
+    },
+    {
+      "id": "J0eAmntxXywr9sGt",
+      "name": "Mage Automaton",
+      "type": "heritage",
+      "level": 0,
+      "path": "automaton/mage-automaton.json"
+    },
+    {
+      "id": "j1nzBc9Pui7vsJ9o",
+      "name": "Sharpshooter Automaton",
+      "type": "heritage",
+      "level": 0,
+      "path": "automaton/sharpshooter-automaton.json"
+    },
+    {
+      "id": "y24ykEUfpIu5Gp6D",
+      "name": "Warrior Automaton",
+      "type": "heritage",
+      "level": 0,
+      "path": "automaton/warrior-automaton.json"
+    },
+    {
+      "id": "13vilUcBjqMV2gxP",
+      "name": "Climbing Animal",
+      "type": "heritage",
+      "level": 0,
+      "path": "awakened-animal/climbing-animal.json"
+    },
+    {
+      "id": "QZv2taQQAdeR8Vmg",
+      "name": "Flying Animal",
+      "type": "heritage",
+      "level": 0,
+      "path": "awakened-animal/flying-animal.json"
+    },
+    {
+      "id": "bsXA1l5mxNnmBh5M",
+      "name": "Running Animal",
+      "type": "heritage",
+      "level": 0,
+      "path": "awakened-animal/running-animal.json"
+    },
+    {
+      "id": "nlhVoQDfLKYM3j1l",
+      "name": "Swimming Animal",
+      "type": "heritage",
+      "level": 0,
+      "path": "awakened-animal/swimming-animal.json"
+    },
+    {
+      "id": "zPhArF36ZVgLeVUU",
+      "name": "Ancient Scale Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/ancient-scale-azarketi.json"
+    },
+    {
+      "id": "HFHSh2RWuxa4GhhQ",
+      "name": "Benthic Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/benthic-azarketi.json"
+    },
+    {
+      "id": "7ZDCShtRg5QZggrU",
+      "name": "Inured Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/inured-azarketi.json"
+    },
+    {
+      "id": "7wdeVadvchdM0aPK",
+      "name": "Mistbreath Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/mistbreath-azarketi.json"
+    },
+    {
+      "id": "MtH5bq0MhaMQbJEL",
+      "name": "Murkeyed Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/murkeyed-azarketi.json"
+    },
+    {
+      "id": "GlejQr3rBh3sn8sL",
+      "name": "River Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/river-azarketi.json"
+    },
+    {
+      "id": "9Iu1gFEuvVz9zaYU",
+      "name": "Spined Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/spined-azarketi.json"
+    },
+    {
+      "id": "S1062No0sYH35AhN",
+      "name": "Tactile Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/tactile-azarketi.json"
+    },
+    {
+      "id": "qbWaybAX1LK7kUyY",
+      "name": "Thalassic Azarketi",
+      "type": "heritage",
+      "level": 0,
+      "path": "azarketi/thalassic-azarketi.json"
+    },
+    {
+      "id": "bLhIBwqdjTiVJ5qm",
+      "name": "Clawed Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/clawed-catfolk.json"
+    },
+    {
+      "id": "TDc9MXLXkgEFoKdD",
+      "name": "Flexible Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/flexible-catfolk.json"
+    },
+    {
+      "id": "1lv7RMp7t5iqeUFT",
+      "name": "Hunting Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/hunting-catfolk.json"
+    },
+    {
+      "id": "HpqQ5VQ0w4HqYgVC",
+      "name": "Jungle Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/jungle-catfolk.json"
+    },
+    {
+      "id": "3F5ffk7cmnrBhPcT",
+      "name": "Liminal Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/liminal-catfolk.json"
+    },
+    {
+      "id": "hOPOyyt7qZXYYCOU",
+      "name": "Nine Lives Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/nine-lives-catfolk.json"
+    },
+    {
+      "id": "NWsZ0cIeghyzk9bU",
+      "name": "Sharp-Eared Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/sharp-eared-catfolk.json"
+    },
+    {
+      "id": "6dMd4JG0ndrObEUj",
+      "name": "Winter Catfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "catfolk/winter-catfolk.json"
+    },
+    {
+      "id": "1FmcZqnmDm8H0DRB",
+      "name": "Budding Speaker Centaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "centaur/budding-speaker-centaur.json"
+    },
+    {
+      "id": "z16zRyLCeTXan0Ae",
+      "name": "Fleetwind Centaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "centaur/fleetwind-centaur.json"
+    },
+    {
+      "id": "XQp3uReCgoXS8hCJ",
+      "name": "Ironhoof Centaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "centaur/ironhoof-centaur.json"
+    },
+    {
+      "id": "3aKeX3q9hRdxgP1J",
+      "name": "Mottle-Coat Centaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "centaur/mottle-coat-centaur.json"
+    },
+    {
+      "id": "2GmWdSNbH4yx9pzY",
+      "name": "Ponygait Centaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "centaur/ponygait-centaur.json"
+    },
+    {
+      "id": "raDHBXYpc2MvWWgh",
+      "name": "Stoutheart Centaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "centaur/stoutheart-centaur.json"
+    },
+    {
+      "id": "GpnHIonrLN8TFZci",
+      "name": "Rite of Invocation",
+      "type": "heritage",
+      "level": 0,
+      "path": "conrasu/rite-of-invocation.json"
+    },
+    {
+      "id": "faLb2rczsrxAuOTt",
+      "name": "Rite of Knowing",
+      "type": "heritage",
+      "level": 0,
+      "path": "conrasu/rite-of-knowing.json"
+    },
+    {
+      "id": "EoWwvDdoMqN5x0c9",
+      "name": "Rite of Light",
+      "type": "heritage",
+      "level": 0,
+      "path": "conrasu/rite-of-light.json"
+    },
+    {
+      "id": "yVtcyAbLmWCIHHZi",
+      "name": "Rite of Passage",
+      "type": "heritage",
+      "level": 0,
+      "path": "conrasu/rite-of-passage.json"
+    },
+    {
+      "id": "q2omqJ9t0skGTYki",
+      "name": "Rite of Reinforcement",
+      "type": "heritage",
+      "level": 0,
+      "path": "conrasu/rite-of-reinforcement.json"
+    },
+    {
+      "id": "Y1cG8cw4qoHR145y",
+      "name": "Fey Dragonet",
+      "type": "heritage",
+      "level": 0,
+      "path": "dragonet/fey-dragonet.json"
+    },
+    {
+      "id": "EG0zqAipDIMGBAKz",
+      "name": "Homing Drake",
+      "type": "heritage",
+      "level": 0,
+      "path": "dragonet/homing-drake.json"
+    },
+    {
+      "id": "8oqAuez98yqAgteo",
+      "name": "House Drake",
+      "type": "heritage",
+      "level": 0,
+      "path": "dragonet/house-drake.json"
+    },
+    {
+      "id": "Rz0hZM6CFvX5LnXg",
+      "name": "Pearl Dragonet",
+      "type": "heritage",
+      "level": 0,
+      "path": "dragonet/pearl-dragonet.json"
+    },
+    {
+      "id": "Qr1foFh24dkTqe1s",
+      "name": "Tidepool Dragonet",
+      "type": "heritage",
+      "level": 0,
+      "path": "dragonet/tidepool-dragonet.json"
+    },
+    {
+      "id": "yL6944LrPo2HNdEJ",
+      "name": "Ancient-Blooded Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/ancient-blooded-dwarf.json"
+    },
+    {
+      "id": "kRDsVbhdBVeSlpBa",
+      "name": "Anvil Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/anvil-dwarf.json"
+    },
+    {
+      "id": "VTtXwBxrfRUXSL38",
+      "name": "Death Warden Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/death-warden-dwarf.json"
+    },
+    {
+      "id": "MeMAAtUlZmFgKSMF",
+      "name": "Elemental Heart Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/elemental-heart-dwarf.json"
+    },
+    {
+      "id": "erZPj5701KiVAqoi",
+      "name": "Forge-Blessed Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/forge-blessed-dwarf.json"
+    },
+    {
+      "id": "5CqsBKCZuGON53Hk",
+      "name": "Forge Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/forge-dwarf.json"
+    },
+    {
+      "id": "85tRKGZUTFa6pKpG",
+      "name": "Oathkeeper Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/oathkeeper-dwarf.json"
+    },
+    {
+      "id": "VSyOvtgJ1ZNpIVgC",
+      "name": "Rock Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/rock-dwarf.json"
+    },
+    {
+      "id": "UV2sABrTC5teOXTE",
+      "name": "Strong-Blooded Dwarf",
+      "type": "heritage",
+      "level": 0,
+      "path": "dwarf/strong-blooded-dwarf.json"
+    },
+    {
+      "id": "Nd9hdX8rdYyRozw8",
+      "name": "Ancient Elf",
+      "type": "heritage",
+      "level": 0,
+      "path": "elf/ancient-elf.json"
+    },
+    {
+      "id": "1dYDucCIaZpCJqBc",
+      "name": "Arctic Elf",
+      "type": "heritage",
+      "level": 0,
+      "path": "elf/arctic-elf.json"
+    },
+    {
+      "id": "NfIAGatB1KIzt8G7",
+      "name": "Cavern Elf",
+      "type": "heritage",
+      "level": 0,
+      "path": "elf/cavern-elf.json"
+    },
+    {
+      "id": "kiKxnKd7Dfegk9dM",
+      "name": "Desert Elf",
+      "type": "heritage",
+      "level": 0,
+      "path": "elf/desert-elf.json"
+    },
+    {
+      "id": "jEtVesbqYcWGbBYk",
+      "name": "Seer Elf",
+      "type": "heritage",
+      "level": 0,
+      "path": "elf/seer-elf.json"
+    },
+    {
+      "id": "1wVDYY9Wue0G5R9Q",
+      "name": "Whisper Elf",
+      "type": "heritage",
+      "level": 0,
+      "path": "elf/whisper-elf.json"
+    },
+    {
+      "id": "nW1gi13E62Feto2w",
+      "name": "Woodland Elf",
+      "type": "heritage",
+      "level": 0,
+      "path": "elf/woodland-elf.json"
+    },
+    {
+      "id": "wHO5luJMODbDLXNi",
+      "name": "Bright Fetchling",
+      "type": "heritage",
+      "level": 0,
+      "path": "fetchling/bright-fetchling.json"
+    },
+    {
+      "id": "k4AU5tjtngDOIqrB",
+      "name": "Deep Fetchling",
+      "type": "heritage",
+      "level": 0,
+      "path": "fetchling/deep-fetchling.json"
+    },
+    {
+      "id": "PwxbD5VSJ0Yroqvp",
+      "name": "Liminal Fetchling",
+      "type": "heritage",
+      "level": 0,
+      "path": "fetchling/liminal-fetchling.json"
+    },
+    {
+      "id": "VAo6NnrCEAAOUSkc",
+      "name": "Resolute Fetchling",
+      "type": "heritage",
+      "level": 0,
+      "path": "fetchling/resolute-fetchling.json"
+    },
+    {
+      "id": "kHHcvJBJNiPJTuna",
+      "name": "Wisp Fetchling",
+      "type": "heritage",
+      "level": 0,
+      "path": "fetchling/wisp-fetchling.json"
+    },
+    {
+      "id": "PQuJEYI0UFl8W7fH",
+      "name": "Cataphract Fleshwarp",
+      "type": "heritage",
+      "level": 0,
+      "path": "fleshwarp/cataphract-fleshwarp.json"
+    },
+    {
+      "id": "iY2CCqoMc2bRdoas",
+      "name": "Created Fleshwarp",
+      "type": "heritage",
+      "level": 0,
+      "path": "fleshwarp/created-fleshwarp.json"
+    },
+    {
+      "id": "OtqOC3ElpF444qMe",
+      "name": "Discarded Fleshwarp",
+      "type": "heritage",
+      "level": 0,
+      "path": "fleshwarp/discarded-fleshwarp.json"
+    },
+    {
+      "id": "CCwTBSNTw0caN1jd",
+      "name": "Mutated Fleshwarp",
+      "type": "heritage",
+      "level": 0,
+      "path": "fleshwarp/mutated-fleshwarp.json"
+    },
+    {
+      "id": "uxtcKTkD62SmrUoh",
+      "name": "Shapewrought Fleshwarp",
+      "type": "heritage",
+      "level": 0,
+      "path": "fleshwarp/shapewrought-fleshwarp.json"
+    },
+    {
+      "id": "hzW7VoRDYsKJB8ku",
+      "name": "Surgewise Fleshwarp",
+      "type": "heritage",
+      "level": 0,
+      "path": "fleshwarp/surgewise-fleshwarp.json"
+    },
+    {
+      "id": "n2DKA0OQQcfvZRly",
+      "name": "Technological Fleshwarp",
+      "type": "heritage",
+      "level": 0,
+      "path": "fleshwarp/technological-fleshwarp.json"
+    },
+    {
+      "id": "CMf0qluB0LXWReew",
+      "name": "Ancient Ash",
+      "type": "heritage",
+      "level": 0,
+      "path": "ghoran/ancient-ash.json"
+    },
+    {
+      "id": "VqgrYMaAwnNjT9Mn",
+      "name": "Enchanting Lily",
+      "type": "heritage",
+      "level": 0,
+      "path": "ghoran/enchanting-lily.json"
+    },
+    {
+      "id": "bKr34Uvxc2XClr9q",
+      "name": "Strong Oak",
+      "type": "heritage",
+      "level": 0,
+      "path": "ghoran/strong-oak.json"
+    },
+    {
+      "id": "6KhxY5ArGFhLF7r1",
+      "name": "Thorned Rose",
+      "type": "heritage",
+      "level": 0,
+      "path": "ghoran/thorned-rose.json"
+    },
+    {
+      "id": "XeXWsvcWU3Zaj5WC",
+      "name": "Chameleon Gnome",
+      "type": "heritage",
+      "level": 0,
+      "path": "gnome/chameleon-gnome.json"
+    },
+    {
+      "id": "D3hTAqgwSank8OyO",
+      "name": "Fey-Touched Gnome",
+      "type": "heritage",
+      "level": 0,
+      "path": "gnome/fey-touched-gnome.json"
+    },
+    {
+      "id": "8Uw1E3L2Mgo6PxwB",
+      "name": "Kijimuna Gnome",
+      "type": "heritage",
+      "level": 0,
+      "path": "gnome/kijimuna-gnome.json"
+    },
+    {
+      "id": "tXC5Gwn9D5x0ouJh",
+      "name": "Sensate Gnome",
+      "type": "heritage",
+      "level": 0,
+      "path": "gnome/sensate-gnome.json"
+    },
+    {
+      "id": "d0bNxgGqvaCkFlhN",
+      "name": "Umbral Gnome",
+      "type": "heritage",
+      "level": 0,
+      "path": "gnome/umbral-gnome.json"
+    },
+    {
+      "id": "ViKRoVgog172r163",
+      "name": "Vivacious Gnome",
+      "type": "heritage",
+      "level": 0,
+      "path": "gnome/vivacious-gnome.json"
+    },
+    {
+      "id": "etkuQkjkNLPLnjkA",
+      "name": "Wellspring Gnome",
+      "type": "heritage",
+      "level": 0,
+      "path": "gnome/wellspring-gnome.json"
+    },
+    {
+      "id": "32oX6hHUY6K8N70Q",
+      "name": "Charhide Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/charhide-goblin.json"
+    },
+    {
+      "id": "gf2CfXocpIQgRsCY",
+      "name": "Dokkaebi Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/dokkaebi-goblin.json"
+    },
+    {
+      "id": "gyoN45SVfRZwHMkk",
+      "name": "Irongut Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/irongut-goblin.json"
+    },
+    {
+      "id": "a6F2WjYU8D0suT8T",
+      "name": "Razortooth Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/razortooth-goblin.json"
+    },
+    {
+      "id": "gQyPU441J3rGt8mD",
+      "name": "Snow Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/snow-goblin.json"
+    },
+    {
+      "id": "8wGUh9RsMUamOKjh",
+      "name": "Tailed Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/tailed-goblin.json"
+    },
+    {
+      "id": "EEvA4uj8h3zDiAfP",
+      "name": "Treedweller Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/treedweller-goblin.json"
+    },
+    {
+      "id": "ULj56ZoW7dWdnBvu",
+      "name": "Unbreakable Goblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "goblin/unbreakable-goblin.json"
+    },
+    {
+      "id": "6JKdAZGa8odFzleS",
+      "name": "Farsight Goloma",
+      "type": "heritage",
+      "level": 0,
+      "path": "goloma/farsight-goloma.json"
+    },
+    {
+      "id": "KJ2dSDXP9d5hJHzd",
+      "name": "Frightful Goloma",
+      "type": "heritage",
+      "level": 0,
+      "path": "goloma/frightful-goloma.json"
+    },
+    {
+      "id": "cnbwtbDmlD0KoLqY",
+      "name": "Insightful Goloma",
+      "type": "heritage",
+      "level": 0,
+      "path": "goloma/insightful-goloma.json"
+    },
+    {
+      "id": "x5S4MNQ0aqUmgHcC",
+      "name": "Vicious Goloma",
+      "type": "heritage",
+      "level": 0,
+      "path": "goloma/vicious-goloma.json"
+    },
+    {
+      "id": "sGzhnQpgWErX1bmx",
+      "name": "Vigilant Goloma",
+      "type": "heritage",
+      "level": 0,
+      "path": "goloma/vigilant-goloma.json"
+    },
+    {
+      "id": "Eq42wZ5OTweJLnLU",
+      "name": "Gutsy Halfling",
+      "type": "heritage",
+      "level": 0,
+      "path": "halfling/gutsy-halfling.json"
+    },
+    {
+      "id": "Mj7uHxxVkRUlOFwJ",
+      "name": "Hillock Halfling",
+      "type": "heritage",
+      "level": 0,
+      "path": "halfling/hillock-halfling.json"
+    },
+    {
+      "id": "G9Gwfi8ZIva52uGp",
+      "name": "Jinxed Halfling",
+      "type": "heritage",
+      "level": 0,
+      "path": "halfling/jinxed-halfling.json"
+    },
+    {
+      "id": "idGDjqi1q3Ft8bAZ",
+      "name": "Nomadic Halfling",
+      "type": "heritage",
+      "level": 0,
+      "path": "halfling/nomadic-halfling.json"
+    },
+    {
+      "id": "Lp7ywxabmm88Gei6",
+      "name": "Observant Halfling",
+      "type": "heritage",
+      "level": 0,
+      "path": "halfling/observant-halfling.json"
+    },
+    {
+      "id": "cCy8vsZENlwiAyZ6",
+      "name": "Twilight Halfling",
+      "type": "heritage",
+      "level": 0,
+      "path": "halfling/twilight-halfling.json"
+    },
+    {
+      "id": "xtRIYizCjLg9qe1Z",
+      "name": "Wildwood Halfling",
+      "type": "heritage",
+      "level": 0,
+      "path": "halfling/wildwood-halfling.json"
+    },
+    {
+      "id": "ikNJZRxUjcRLisO6",
+      "name": "Elfbane Hobgoblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "hobgoblin/elfbane-hobgoblin.json"
+    },
+    {
+      "id": "CzOHITB2ihLGqMuJ",
+      "name": "Runtboss Hobgoblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "hobgoblin/runtboss-hobgoblin.json"
+    },
+    {
+      "id": "rQJBtQ9uKUzK9ktK",
+      "name": "Shortshanks Hobgoblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "hobgoblin/shortshanks-hobgoblin.json"
+    },
+    {
+      "id": "n2eJEjA8pnOMiuCm",
+      "name": "Smokeworker Hobgoblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "hobgoblin/smokeworker-hobgoblin.json"
+    },
+    {
+      "id": "BFOsMnWfXL1oaWkY",
+      "name": "Steelskin Hobgoblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "hobgoblin/steelskin-hobgoblin.json"
+    },
+    {
+      "id": "K124fCpU03SJvmeP",
+      "name": "Warmarch Hobgoblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "hobgoblin/warmarch-hobgoblin.json"
+    },
+    {
+      "id": "0vaeOoECfVD5EGbq",
+      "name": "Warrenbred Hobgoblin",
+      "type": "heritage",
+      "level": 0,
+      "path": "hobgoblin/warrenbred-hobgoblin.json"
+    },
+    {
+      "id": "d7NC4C19AgkspQQg",
+      "name": "Battle-Trained Human (BB)",
+      "type": "heritage",
+      "level": 0,
+      "path": "human/battle-trained-human-bb.json"
+    },
+    {
+      "id": "zVf0Hlp5xG0Q7kmc",
+      "name": "Skilled Human",
+      "type": "heritage",
+      "level": 0,
+      "path": "human/skilled-human.json"
+    },
+    {
+      "id": "hFBwsVcSnNCJoimo",
+      "name": "Versatile Human",
+      "type": "heritage",
+      "level": 0,
+      "path": "human/versatile-human.json"
+    },
+    {
+      "id": "0Iv6LfT3UEt8taj5",
+      "name": "Warden Human (BB)",
+      "type": "heritage",
+      "level": 0,
+      "path": "human/warden-human-bb.json"
+    },
+    {
+      "id": "KO33MNyY9VqNQmbZ",
+      "name": "Wintertouched Human",
+      "type": "heritage",
+      "level": 0,
+      "path": "human/wintertouched-human.json"
+    },
+    {
+      "id": "m4kFMTu2sOSWgnAU",
+      "name": "Keeper Jotunborn",
+      "type": "heritage",
+      "level": 0,
+      "path": "jotunborn/keeper-jotunborn.json"
+    },
+    {
+      "id": "KDs97OkCmEYTLUp9",
+      "name": "Plane-Hopper Jotunborn",
+      "type": "heritage",
+      "level": 0,
+      "path": "jotunborn/plane-hopper-jotunborn.json"
+    },
+    {
+      "id": "NUUWs7jFwsIPmx3p",
+      "name": "Sage Jotunborn",
+      "type": "heritage",
+      "level": 0,
+      "path": "jotunborn/sage-jotunborn.json"
+    },
+    {
+      "id": "t9HOJelfwDo3RBii",
+      "name": "Warrior Jotunborn",
+      "type": "heritage",
+      "level": 0,
+      "path": "jotunborn/warrior-jotunborn.json"
+    },
+    {
+      "id": "K0NerdkFnce9KeHw",
+      "name": "Weaver Jotunborn",
+      "type": "heritage",
+      "level": 0,
+      "path": "jotunborn/weaver-jotunborn.json"
+    },
+    {
+      "id": "CnCFZfuKzAYqy61e",
+      "name": "Athamasi",
+      "type": "heritage",
+      "level": 0,
+      "path": "kashrishi/athamasi.json"
+    },
+    {
+      "id": "Csezts78L4FMaskB",
+      "name": "Lethoci",
+      "type": "heritage",
+      "level": 0,
+      "path": "kashrishi/lethoci.json"
+    },
+    {
+      "id": "pJ395g22dKNoufIK",
+      "name": "Nascent",
+      "type": "heritage",
+      "level": 0,
+      "path": "kashrishi/nascent.json"
+    },
+    {
+      "id": "AVZJI5wP2X5o0LL3",
+      "name": "Trogloshi",
+      "type": "heritage",
+      "level": 0,
+      "path": "kashrishi/trogloshi.json"
+    },
+    {
+      "id": "FLWUYM2XxYwnIDQf",
+      "name": "Xyloshi",
+      "type": "heritage",
+      "level": 0,
+      "path": "kashrishi/xyloshi.json"
+    },
+    {
+      "id": "udMXXjFirjARYr4p",
+      "name": "Ant Kholo",
+      "type": "heritage",
+      "level": 0,
+      "path": "kholo/ant-kholo.json"
+    },
+    {
+      "id": "JW45oQRHaqthjmIx",
+      "name": "Cave Kholo",
+      "type": "heritage",
+      "level": 0,
+      "path": "kholo/cave-kholo.json"
+    },
+    {
+      "id": "0B0M6CUnVDkeznRv",
+      "name": "Dog Kholo",
+      "type": "heritage",
+      "level": 0,
+      "path": "kholo/dog-kholo.json"
+    },
+    {
+      "id": "SqEcb1c3yeoJMxm0",
+      "name": "Great Kholo",
+      "type": "heritage",
+      "level": 0,
+      "path": "kholo/great-kholo.json"
+    },
+    {
+      "id": "B89BCo6LtI3SJq54",
+      "name": "Sweetbreath Kholo",
+      "type": "heritage",
+      "level": 0,
+      "path": "kholo/sweetbreath-kholo.json"
+    },
+    {
+      "id": "hwRWx3hWx8ahBdz0",
+      "name": "Winter Kholo",
+      "type": "heritage",
+      "level": 0,
+      "path": "kholo/winter-kholo.json"
+    },
+    {
+      "id": "kXp8qRh5AgtD4Izi",
+      "name": "Witch Kholo",
+      "type": "heritage",
+      "level": 0,
+      "path": "kholo/witch-kholo.json"
+    },
+    {
+      "id": "IFg2tqmAFFnU8UNU",
+      "name": "Celestial Envoy Kitsune",
+      "type": "heritage",
+      "level": 0,
+      "path": "kitsune/celestial-envoy-kitsune.json"
+    },
+    {
+      "id": "NWbdAN5gDse0ad7C",
+      "name": "Dark Fields Kitsune",
+      "type": "heritage",
+      "level": 0,
+      "path": "kitsune/dark-fields-kitsune.json"
+    },
+    {
+      "id": "Wk4HyaZtC1j221i1",
+      "name": "Earthly Wilds Kitsune",
+      "type": "heritage",
+      "level": 0,
+      "path": "kitsune/earthly-wilds-kitsune.json"
+    },
+    {
+      "id": "mBH1L01kYmB8EL56",
+      "name": "Empty Sky Kitsune",
+      "type": "heritage",
+      "level": 0,
+      "path": "kitsune/empty-sky-kitsune.json"
+    },
+    {
+      "id": "kHT9dFJt5yTjeYoB",
+      "name": "Frozen Wind Kitsune",
+      "type": "heritage",
+      "level": 0,
+      "path": "kitsune/frozen-wind-kitsune.json"
+    },
+    {
+      "id": "SienSObWb4deLQig",
+      "name": "Palace Echoes Kitsune",
+      "type": "heritage",
+      "level": 0,
+      "path": "kitsune/palace-echoes-kitsune.json"
+    },
+    {
+      "id": "5A1wMPdzN1OWE4cY",
+      "name": "Caveclimber Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/caveclimber-kobold.json"
+    },
+    {
+      "id": "35k2aujXYvqUCSS1",
+      "name": "Cavernstalker Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/cavernstalker-kobold.json"
+    },
+    {
+      "id": "P8BP1un5BTrwXoBy",
+      "name": "Dragonscaled Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/dragonscaled-kobold.json"
+    },
+    {
+      "id": "dbj1cbkYeAAdkDSM",
+      "name": "Elementheart Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/elementheart-kobold.json"
+    },
+    {
+      "id": "G61eBHmsQaPM4Xge",
+      "name": "Heavenscribe Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/heavenscribe-kobold.json"
+    },
+    {
+      "id": "SPcTcZgUMy5J4kzs",
+      "name": "Mightyfall Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/mightyfall-kobold.json"
+    },
+    {
+      "id": "VRyX00OuPGsJSurM",
+      "name": "Spellhorn Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/spellhorn-kobold.json"
+    },
+    {
+      "id": "WaCn0mcivFv1omNK",
+      "name": "Strongjaw Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/strongjaw-kobold.json"
+    },
+    {
+      "id": "ZW8GX14n3ZGievK1",
+      "name": "Tunnelflood Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/tunnelflood-kobold.json"
+    },
+    {
+      "id": "m9rrlchS10xHFA2G",
+      "name": "Venomtail Kobold",
+      "type": "heritage",
+      "level": 0,
+      "path": "kobold/venomtail-kobold.json"
+    },
+    {
+      "id": "2cii5ZkBsJ4DYdd2",
+      "name": "Cactus Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/cactus-leshy.json"
+    },
+    {
+      "id": "CpjsxaXYjlkCI5nc",
+      "name": "Chrysanthemum Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/chrysanthemum-leshy.json"
+    },
+    {
+      "id": "L6zfGzLMDLHbZ7VV",
+      "name": "Fruit Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/fruit-leshy.json"
+    },
+    {
+      "id": "87h0jepQuzIbN7jN",
+      "name": "Fungus Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/fungus-leshy.json"
+    },
+    {
+      "id": "wNnsjird4OQe0s6p",
+      "name": "Gourd Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/gourd-leshy.json"
+    },
+    {
+      "id": "dQqurQys37aJYb26",
+      "name": "Leaf Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/leaf-leshy.json"
+    },
+    {
+      "id": "ievKYUc53q0mroGp",
+      "name": "Lotus Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/lotus-leshy.json"
+    },
+    {
+      "id": "G5U7zxwxDmERm3EY",
+      "name": "Peachchild Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/peachchild-leshy.json"
+    },
+    {
+      "id": "KaokXdiE3ewXprdL",
+      "name": "Pine Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/pine-leshy.json"
+    },
+    {
+      "id": "CZx9HMmoOwcpkLY8",
+      "name": "Root Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/root-leshy.json"
+    },
+    {
+      "id": "hTl3uc6y1kTuo9ac",
+      "name": "Seaweed Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/seaweed-leshy.json"
+    },
+    {
+      "id": "evXJISqyhl3fHE9u",
+      "name": "Vine Leshy",
+      "type": "heritage",
+      "level": 0,
+      "path": "leshy/vine-leshy.json"
+    },
+    {
+      "id": "OIW3UYrdaWLwUZCh",
+      "name": "Bakuwa Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/bakuwa-lizardfolk.json"
+    },
+    {
+      "id": "OoUqJJB77VfWbWRM",
+      "name": "Cliffscale Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/cliffscale-lizardfolk.json"
+    },
+    {
+      "id": "sEnMG5zbnXdJvVPz",
+      "name": "Cloudleaper Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/cloudleaper-lizardfolk.json"
+    },
+    {
+      "id": "6rIIsZg3tOyIU3g3",
+      "name": "Frilled Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/frilled-lizardfolk.json"
+    },
+    {
+      "id": "e6ykfotynKPzR2PT",
+      "name": "Makari Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/makari-lizardfolk.json"
+    },
+    {
+      "id": "6xxXtgj3fcCi53lt",
+      "name": "Sandstrider Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/sandstrider-lizardfolk.json"
+    },
+    {
+      "id": "VYfpTUuXJM3iBOz0",
+      "name": "Unseen Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/unseen-lizardfolk.json"
+    },
+    {
+      "id": "dJeiekfqGQ8dkwsO",
+      "name": "Wetlander Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/wetlander-lizardfolk.json"
+    },
+    {
+      "id": "TQFE10VFvh9wb8zb",
+      "name": "Woodstalker Lizardfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "lizardfolk/woodstalker-lizardfolk.json"
+    },
+    {
+      "id": "6egx1zhQx2s6BEa1",
+      "name": "Abyssal Merfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "merfolk/abyssal-merfolk.json"
+    },
+    {
+      "id": "DNynADD4xhwTAiE5",
+      "name": "Carcharodon Merfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "merfolk/carcharodon-merfolk.json"
+    },
+    {
+      "id": "OOkgTzDU4mBvV98Z",
+      "name": "Pelagic Merfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "merfolk/pelagic-merfolk.json"
+    },
+    {
+      "id": "Q5NrFWKDMCoVn9qR",
+      "name": "Reef Merfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "merfolk/reef-merfolk.json"
+    },
+    {
+      "id": "4BiGekRGfBRC7DoI",
+      "name": "Sailfish Merfolk",
+      "type": "heritage",
+      "level": 0,
+      "path": "merfolk/sailfish-merfolk.json"
+    },
+    {
+      "id": "bHgGh3vtXL7fkhIy",
+      "name": "Ghost Bull Minotaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "minotaur/ghost-bull-minotaur.json"
+    },
+    {
+      "id": "jP9ORt0jgY5VHyD3",
+      "name": "Glacier Cavern Minotaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "minotaur/glacier-cavern-minotaur.json"
+    },
+    {
+      "id": "23MEmXuyw75jiGKq",
+      "name": "Littlehorn Minotaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "minotaur/littlehorn-minotaur.json"
+    },
+    {
+      "id": "HAo0S8ysFipf6S2B",
+      "name": "Roaming Minotaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "minotaur/roaming-minotaur.json"
+    },
+    {
+      "id": "mPVEc7hFZQhv0gqJ",
+      "name": "Slabsoul Minotaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "minotaur/slabsoul-minotaur.json"
+    },
+    {
+      "id": "tYrb9KOv1etjE5wK",
+      "name": "Stalker Minotaur",
+      "type": "heritage",
+      "level": 0,
+      "path": "minotaur/stalker-minotaur.json"
+    },
+    {
+      "id": "tf3edMCyS15GhFPx",
+      "name": "Hooded Nagaji",
+      "type": "heritage",
+      "level": 0,
+      "path": "nagaji/hooded-nagaji.json"
+    },
+    {
+      "id": "iOREr80Q0SsvPP8B",
+      "name": "Sacred Nagaji",
+      "type": "heritage",
+      "level": 0,
+      "path": "nagaji/sacred-nagaji.json"
+    },
+    {
+      "id": "Cmj0pI0GPHl7kBUB",
+      "name": "Shimmertongue Nagaji",
+      "type": "heritage",
+      "level": 0,
+      "path": "nagaji/shimmertongue-nagaji.json"
+    },
+    {
+      "id": "LlUEmCDOLSZaGOyI",
+      "name": "Titan Nagaji",
+      "type": "heritage",
+      "level": 0,
+      "path": "nagaji/titan-nagaji.json"
+    },
+    {
+      "id": "2jsWmnKtidCTpaQV",
+      "name": "Venomshield Nagaji",
+      "type": "heritage",
+      "level": 0,
+      "path": "nagaji/venomshield-nagaji.json"
+    },
+    {
+      "id": "cDElVLonQvUK3vVk",
+      "name": "Whipfang Nagaji",
+      "type": "heritage",
+      "level": 0,
+      "path": "nagaji/whipfang-nagaji.json"
+    },
+    {
+      "id": "8Gsa8KFsHizEwSHU",
+      "name": "Badlands Orc",
+      "type": "heritage",
+      "level": 0,
+      "path": "orc/badlands-orc.json"
+    },
+    {
+      "id": "nXQxlmjH24Eb8h2Q",
+      "name": "Battle-Ready Orc",
+      "type": "heritage",
+      "level": 0,
+      "path": "orc/battle-ready-orc.json"
+    },
+    {
+      "id": "wn4EbYk1QN3tyFhh",
+      "name": "Deep Orc",
+      "type": "heritage",
+      "level": 0,
+      "path": "orc/deep-orc.json"
+    },
+    {
+      "id": "VvEAFoxuddYNBmNc",
+      "name": "Grave Orc",
+      "type": "heritage",
+      "level": 0,
+      "path": "orc/grave-orc.json"
+    },
+    {
+      "id": "MTTU2t7x6TjvUDnE",
+      "name": "Hold-Scarred Orc",
+      "type": "heritage",
+      "level": 0,
+      "path": "orc/hold-scarred-orc.json"
+    },
+    {
+      "id": "dwKCwwtWetvPmJks",
+      "name": "Rainfall Orc",
+      "type": "heritage",
+      "level": 0,
+      "path": "orc/rainfall-orc.json"
+    },
+    {
+      "id": "pZ1u2ScWrBXSaAqQ",
+      "name": "Winter Orc",
+      "type": "heritage",
+      "level": 0,
+      "path": "orc/winter-orc.json"
+    },
+    {
+      "id": "Je15UGsLWYaaGJSW",
+      "name": "Ghost Poppet",
+      "type": "heritage",
+      "level": 0,
+      "path": "poppet/ghost-poppet.json"
+    },
+    {
+      "id": "7kHg780SAsu2FNfP",
+      "name": "Stuffed Poppet",
+      "type": "heritage",
+      "level": 0,
+      "path": "poppet/stuffed-poppet.json"
+    },
+    {
+      "id": "EHDYVhJcZ9uPUjfZ",
+      "name": "Toy Poppet",
+      "type": "heritage",
+      "level": 0,
+      "path": "poppet/toy-poppet.json"
+    },
+    {
+      "id": "cKgxEWnRVazFPi3M",
+      "name": "Tsukumogami Poppet",
+      "type": "heritage",
+      "level": 0,
+      "path": "poppet/tsukumogami-poppet.json"
+    },
+    {
+      "id": "Cv7BOjuziOQ0PO9r",
+      "name": "Windup Poppet",
+      "type": "heritage",
+      "level": 0,
+      "path": "poppet/windup-poppet.json"
+    },
+    {
+      "id": "w5801ArZQCU8IXnU",
+      "name": "Wishborn Poppet",
+      "type": "heritage",
+      "level": 0,
+      "path": "poppet/wishborn-poppet.json"
+    },
+    {
+      "id": "7p9HtLzWBHc18JDW",
+      "name": "Deep Rat",
+      "type": "heritage",
+      "level": 0,
+      "path": "ratfolk/deep-rat.json"
+    },
+    {
+      "id": "twayjFuXbsvyHUwy",
+      "name": "Desert Rat",
+      "type": "heritage",
+      "level": 0,
+      "path": "ratfolk/desert-rat.json"
+    },
+    {
+      "id": "fROPRHGyUn4PgcER",
+      "name": "Longsnout Rat",
+      "type": "heritage",
+      "level": 0,
+      "path": "ratfolk/longsnout-rat.json"
+    },
+    {
+      "id": "eFsD7W6hnK33jlDQ",
+      "name": "Sewer Rat",
+      "type": "heritage",
+      "level": 0,
+      "path": "ratfolk/sewer-rat.json"
+    },
+    {
+      "id": "tarfuEXmi0E0Enfy",
+      "name": "Shadow Rat",
+      "type": "heritage",
+      "level": 0,
+      "path": "ratfolk/shadow-rat.json"
+    },
+    {
+      "id": "7lFPhRMAFXQsXUP2",
+      "name": "Snow Rat",
+      "type": "heritage",
+      "level": 0,
+      "path": "ratfolk/snow-rat.json"
+    },
+    {
+      "id": "U882U2NUUGL6u3rL",
+      "name": "Tunnel Rat",
+      "type": "heritage",
+      "level": 0,
+      "path": "ratfolk/tunnel-rat.json"
+    },
+    {
+      "id": "NK88lPzi3SDAT8w5",
+      "name": "Healer Samsaran",
+      "type": "heritage",
+      "level": 0,
+      "path": "samsaran/healer-samsaran.json"
+    },
+    {
+      "id": "IZqIVO1IOK3fAp30",
+      "name": "Mountaineer Samsaran",
+      "type": "heritage",
+      "level": 0,
+      "path": "samsaran/mountaineer-samsaran.json"
+    },
+    {
+      "id": "DR6okTFLHi3MYbzK",
+      "name": "Oracular Samsaran",
+      "type": "heritage",
+      "level": 0,
+      "path": "samsaran/oracular-samsaran.json"
+    },
+    {
+      "id": "MoeWxhJEtteD3v9z",
+      "name": "Sanctuary Samsaran",
+      "type": "heritage",
+      "level": 0,
+      "path": "samsaran/sanctuary-samsaran.json"
+    },
+    {
+      "id": "e4FaENGKRD3fxZeJ",
+      "name": "Wilderness Samsaran",
+      "type": "heritage",
+      "level": 0,
+      "path": "samsaran/wilderness-samsaran.json"
+    },
+    {
+      "id": "6gK4A6dtN4LCpCXS",
+      "name": "Full Moon Sarangay",
+      "type": "heritage",
+      "level": 0,
+      "path": "sarangay/full-moon-sarangay.json"
+    },
+    {
+      "id": "ImdAt4Ma9GfaNuZW",
+      "name": "Half Moon Sarangay",
+      "type": "heritage",
+      "level": 0,
+      "path": "sarangay/half-moon-sarangay.json"
+    },
+    {
+      "id": "H2mbY3aypl6ikaSR",
+      "name": "New Moon Sarangay",
+      "type": "heritage",
+      "level": 0,
+      "path": "sarangay/new-moon-sarangay.json"
+    },
+    {
+      "id": "MNeg7vI854rB6fmz",
+      "name": "Waning Moon Sarangay",
+      "type": "heritage",
+      "level": 0,
+      "path": "sarangay/waning-moon-sarangay.json"
+    },
+    {
+      "id": "BHiOV3ETYSv6k7kF",
+      "name": "Waxing Moon Sarangay",
+      "type": "heritage",
+      "level": 0,
+      "path": "sarangay/waxing-moon-sarangay.json"
+    },
+    {
+      "id": "Fgysc0A1pFQE8PMA",
+      "name": "Lorekeeper Shisk",
+      "type": "heritage",
+      "level": 0,
+      "path": "shisk/lorekeeper-shisk.json"
+    },
+    {
+      "id": "vDEfNzjLpGJU54cz",
+      "name": "Quillcoat Shisk",
+      "type": "heritage",
+      "level": 0,
+      "path": "shisk/quillcoat-shisk.json"
+    },
+    {
+      "id": "0TFf82gcfxXG9A54",
+      "name": "Spellkeeper Shisk",
+      "type": "heritage",
+      "level": 0,
+      "path": "shisk/spellkeeper-shisk.json"
+    },
+    {
+      "id": "lDT5h3f5GXRj42Ir",
+      "name": "Stonestep Shisk",
+      "type": "heritage",
+      "level": 0,
+      "path": "shisk/stonestep-shisk.json"
+    },
+    {
+      "id": "KcozzlkFAqShDEzo",
+      "name": "Stronggut Shisk",
+      "type": "heritage",
+      "level": 0,
+      "path": "shisk/stronggut-shisk.json"
+    },
+    {
+      "id": "z4cvqtpkkAYoFpHa",
+      "name": "Bloodhound Shoony",
+      "type": "heritage",
+      "level": 0,
+      "path": "shoony/bloodhound-shoony.json"
+    },
+    {
+      "id": "isJhIPhT4MsjJvoq",
+      "name": "Fishseeker Shoony",
+      "type": "heritage",
+      "level": 0,
+      "path": "shoony/fishseeker-shoony.json"
+    },
+    {
+      "id": "mnhpCk9dIwMuFegM",
+      "name": "Paddler Shoony",
+      "type": "heritage",
+      "level": 0,
+      "path": "shoony/paddler-shoony.json"
+    },
+    {
+      "id": "MhXHEh7utEfxBwmc",
+      "name": "Thickcoat Shoony",
+      "type": "heritage",
+      "level": 0,
+      "path": "shoony/thickcoat-shoony.json"
+    },
+    {
+      "id": "mZqaKQkvadBbNubM",
+      "name": "Compact Skeleton",
+      "type": "heritage",
+      "level": 0,
+      "path": "skeleton/compact-skeleton.json"
+    },
+    {
+      "id": "RZHr0olieS6YdYE9",
+      "name": "Fodder Skeleton",
+      "type": "heritage",
+      "level": 0,
+      "path": "skeleton/fodder-skeleton.json"
+    },
+    {
+      "id": "wB8xiQB4RDbzOOvR",
+      "name": "Monstrous Skeleton",
+      "type": "heritage",
+      "level": 0,
+      "path": "skeleton/monstrous-skeleton.json"
+    },
+    {
+      "id": "idJ2lSKEmmwqG5eT",
+      "name": "Shifting Skeleton",
+      "type": "heritage",
+      "level": 0,
+      "path": "skeleton/shifting-skeleton.json"
+    },
+    {
+      "id": "P8Rl3dUsq8AzXLHC",
+      "name": "Sturdy Skeleton",
+      "type": "heritage",
+      "level": 0,
+      "path": "skeleton/sturdy-skeleton.json"
+    },
+    {
+      "id": "TXBsQbzDg1AjJnop",
+      "name": "Dijiang",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/dijiang.json"
+    },
+    {
+      "id": "zcO93E8gAW1tDYKk",
+      "name": "Draxie",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/draxie.json"
+    },
+    {
+      "id": "lBSO9RuEUv2P4rnp",
+      "name": "Gandharva",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/gandharva.json"
+    },
+    {
+      "id": "gfXSF1TafBAmZo2u",
+      "name": "Grig",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/grig.json"
+    },
+    {
+      "id": "5WkhF3JYISElgMLL",
+      "name": "Kanchil",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/kanchil.json"
+    },
+    {
+      "id": "wxQwFQGsg6yDiMmN",
+      "name": "Leungli",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/leungli.json"
+    },
+    {
+      "id": "LU4i3qXtyzeTGWZQ",
+      "name": "Luminous Sprite",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/luminous-sprite.json"
+    },
+    {
+      "id": "TYvzNoL5ldmB5F76",
+      "name": "Melixie",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/melixie.json"
+    },
+    {
+      "id": "h2VKMYAlUIFAAXVG",
+      "name": "Nyktera",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/nyktera.json"
+    },
+    {
+      "id": "KbG2BZ3Sbr3xU1sW",
+      "name": "Pixie",
+      "type": "heritage",
+      "level": 0,
+      "path": "sprite/pixie.json"
+    },
+    {
+      "id": "9mS8EGLlGUOzSAzP",
+      "name": "Nightglider Strix",
+      "type": "heritage",
+      "level": 0,
+      "path": "strix/nightglider-strix.json"
+    },
+    {
+      "id": "MUujYQYWg6PNVaaN",
+      "name": "Predator Strix",
+      "type": "heritage",
+      "level": 0,
+      "path": "strix/predator-strix.json"
+    },
+    {
+      "id": "j0R1SyJP8k4G2Hkn",
+      "name": "Scavenger Strix",
+      "type": "heritage",
+      "level": 0,
+      "path": "strix/scavenger-strix.json"
+    },
+    {
+      "id": "RxNBBMFZwPA3Vlg3",
+      "name": "Shoreline Strix",
+      "type": "heritage",
+      "level": 0,
+      "path": "strix/shoreline-strix.json"
+    },
+    {
+      "id": "fWT7Mo2vFC10H4Wq",
+      "name": "Songbird Strix",
+      "type": "heritage",
+      "level": 0,
+      "path": "strix/songbird-strix.json"
+    },
+    {
+      "id": "BDBzVaZx3GfZXs5b",
+      "name": "Breaker Surki",
+      "type": "heritage",
+      "level": 0,
+      "path": "surki/breaker-surki.json"
+    },
+    {
+      "id": "0Anj61DzUimJ1uMS",
+      "name": "Elytron Surki",
+      "type": "heritage",
+      "level": 0,
+      "path": "surki/elytron-surki.json"
+    },
+    {
+      "id": "qKn9k3TQt0gsOLn7",
+      "name": "Hardshell Surki",
+      "type": "heritage",
+      "level": 0,
+      "path": "surki/hardshell-surki.json"
+    },
+    {
+      "id": "Wyw1tkO0e199Wm8o",
+      "name": "Lantern Surki",
+      "type": "heritage",
+      "level": 0,
+      "path": "surki/lantern-surki.json"
+    },
+    {
+      "id": "L6FwEsrOK3Xno7qM",
+      "name": "Ascetic Tanuki",
+      "type": "heritage",
+      "level": 0,
+      "path": "tanuki/ascetic-tanuki.json"
+    },
+    {
+      "id": "hqh4zKHYBtDE26g8",
+      "name": "Courageous Tanuki",
+      "type": "heritage",
+      "level": 0,
+      "path": "tanuki/courageous-tanuki.json"
+    },
+    {
+      "id": "uAo0wK1JL9kePcZb",
+      "name": "Even-Tempered Tanuki",
+      "type": "heritage",
+      "level": 0,
+      "path": "tanuki/even-tempered-tanuki.json"
+    },
+    {
+      "id": "5gqcEsJ4gkE6W5jj",
+      "name": "Steadfast Tanuki",
+      "type": "heritage",
+      "level": 0,
+      "path": "tanuki/steadfast-tanuki.json"
+    },
+    {
+      "id": "JtrZ2TcPXP1uIcmd",
+      "name": "Virtuous Tanuki",
+      "type": "heritage",
+      "level": 0,
+      "path": "tanuki/virtuous-tanuki.json"
+    },
+    {
+      "id": "2hLDilS6qbjHxgVS",
+      "name": "Dogtooth Tengu",
+      "type": "heritage",
+      "level": 0,
+      "path": "tengu/dogtooth-tengu.json"
+    },
+    {
+      "id": "g4FRxyuHndZu4KTo",
+      "name": "Jinxed Tengu",
+      "type": "heritage",
+      "level": 0,
+      "path": "tengu/jinxed-tengu.json"
+    },
+    {
+      "id": "ptpK6H1rM4Bu3ry4",
+      "name": "Mountainkeeper Tengu",
+      "type": "heritage",
+      "level": 0,
+      "path": "tengu/mountainkeeper-tengu.json"
+    },
+    {
+      "id": "rKV11HWREwjjMIum",
+      "name": "Skyborn Tengu",
+      "type": "heritage",
+      "level": 0,
+      "path": "tengu/skyborn-tengu.json"
+    },
+    {
+      "id": "7vHLPleFpSqKAjWG",
+      "name": "Stormtossed Tengu",
+      "type": "heritage",
+      "level": 0,
+      "path": "tengu/stormtossed-tengu.json"
+    },
+    {
+      "id": "qM566kCXljkOpocA",
+      "name": "Taloned Tengu",
+      "type": "heritage",
+      "level": 0,
+      "path": "tengu/taloned-tengu.json"
+    },
+    {
+      "id": "WEzgrxBRFBGdj8Hx",
+      "name": "Wavediver Tengu",
+      "type": "heritage",
+      "level": 0,
+      "path": "tengu/wavediver-tengu.json"
+    },
+    {
+      "id": "bmA9JK06rnOKpNLr",
+      "name": "Poisonhide Tripkee",
+      "type": "heritage",
+      "level": 0,
+      "path": "tripkee/poisonhide-tripkee.json"
+    },
+    {
+      "id": "87Eej7uEvTxXeli7",
+      "name": "Riverside Tripkee",
+      "type": "heritage",
+      "level": 0,
+      "path": "tripkee/riverside-tripkee.json"
+    },
+    {
+      "id": "2kSzKDtwbcILZTIe",
+      "name": "Snaptongue Tripkee",
+      "type": "heritage",
+      "level": 0,
+      "path": "tripkee/snaptongue-tripkee.json"
+    },
+    {
+      "id": "rFdVYKtHsZzRCsSd",
+      "name": "Stickytoe Tripkee",
+      "type": "heritage",
+      "level": 0,
+      "path": "tripkee/stickytoe-tripkee.json"
+    },
+    {
+      "id": "2QLKvmCimT9ai0Bi",
+      "name": "Thickskin Tripkee",
+      "type": "heritage",
+      "level": 0,
+      "path": "tripkee/thickskin-tripkee.json"
+    },
+    {
+      "id": "xaTTN5anLEBzWCzv",
+      "name": "Windweb Tripkee",
+      "type": "heritage",
+      "level": 0,
+      "path": "tripkee/windweb-tripkee.json"
+    },
+    {
+      "id": "ClshvrjvBTMm3INX",
+      "name": "Bandaagee Vanara",
+      "type": "heritage",
+      "level": 0,
+      "path": "vanara/bandaagee-vanara.json"
+    },
+    {
+      "id": "Kq3k1Z6IWGVsLrmg",
+      "name": "Lahkgyan Vanara",
+      "type": "heritage",
+      "level": 0,
+      "path": "vanara/lahkgyan-vanara.json"
+    },
+    {
+      "id": "By1y7HCfVPgX2GmI",
+      "name": "Ragdyan Vanara",
+      "type": "heritage",
+      "level": 0,
+      "path": "vanara/ragdyan-vanara.json"
+    },
+    {
+      "id": "nUCRd8tmz3C6LM0T",
+      "name": "Wajaghand Vanara",
+      "type": "heritage",
+      "level": 0,
+      "path": "vanara/wajaghand-vanara.json"
+    },
+    {
+      "id": "N36ZR4lh9eCazDaN",
+      "name": "Aiuvarin",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/aiuvarin.json"
+    },
+    {
+      "id": "jAX7yavR4lNKwDK8",
+      "name": "Ardande",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/ardande.json"
+    },
+    {
+      "id": "GAn2cdhBE9Bqa85s",
+      "name": "Beastkin",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/beastkin.json"
+    },
+    {
+      "id": "EKY9v7SF1hVsUdbH",
+      "name": "Changeling",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/changeling.json"
+    },
+    {
+      "id": "UaD5VDoFlILEmbyz",
+      "name": "Dhampir",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/dhampir.json"
+    },
+    {
+      "id": "cbbXIV4QBred4lM5",
+      "name": "Dragonblood",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/dragonblood.json"
+    },
+    {
+      "id": "tLd8Qg82AwEbbmgX",
+      "name": "Dromaar",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/dromaar.json"
+    },
+    {
+      "id": "ZZKZkeSP5TuT62IA",
+      "name": "Duskwalker",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/duskwalker.json"
+    },
+    {
+      "id": "9FlpW1nSczH8f85v",
+      "name": "Hungerseed",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/hungerseed.json"
+    },
+    {
+      "id": "Svk2CHwvurK1QQhD",
+      "name": "Naari",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/naari.json"
+    },
+    {
+      "id": "1oLMOmLpurfWTTff",
+      "name": "Nephilim",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/nephilim.json"
+    },
+    {
+      "id": "ITgkqfnAOJCbcIys",
+      "name": "Oread",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/oread.json"
+    },
+    {
+      "id": "gKLTlzAVapXTQ86V",
+      "name": "Reflection",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/reflection.json"
+    },
+    {
+      "id": "RKz7Z5pefXKiv9JE",
+      "name": "Suli",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/suli.json"
+    },
+    {
+      "id": "G8jfMayPv4vZvAVr",
+      "name": "Sylph",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/sylph.json"
+    },
+    {
+      "id": "Ga7UEU186pjq7LBD",
+      "name": "Talos",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/talos.json"
+    },
+    {
+      "id": "Gmk7oNITvMVBy78Z",
+      "name": "Undine",
+      "type": "heritage",
+      "level": 0,
+      "path": "versatile-heritages/undine.json"
+    },
+    {
+      "id": "ywNXVLZtwrAStyh1",
+      "name": "Elusive Vishkanya",
+      "type": "heritage",
+      "level": 0,
+      "path": "vishkanya/elusive-vishkanya.json"
+    },
+    {
+      "id": "BhbwjTFw2V67XF35",
+      "name": "Keen-Venom Vishkanya",
+      "type": "heritage",
+      "level": 0,
+      "path": "vishkanya/keen-venom-vishkanya.json"
+    },
+    {
+      "id": "PbXqlzRdQbKLQx1R",
+      "name": "Old-Blood Vishkanya",
+      "type": "heritage",
+      "level": 0,
+      "path": "vishkanya/old-blood-vishkanya.json"
+    },
+    {
+      "id": "vrU3lmDO7FYzmuQc",
+      "name": "Prismatic Vishkanya",
+      "type": "heritage",
+      "level": 0,
+      "path": "vishkanya/prismatic-vishkanya.json"
+    },
+    {
+      "id": "ohOJHeFenX97sBHf",
+      "name": "Scalekeeper Vishkanya",
+      "type": "heritage",
+      "level": 0,
+      "path": "vishkanya/scalekeeper-vishkanya.json"
+    },
+    {
+      "id": "OBxrlZKg0IC5n238",
+      "name": "Venom-Resistant Vishkanya",
+      "type": "heritage",
+      "level": 0,
+      "path": "vishkanya/venom-resistant-vishkanya.json"
+    },
+    {
+      "id": "GvtOzLp4kIuYfx1R",
+      "name": "Shadow of the Courtier",
+      "type": "heritage",
+      "level": 0,
+      "path": "wayang/shadow-of-the-courtier.json"
+    },
+    {
+      "id": "yxZtNE87im9yZFXk",
+      "name": "Shadow of the Hermit",
+      "type": "heritage",
+      "level": 0,
+      "path": "wayang/shadow-of-the-hermit.json"
+    },
+    {
+      "id": "5apoJtHGL0lIz1cz",
+      "name": "Shadow of the Sailor",
+      "type": "heritage",
+      "level": 0,
+      "path": "wayang/shadow-of-the-sailor.json"
+    },
+    {
+      "id": "VHln8G1GNaSzNNHq",
+      "name": "Shadow of the Smith",
+      "type": "heritage",
+      "level": 0,
+      "path": "wayang/shadow-of-the-smith.json"
+    },
+    {
+      "id": "fcsYmaIfMR9iXv06",
+      "name": "Shadow of the Wanderer",
+      "type": "heritage",
+      "level": 0,
+      "path": "wayang/shadow-of-the-wanderer.json"
+    },
+    {
+      "id": "qeFCDRSgFRR2ElWK",
+      "name": "Deny Lady Nanbyo's Charity",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaksha/deny-lady-nanbyos-charity.json"
+    },
+    {
+      "id": "AWLcCe69nzxZzWQc",
+      "name": "Deny the Firstborn Pursuit",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaksha/deny-the-firstborn-pursuit.json"
+    },
+    {
+      "id": "YoDvQ5fvpbgcoG3V",
+      "name": "Deny the Traitor's Rebirth",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaksha/deny-the-traitors-rebirth.json"
+    },
+    {
+      "id": "q7b4yu3Nty0jZLOi",
+      "name": "Respite of a Thousand Roofs",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaksha/respite-of-a-thousand-roofs.json"
+    },
+    {
+      "id": "aPqNdvtKHv4amLcO",
+      "name": "Respite of Cloudless Paths",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaksha/respite-of-cloudless-paths.json"
+    },
+    {
+      "id": "WczVM4KQq7xybsPZ",
+      "name": "Respite of Loam and Leaf",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaksha/respite-of-loam-and-leaf.json"
+    },
+    {
+      "id": "buGlGWcCrdNxfCr4",
+      "name": "Born of Animal",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaoguai/born-of-animal.json"
+    },
+    {
+      "id": "Iaq8C3bbC9EzZhBJ",
+      "name": "Born of Celestial",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaoguai/born-of-celestial.json"
+    },
+    {
+      "id": "RXn2y7QVHVB0XHr8",
+      "name": "Born of Elements",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaoguai/born-of-elements.json"
+    },
+    {
+      "id": "kHvlHDq5hs2JDG0Y",
+      "name": "Born of Item",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaoguai/born-of-item.json"
+    },
+    {
+      "id": "y87jU1yU8Plz4Yhq",
+      "name": "Born of Vegetation",
+      "type": "heritage",
+      "level": 0,
+      "path": "yaoguai/born-of-vegetation.json"
+    }
+  ]
+}
