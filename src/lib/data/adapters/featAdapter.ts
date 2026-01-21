@@ -18,6 +18,12 @@ import type { Feat } from '../types/app';
  * Transform a Foundry feat into our app schema
  */
 export function adaptFeat(foundryFeat: FoundryFeat): Feat {
+	// Combine traits.value and traits.otherTags for complete trait list
+	const traits = [
+		...foundryFeat.system.traits.value,
+		...(foundryFeat.system.traits.otherTags || [])
+	];
+
 	return {
 		type: 'feat',
 		id: foundryFeat._id,
@@ -26,7 +32,7 @@ export function adaptFeat(foundryFeat: FoundryFeat): Feat {
 		level: foundryFeat.system.level.value,
 		category: foundryFeat.system.category,
 		prerequisites: extractPrerequisites(foundryFeat),
-		traits: foundryFeat.system.traits.value,
+		traits: traits,
 		rarity: foundryFeat.system.traits.rarity,
 		actionType: extractActionType(foundryFeat),
 		actions: extractActions(foundryFeat),
