@@ -28,6 +28,7 @@ export interface FoundryItemBase {
 		traits: {
 			rarity: 'common' | 'uncommon' | 'rare' | 'unique';
 			value: string[];
+			otherTags?: string[]; // Additional tags for filtering (e.g., "alchemist-research-field")
 		};
 		rules: RuleElement[];
 	};
@@ -39,7 +40,7 @@ export interface FoundryItemBase {
 export interface FoundryFeat extends FoundryItemBase {
 	type: 'feat';
 	system: FoundryItemBase['system'] & {
-		category: 'general' | 'skill' | 'class' | 'ancestry' | 'archetype';
+		category: 'general' | 'skill' | 'class' | 'ancestry' | 'archetype' | 'classfeature';
 		level: {
 			value: number;
 		};
@@ -151,6 +152,15 @@ export interface FoundryClass extends FoundryItemBase {
 			value: string[];
 			additional: number;
 		};
+		items?: Record<
+			string,
+			{
+				level: number;
+				name: string;
+				uuid: string;
+				img: string;
+			}
+		>;
 	};
 }
 
