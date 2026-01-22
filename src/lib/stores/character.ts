@@ -123,12 +123,24 @@ export interface Character {
 
 	/** Spellcasting data */
 	spellcasting: {
-		/** Known/prepared spells by spell ID */
+		/** Known/inscribed spells in spellbook by spell ID (leveled spells only) */
 		knownSpells: string[];
-		/** Spell slots by level (1-10) */
-		spellSlots: Array<{ level: number; total: number; used: number }>;
+		/** Known/inscribed cantrips in spellbook by spell ID */
+		cantripsKnown: string[];
 		/** Focus points */
 		focusPoints: { max: number; current: number };
+		/** Resolved spell tradition (arcane, divine, primal, occult) */
+		tradition: string | null;
+		/** Spellcasting type (prepared, spontaneous, bounded) */
+		spellcastingType: 'prepared' | 'spontaneous' | 'bounded' | null;
+		/** Prepared cantrip slots - each slot holds a spell ID or null if empty */
+		preparedCantrips: Array<{ spellId: string | null }>;
+		/** Prepared spell slots by level - each slot has spell ID and cast state */
+		preparedSlots: Record<number, Array<{ spellId: string | null; cast: boolean }>>;
+		/** Legacy: Spell slots by level (kept for migration) */
+		spellSlots: Array<{ level: number; total: number; used: number }>;
+		/** Legacy: Prepared spells by level (kept for migration) */
+		preparedSpells: Record<number, string[]>;
 	};
 
 	/** Inventory items (general inventory with quantities and bulk) */
@@ -282,8 +294,15 @@ export function createNewCharacter(): Character {
 		activeSpellsAndEffects: [],
 		spellcasting: {
 			knownSpells: [],
+			cantripsKnown: [],
+			focusPoints: { max: 0, current: 0 },
+			tradition: null,
+			spellcastingType: null,
+			preparedCantrips: [],
+			preparedSlots: {},
+			// Legacy fields for migration
 			spellSlots: [],
-			focusPoints: { max: 0, current: 0 }
+			preparedSpells: {}
 		},
 		inventory: [],
 		wealth: {
@@ -381,9 +400,36 @@ function loadFromStorage(): Character {
 			if (!parsed.spellcasting) {
 				parsed.spellcasting = {
 					knownSpells: [],
+					cantripsKnown: [],
+					focusPoints: { max: 0, current: 0 },
+					tradition: null,
+					spellcastingType: null,
+					preparedCantrips: [],
+					preparedSlots: {},
 					spellSlots: [],
-					focusPoints: { max: 0, current: 0 }
+					preparedSpells: {}
 				};
+			} else {
+				// Migrate existing spellcasting to new fields
+				if (parsed.spellcasting.tradition === undefined) {
+					parsed.spellcasting.tradition = null;
+				}
+				if (parsed.spellcasting.spellcastingType === undefined) {
+					parsed.spellcasting.spellcastingType = null;
+				}
+				if (!parsed.spellcasting.preparedSpells) {
+					parsed.spellcasting.preparedSpells = {};
+				}
+				if (!parsed.spellcasting.cantripsKnown) {
+					parsed.spellcasting.cantripsKnown = [];
+				}
+				// New slot-based preparation fields
+				if (!parsed.spellcasting.preparedCantrips) {
+					parsed.spellcasting.preparedCantrips = [];
+				}
+				if (!parsed.spellcasting.preparedSlots) {
+					parsed.spellcasting.preparedSlots = {};
+				}
 			}
 
 			// Ensure companions property exists (migration for older characters)
@@ -812,16 +858,25 @@ function createCharacterStore() {
 		},
 
 		/**
-		 * Remove a known spell
+		 * Remove a known spell (also removes from prepared spells)
 		 */
 		removeKnownSpell: (spellId: string) => {
-			update((char) => ({
-				...char,
-				spellcasting: {
-					...char.spellcasting,
-					knownSpells: char.spellcasting.knownSpells.filter((id) => id !== spellId)
+			update((char) => {
+				// Also remove from prepared spells at all levels
+				const newPreparedSpells: Record<number, string[]> = {};
+				for (const [level, spells] of Object.entries(char.spellcasting.preparedSpells)) {
+					newPreparedSpells[Number(level)] = spells.filter((id) => id !== spellId);
 				}
-			}));
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						knownSpells: char.spellcasting.knownSpells.filter((id) => id !== spellId),
+						preparedSpells: newPreparedSpells
+					}
+				};
+			});
 		},
 
 		/**
@@ -1013,6 +1068,439 @@ function createCharacterStore() {
 					}
 				}
 			}));
+		},
+
+		// ====================
+		// Advanced Spellcasting
+		// ====================
+
+		/**
+		 * Set spellcasting info (tradition and type)
+		 */
+		setSpellcastingInfo: (
+			tradition: string | null,
+			type: 'prepared' | 'spontaneous' | 'bounded' | null
+		) => {
+			update((char) => {
+				// Don't update if values are the same
+				if (
+					char.spellcasting.tradition === tradition &&
+					char.spellcasting.spellcastingType === type
+				) {
+					return char;
+				}
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						tradition,
+						spellcastingType: type
+					}
+				};
+			});
+		},
+
+		/**
+		 * Prepare a spell at a given level
+		 */
+		prepareSpell: (level: number, spellId: string) => {
+			update((char) => {
+				const preparedAtLevel = char.spellcasting.preparedSpells[level] || [];
+				if (preparedAtLevel.includes(spellId)) return char;
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedSpells: {
+							...char.spellcasting.preparedSpells,
+							[level]: [...preparedAtLevel, spellId]
+						}
+					}
+				};
+			});
+		},
+
+		/**
+		 * Unprepare a spell at a given level
+		 */
+		unprepareSpell: (level: number, spellId: string) => {
+			update((char) => {
+				const preparedAtLevel = char.spellcasting.preparedSpells[level] || [];
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedSpells: {
+							...char.spellcasting.preparedSpells,
+							[level]: preparedAtLevel.filter((id) => id !== spellId)
+						}
+					}
+				};
+			});
+		},
+
+		/**
+		 * Add a known cantrip
+		 */
+		addCantrip: (spellId: string) => {
+			update((char) => {
+				if (char.spellcasting.cantripsKnown.includes(spellId)) return char;
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						cantripsKnown: [...char.spellcasting.cantripsKnown, spellId]
+					}
+				};
+			});
+		},
+
+		/**
+		 * Remove a known cantrip
+		 */
+		removeCantrip: (spellId: string) => {
+			update((char) => ({
+				...char,
+				spellcasting: {
+					...char.spellcasting,
+					cantripsKnown: char.spellcasting.cantripsKnown.filter((id) => id !== spellId)
+				}
+			}));
+		},
+
+		/**
+		 * Initialize spell slots based on class and level
+		 */
+		initializeSpellSlots: (slots: Array<{ level: number; total: number }>) => {
+			update((char) => ({
+				...char,
+				spellcasting: {
+					...char.spellcasting,
+					spellSlots: slots.map((s) => ({ ...s, used: 0 }))
+				}
+			}));
+		},
+
+		/**
+		 * Clear all spellcasting data (when class changes)
+		 */
+		clearSpellcasting: () => {
+			update((char) => {
+				// Check if already cleared
+				if (
+					char.spellcasting.tradition === null &&
+					char.spellcasting.spellcastingType === null &&
+					char.spellcasting.knownSpells.length === 0 &&
+					char.spellcasting.cantripsKnown.length === 0 &&
+					char.spellcasting.preparedCantrips.length === 0 &&
+					Object.keys(char.spellcasting.preparedSlots).length === 0
+				) {
+					return char; // No change needed
+				}
+				return {
+					...char,
+					spellcasting: {
+						knownSpells: [],
+						cantripsKnown: [],
+						focusPoints: { max: 0, current: 0 },
+						tradition: null,
+						spellcastingType: null,
+						preparedCantrips: [],
+						preparedSlots: {},
+						spellSlots: [],
+						preparedSpells: {}
+					}
+				};
+			});
+		},
+
+		/**
+		 * Reset all class-related data (when changing classes)
+		 * Clears class feats, spellcasting, and class-specific rule selections
+		 */
+		resetClassData: () => {
+			update((char) => ({
+				...char,
+				feats: {
+					...char.feats,
+					class: [] // Clear class feats
+				},
+				spellcasting: {
+					knownSpells: [],
+					cantripsKnown: [],
+					focusPoints: { max: 0, current: 0 },
+					tradition: null,
+					spellcastingType: null,
+					preparedCantrips: [],
+					preparedSlots: {},
+					spellSlots: [],
+					preparedSpells: {}
+				},
+				// Reset skills to untrained (they'll be re-selected based on new class)
+				skills: {
+					acrobatics: 0,
+					arcana: 0,
+					athletics: 0,
+					crafting: 0,
+					deception: 0,
+					diplomacy: 0,
+					intimidation: 0,
+					lore: 0,
+					medicine: 0,
+					nature: 0,
+					occultism: 0,
+					performance: 0,
+					religion: 0,
+					society: 0,
+					stealth: 0,
+					survival: 0,
+					thievery: 0
+				},
+				// Clear class-related rule selections
+				ruleSelections: Object.fromEntries(
+					Object.entries(char.ruleSelections).filter(
+						([key]) => !key.startsWith('trained-skills')
+					)
+				)
+			}));
+		},
+
+		// ====================
+		// Slot-based Spell Preparation
+		// ====================
+
+		/**
+		 * Initialize spell slots based on class configuration
+		 * Creates empty slots for each spell level
+		 */
+		initializePreparedSlots: (
+			cantripSlotCount: number,
+			slotsByLevel: Array<{ level: number; count: number }>
+		) => {
+			update((char) => {
+				// Check if slots are already correctly configured
+				const currentCantrips = char.spellcasting.preparedCantrips;
+				const currentSlots = char.spellcasting.preparedSlots;
+
+				const cantripsMatch = currentCantrips.length === cantripSlotCount;
+				const slotsMatch = slotsByLevel.every(({ level, count }) => {
+					const slotsAtLevel = currentSlots[level];
+					return slotsAtLevel && slotsAtLevel.length === count;
+				});
+
+				// Also check that there are no extra levels in current slots
+				const currentLevels = Object.keys(currentSlots).map(Number);
+				const expectedLevels = slotsByLevel.map((s) => s.level);
+				const noExtraLevels = currentLevels.every((l) => expectedLevels.includes(l));
+
+				if (cantripsMatch && slotsMatch && noExtraLevels) {
+					return char; // No change needed
+				}
+
+				// Create empty cantrip slots
+				const preparedCantrips: Array<{ spellId: string | null }> = [];
+				for (let i = 0; i < cantripSlotCount; i++) {
+					preparedCantrips.push({ spellId: null });
+				}
+
+				// Create empty leveled spell slots
+				const preparedSlots: Record<number, Array<{ spellId: string | null; cast: boolean }>> = {};
+				for (const { level, count } of slotsByLevel) {
+					preparedSlots[level] = [];
+					for (let i = 0; i < count; i++) {
+						preparedSlots[level].push({ spellId: null, cast: false });
+					}
+				}
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedCantrips,
+						preparedSlots
+					}
+				};
+			});
+		},
+
+		/**
+		 * Prepare a cantrip into a specific slot
+		 */
+		prepareCantripInSlot: (slotIndex: number, spellId: string) => {
+			update((char) => {
+				if (slotIndex < 0 || slotIndex >= char.spellcasting.preparedCantrips.length) {
+					return char;
+				}
+
+				const newCantrips = [...char.spellcasting.preparedCantrips];
+				newCantrips[slotIndex] = { spellId };
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedCantrips: newCantrips
+					}
+				};
+			});
+		},
+
+		/**
+		 * Remove a cantrip from a specific slot
+		 */
+		removeCantripFromSlot: (slotIndex: number) => {
+			update((char) => {
+				if (slotIndex < 0 || slotIndex >= char.spellcasting.preparedCantrips.length) {
+					return char;
+				}
+
+				const newCantrips = [...char.spellcasting.preparedCantrips];
+				newCantrips[slotIndex] = { spellId: null };
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedCantrips: newCantrips
+					}
+				};
+			});
+		},
+
+		/**
+		 * Prepare a spell into a specific slot at a given level
+		 */
+		prepareSpellInSlot: (level: number, slotIndex: number, spellId: string) => {
+			update((char) => {
+				const slotsAtLevel = char.spellcasting.preparedSlots[level];
+				if (!slotsAtLevel || slotIndex < 0 || slotIndex >= slotsAtLevel.length) {
+					return char;
+				}
+
+				const newSlots = [...slotsAtLevel];
+				newSlots[slotIndex] = { spellId, cast: false };
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedSlots: {
+							...char.spellcasting.preparedSlots,
+							[level]: newSlots
+						}
+					}
+				};
+			});
+		},
+
+		/**
+		 * Remove a spell from a specific slot at a given level
+		 */
+		removeSpellFromSlot: (level: number, slotIndex: number) => {
+			update((char) => {
+				const slotsAtLevel = char.spellcasting.preparedSlots[level];
+				if (!slotsAtLevel || slotIndex < 0 || slotIndex >= slotsAtLevel.length) {
+					return char;
+				}
+
+				const newSlots = [...slotsAtLevel];
+				newSlots[slotIndex] = { spellId: null, cast: false };
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedSlots: {
+							...char.spellcasting.preparedSlots,
+							[level]: newSlots
+						}
+					}
+				};
+			});
+		},
+
+		/**
+		 * Cast a spell from a specific slot (marks it as cast/used)
+		 */
+		castSpellFromSlot: (level: number, slotIndex: number) => {
+			update((char) => {
+				const slotsAtLevel = char.spellcasting.preparedSlots[level];
+				if (!slotsAtLevel || slotIndex < 0 || slotIndex >= slotsAtLevel.length) {
+					return char;
+				}
+
+				const slot = slotsAtLevel[slotIndex];
+				if (!slot.spellId || slot.cast) {
+					return char; // Can't cast empty or already cast slot
+				}
+
+				const newSlots = [...slotsAtLevel];
+				newSlots[slotIndex] = { ...slot, cast: true };
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedSlots: {
+							...char.spellcasting.preparedSlots,
+							[level]: newSlots
+						}
+					}
+				};
+			});
+		},
+
+		/**
+		 * Recover a specific spell slot (unmarks as cast)
+		 */
+		recoverSpellSlotAt: (level: number, slotIndex: number) => {
+			update((char) => {
+				const slotsAtLevel = char.spellcasting.preparedSlots[level];
+				if (!slotsAtLevel || slotIndex < 0 || slotIndex >= slotsAtLevel.length) {
+					return char;
+				}
+
+				const newSlots = [...slotsAtLevel];
+				newSlots[slotIndex] = { ...newSlots[slotIndex], cast: false };
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedSlots: {
+							...char.spellcasting.preparedSlots,
+							[level]: newSlots
+						}
+					}
+				};
+			});
+		},
+
+		/**
+		 * Recover all spell slots (daily preparation reset)
+		 */
+		recoverAllPreparedSlots: () => {
+			update((char) => {
+				const newPreparedSlots: Record<number, Array<{ spellId: string | null; cast: boolean }>> = {};
+
+				for (const [level, slots] of Object.entries(char.spellcasting.preparedSlots)) {
+					newPreparedSlots[Number(level)] = slots.map((slot) => ({
+						...slot,
+						cast: false
+					}));
+				}
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						preparedSlots: newPreparedSlots
+					}
+				};
+			});
 		},
 
 		// ====================
