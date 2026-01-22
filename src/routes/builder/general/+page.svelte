@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { character } from '$lib/stores/character';
 	import { getBuilderDataContext } from '$lib/contexts/builderDataContext.svelte';
 	import type { Ancestry, Heritage, Background, Class, Feat } from '$lib/data/types/app';
@@ -10,6 +11,8 @@
 	import AbilityScoreManager from '$lib/components/wizard/AbilityScoreManager.svelte';
 	import SkillSelector from '$lib/components/wizard/SkillSelector.svelte';
 	import FeatPicker from '$lib/components/features/FeatPicker.svelte';
+	import Modal from '$lib/components/common/Modal.svelte';
+	import Button from '$lib/components/common/Button.svelte';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -25,6 +28,10 @@
 	let trainedSkills: string[] = $state([]);
 	let heritageChoices: Record<string, string> = $state({}); // Key: flag name, Value: selected value
 	let hasRestoredData = $state(false);
+
+	// State for class change confirmation modal
+	let showClassChangeModal = $state(false);
+	let pendingClassChange = $state<Class | null>(null);
 
 	// Restore character selections reactively when data becomes available
 	$effect(() => {
@@ -100,41 +107,51 @@
 	});
 
 	// Re-apply class proficiencies if they're missing (migration for older characters)
+	// This effect only runs for migration purposes - normal class selection applies profs directly
 	$effect(() => {
 		if (!selectedClass) return;
 
 		const currentChar = $character;
+		const classProfs = selectedClass.proficiencies;
 
 		// Check if saves are all 0 (meaning they weren't set from class)
 		const savesNotSet = currentChar.saves.fortitude === 0 &&
 			currentChar.saves.reflex === 0 &&
 			currentChar.saves.will === 0;
 
-		// Check if armor proficiencies are default (only unarmored trained)
-		const armorProfsNotSet = currentChar.armorProficiency.unarmored === 1 &&
-			currentChar.armorProficiency.light === 0 &&
-			currentChar.armorProficiency.medium === 0 &&
-			currentChar.armorProficiency.heavy === 0;
+		// Check if saves need to be updated (different from class proficiencies)
+		const savesNeedUpdate = savesNotSet && (
+			currentChar.saves.fortitude !== classProfs.fortitude ||
+			currentChar.saves.reflex !== classProfs.reflex ||
+			currentChar.saves.will !== classProfs.will
+		);
 
-		// If saves or armor proficiencies aren't set, apply them from the class
-		if ((savesNotSet || armorProfsNotSet) && selectedClass && selectedClass.proficiencies) {
-			// Capture selectedClass in a variable to narrow the type for the callback
-			const classProfs = selectedClass.proficiencies;
-			character.update((char) => ({
-				...char,
-				saves: savesNotSet ? {
-					fortitude: classProfs.fortitude,
-					reflex: classProfs.reflex,
-					will: classProfs.will
-				} : char.saves,
-				perception: savesNotSet ? classProfs.perception : char.perception,
-				armorProficiency: armorProfsNotSet ? {
-					unarmored: classProfs.defenses.unarmored,
-					light: classProfs.defenses.light,
-					medium: classProfs.defenses.medium,
-					heavy: classProfs.defenses.heavy
-				} : char.armorProficiency
-			}));
+		// Check if armor proficiencies need to be updated (different from class proficiencies)
+		const armorNeedsUpdate =
+			currentChar.armorProficiency.unarmored !== classProfs.defenses.unarmored ||
+			currentChar.armorProficiency.light !== classProfs.defenses.light ||
+			currentChar.armorProficiency.medium !== classProfs.defenses.medium ||
+			currentChar.armorProficiency.heavy !== classProfs.defenses.heavy;
+
+		// Only update if values would actually change
+		if (savesNeedUpdate || armorNeedsUpdate) {
+			untrack(() => {
+				character.update((char) => ({
+					...char,
+					saves: savesNeedUpdate ? {
+						fortitude: classProfs.fortitude,
+						reflex: classProfs.reflex,
+						will: classProfs.will
+					} : char.saves,
+					perception: savesNeedUpdate ? classProfs.perception : char.perception,
+					armorProficiency: armorNeedsUpdate ? {
+						unarmored: classProfs.defenses.unarmored,
+						light: classProfs.defenses.light,
+						medium: classProfs.defenses.medium,
+						heavy: classProfs.defenses.heavy
+					} : char.armorProficiency
+				}));
+			});
 		}
 	});
 
@@ -149,21 +166,23 @@
 
 		// If all skills are untrained but we have trained skills selected, apply them
 		if (allSkillsUntrained) {
-			character.update((char) => {
-				const updatedSkills = { ...char.skills };
+			untrack(() => {
+				character.update((char) => {
+					const updatedSkills = { ...char.skills };
 
-				// Set selected skills to trained (rank 1)
-				trainedSkills.forEach(skill => {
-					const skillKey = skill.toLowerCase();
-					if (updatedSkills.hasOwnProperty(skillKey)) {
-						updatedSkills[skillKey] = 1;
-					}
+					// Set selected skills to trained (rank 1)
+					trainedSkills.forEach(skill => {
+						const skillKey = skill.toLowerCase();
+						if (updatedSkills.hasOwnProperty(skillKey)) {
+							updatedSkills[skillKey] = 1;
+						}
+					});
+
+					return {
+						...char,
+						skills: updatedSkills
+					};
 				});
-
-				return {
-					...char,
-					skills: updatedSkills
-				};
 			});
 		}
 	});
@@ -375,8 +394,21 @@
 	}
 
 	function handleClassSelect(cls: Class) {
+		// If there's already a class selected and it's different, show confirmation
+		if (selectedClass && selectedClass.name !== cls.name) {
+			pendingClassChange = cls;
+			showClassChangeModal = true;
+			return;
+		}
+
+		// First time selection or same class - apply directly
+		applyClassSelection(cls);
+	}
+
+	function applyClassSelection(cls: Class) {
 		selectedClass = cls;
 		selectedKeyAbility = null; // Reset key ability when class changes
+		trainedSkills = []; // Reset trained skills for new class
 
 		// Update character store with class information and proficiencies
 		character.update((char) => ({
@@ -408,6 +440,25 @@
 				max: cls.hp + Math.floor((char.abilities.constitution - 10) / 2)
 			}
 		}));
+	}
+
+	function handleConfirmClassChange() {
+		if (pendingClassChange) {
+			// Reset all class-related data first
+			character.resetClassData();
+
+			// Then apply the new class
+			applyClassSelection(pendingClassChange);
+		}
+
+		// Close modal and clear pending
+		showClassChangeModal = false;
+		pendingClassChange = null;
+	}
+
+	function handleCancelClassChange() {
+		showClassChangeModal = false;
+		pendingClassChange = null;
 	}
 
 	function handleKeyAbilitySelect(ability: string) {
@@ -605,17 +656,41 @@
 		const scores = calculatedAbilityScores;
 
 		// Update the character store with calculated ability scores
-		character.update((char) => ({
-			...char,
-			abilities: {
-				strength: scores['Strength'] || 10,
-				dexterity: scores['Dexterity'] || 10,
-				constitution: scores['Constitution'] || 10,
-				intelligence: scores['Intelligence'] || 10,
-				wisdom: scores['Wisdom'] || 10,
-				charisma: scores['Charisma'] || 10
-			}
-		}));
+		// Use untrack to prevent the store update from re-triggering this effect
+		untrack(() => {
+			character.update((char) => {
+				// Check if abilities actually changed to avoid unnecessary updates
+				const newStr = scores['Strength'] || 10;
+				const newDex = scores['Dexterity'] || 10;
+				const newCon = scores['Constitution'] || 10;
+				const newInt = scores['Intelligence'] || 10;
+				const newWis = scores['Wisdom'] || 10;
+				const newCha = scores['Charisma'] || 10;
+
+				if (
+					char.abilities.strength === newStr &&
+					char.abilities.dexterity === newDex &&
+					char.abilities.constitution === newCon &&
+					char.abilities.intelligence === newInt &&
+					char.abilities.wisdom === newWis &&
+					char.abilities.charisma === newCha
+				) {
+					return char; // No change needed
+				}
+
+				return {
+					...char,
+					abilities: {
+						strength: newStr,
+						dexterity: newDex,
+						constitution: newCon,
+						intelligence: newInt,
+						wisdom: newWis,
+						charisma: newCha
+					}
+				};
+			});
+		});
 	});
 
 	// Derive heritage skills from heritage choices
@@ -1080,6 +1155,30 @@
 	</div>
 </div>
 
+<!-- Class Change Confirmation Modal -->
+<Modal open={showClassChangeModal} onClose={handleCancelClassChange} title="Change Class?">
+	<div class="class-change-modal-content">
+		<p class="warning-text">
+			Changing your class from <strong>{selectedClass?.name}</strong> to <strong>{pendingClassChange?.name}</strong> will reset the following:
+		</p>
+		<ul class="reset-list">
+			<li>All class feats</li>
+			<li>All spellcasting choices (known spells, prepared spells, spell slots)</li>
+			<li>Trained skill selections</li>
+		</ul>
+		<p class="confirm-text">
+			Are you sure you want to continue?
+		</p>
+	</div>
+
+	{#snippet footer()}
+		<div class="modal-actions">
+			<Button variant="secondary" onclick={handleCancelClassChange}>Cancel</Button>
+			<Button variant="primary" onclick={handleConfirmClassChange}>Change Class</Button>
+		</div>
+	{/snippet}
+</Modal>
+
 <style>
 	.page-content {
 		max-width: 1200px;
@@ -1391,5 +1490,40 @@
 		.reset-button:active {
 			transform: none;
 		}
+	}
+
+	/* Class Change Modal */
+	.class-change-modal-content {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.warning-text {
+		margin: 0;
+		color: var(--text-primary, #1a1a1a);
+		line-height: 1.6;
+	}
+
+	.reset-list {
+		margin: 0;
+		padding-left: 1.5rem;
+		color: var(--text-secondary, #666666);
+	}
+
+	.reset-list li {
+		margin-bottom: 0.5rem;
+	}
+
+	.confirm-text {
+		margin: 0;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.modal-actions {
+		display: flex;
+		gap: 0.75rem;
+		justify-content: flex-end;
 	}
 </style>
