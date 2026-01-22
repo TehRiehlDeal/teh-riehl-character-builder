@@ -2,6 +2,7 @@
 	import type { Spell } from '$lib/data/types/app';
 	import Modal from '../common/Modal.svelte';
 	import Button from '../common/Button.svelte';
+	import { processDescription } from '$lib/utils/descriptionParser';
 
 	/**
 	 * SpellDetail Component
@@ -74,6 +75,9 @@
 
 		return levels.sort((a, b) => a - b);
 	});
+
+	// Process description to handle Foundry VTT syntax
+	const processedDescription = $derived(spell ? processDescription(spell.description) : '');
 
 	function handleCast() {
 		if (spell && onCast) {
@@ -173,7 +177,7 @@
 			<!-- Description -->
 			<div class="spell-description">
 				<div class="description-content">
-					{@html spell.description}
+					{@html processedDescription}
 				</div>
 			</div>
 
@@ -367,6 +371,56 @@
 		margin: 1rem 0;
 		border: none;
 		border-top: 1px solid var(--border-color, #e0e0e0);
+	}
+
+	/* Inline damage/healing formatting */
+	.description-content :global(.inline-damage) {
+		font-weight: 600;
+		color: #c92a2a;
+		background-color: rgba(201, 42, 42, 0.1);
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+		white-space: nowrap;
+	}
+
+	.description-content :global(.inline-healing) {
+		font-weight: 600;
+		color: #2f9e44;
+		background-color: rgba(47, 158, 68, 0.1);
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+		white-space: nowrap;
+	}
+
+	.description-content :global(.inline-roll) {
+		font-weight: 600;
+		color: var(--link-color, #5c7cfa);
+		background-color: rgba(92, 124, 250, 0.1);
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+	}
+
+	.description-content :global(.inline-check) {
+		font-weight: 600;
+		color: #7048e8;
+		background-color: rgba(112, 72, 232, 0.1);
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+	}
+
+	.description-content :global(.template-ref) {
+		font-weight: 500;
+		color: var(--text-secondary, #666666);
+		font-style: italic;
+	}
+
+	.description-content :global(.uuid-link) {
+		color: var(--link-color, #5c7cfa);
+		text-decoration: none;
+	}
+
+	.description-content :global(.uuid-link:hover) {
+		text-decoration: underline;
 	}
 
 	.heightening-section {
