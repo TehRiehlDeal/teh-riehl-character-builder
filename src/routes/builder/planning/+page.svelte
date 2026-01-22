@@ -104,9 +104,17 @@
 			archetype: typeof archetypeFeats;
 		}> = {};
 
+		// Get the selected class's name as a lowercase trait for filtering
+		const classTraitName = selectedClass?.name?.toLowerCase() || '';
+
 		for (let level = 1; level <= 20; level++) {
 			cache[level] = {
-				class: classFeats.filter(f => f.level <= level),
+				// Filter class feats by BOTH level AND class trait
+				// Class feats have the class name (e.g., 'fighter', 'wizard') as a trait
+				class: classFeats.filter(f =>
+					f.level <= level &&
+					(classTraitName === '' || f.traits.some(t => t.toLowerCase() === classTraitName))
+				),
 				ancestry: ancestryFeats.filter(f => f.level <= level),
 				skill: skillFeats.filter(f => f.level <= level),
 				general: generalFeats.filter(f => f.level <= level),
