@@ -29,6 +29,7 @@
 	import { page } from '$app/stores';
 	import Drawer from '$lib/components/common/Drawer.svelte';
 	import ActiveEffectsPanel from '$lib/components/features/ActiveEffectsPanel.svelte';
+	import VariantRulesSettingsModal from '$lib/components/settings/VariantRulesSettingsModal.svelte';
 	import { ancestryLoader, heritageLoader, backgroundLoader, classLoader, featLoader } from '$lib/data/loaders';
 	import { setBuilderDataContext, type BuilderData } from '$lib/contexts/builderDataContext.svelte';
 	import type { Ancestry, Heritage, Background, Class, Feat } from '$lib/data/types/app';
@@ -37,6 +38,7 @@
 
 	let mobileMenuOpen = $state(false);
 	let effectsPanelOpen = $state(false);
+	let variantRulesOpen = $state(false);
 
 	// Shared data state for all builder pages
 	let ancestries = $state<Ancestry[]>([]);
@@ -209,6 +211,38 @@
 				{/each}
 			</ul>
 
+			<!-- Variant Rules button (desktop) -->
+			<button
+				class="variant-rules-button"
+				onclick={() => (variantRulesOpen = true)}
+				aria-label="Open variant rules settings"
+				title="Variant Rules"
+			>
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<path
+						d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+					<path
+						d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				<span class="variant-rules-label">Variant Rules</span>
+			</button>
+
 			<!-- Mobile effects button -->
 			<button
 				class="mobile-effects-button"
@@ -271,6 +305,37 @@
 				{/each}
 			</ul>
 		</nav>
+
+		<!-- Separator and Variant Rules button -->
+		<hr class="mobile-nav-separator" />
+		<button
+			class="mobile-variant-rules-button"
+			onclick={() => { mobileMenuOpen = false; variantRulesOpen = true; }}
+		>
+			<svg
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<path
+					d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path
+					d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+			<span>Variant Rules</span>
+		</button>
 	</div>
 </Drawer>
 
@@ -278,6 +343,9 @@
 <Drawer bind:open={effectsPanelOpen} position="right" title="Active Effects">
 	<ActiveEffectsPanel compact={true} />
 </Drawer>
+
+<!-- Variant Rules Settings Modal -->
+<VariantRulesSettingsModal bind:open={variantRulesOpen} />
 
 <style>
 	.builder-shell {
@@ -345,6 +413,39 @@
 		color: var(--text-primary, #1a1a1a);
 		cursor: pointer;
 		transition: all var(--transition-fast);
+	}
+
+	/* Variant Rules button (desktop) */
+	.variant-rules-button {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background: none;
+		border: 1px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-family: inherit;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-secondary, #666666);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	.variant-rules-button:hover {
+		background-color: var(--surface-2, #f5f5f5);
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.variant-rules-button:focus-visible {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	.variant-rules-label {
+		display: inline;
 	}
 
 	.desktop-tabs {
@@ -485,6 +586,39 @@
 		color: var(--text-secondary, #666666);
 	}
 
+	/* Mobile navigation separator and variant rules button */
+	.mobile-nav-separator {
+		border: none;
+		border-top: 1px solid var(--border-color, #e0e0e0);
+		margin: 1rem 0;
+	}
+
+	.mobile-variant-rules-button {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		width: 100%;
+		padding: 1rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border: none;
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.mobile-variant-rules-button:hover {
+		background-color: var(--surface-3, #e0e0e0);
+	}
+
+	.mobile-variant-rules-button:focus-visible {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
 	/* Responsive Design */
 	@media (max-width: 1024px) {
 		.builder-layout {
@@ -513,8 +647,27 @@
 			display: none;
 		}
 
+		/* Hide desktop variant rules button on mobile - use mobile nav instead */
+		.variant-rules-button {
+			display: none;
+		}
+
 		.builder-content {
 			padding: 1.5rem 1rem;
+		}
+	}
+
+	/* On medium screens, hide the label but keep the icon */
+	@media (max-width: 900px) and (min-width: 769px) {
+		.variant-rules-label {
+			display: none;
+		}
+
+		.variant-rules-button {
+			padding: 0.5rem;
+			width: 40px;
+			height: 40px;
+			justify-content: center;
 		}
 	}
 
