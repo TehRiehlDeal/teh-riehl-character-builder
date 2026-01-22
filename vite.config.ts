@@ -22,6 +22,10 @@ export default defineConfig({
 					if (id.includes('/data/repositories/')) {
 						return 'data-repositories';
 					}
+					// Separate chunk for database module
+					if (id.includes('/data/database/')) {
+						return 'data-database';
+					}
 					// Separate chunk for large wizard components
 					if (id.includes('/components/wizard/')) {
 						return 'wizard-components';
@@ -73,22 +77,53 @@ export default defineConfig({
 				globPatterns: ['**/*.{js,css,html,svg,png,ico,txt,woff,woff2}'],
 
 				// Exclude large data files from precache (they'll be cached on-demand)
-				globIgnores: ['**/data/**/*.json'],
+				globIgnores: ['**/data/**/*.json', '**/data/*.db'],
 
-				// Maximum cache size (50MB)
-				maximumFileSizeToCacheInBytes: 50 * 1024 * 1024,
+				// Maximum cache size (100MB to accommodate database)
+				maximumFileSizeToCacheInBytes: 100 * 1024 * 1024,
 
 				runtimeCaching: [
-					// Game data - Cache First with data version as cache name
-					// This allows invalidation when data version changes
+					// SQLite database - Cache First, single file for all game data
+					{
+						urlPattern: /\/data\/pf2e\.db$/,
+						handler: 'CacheFirst',
+						options: {
+							cacheName: 'pf2e-database-v2026.01.1',
+							expiration: {
+								maxEntries: 1,
+								maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+							},
+							cacheableResponse: {
+								statuses: [200]
+							}
+						}
+					},
+
+					// WASM files for sql.js
+					{
+						urlPattern: /\/wasm\/.*\.wasm$/,
+						handler: 'CacheFirst',
+						options: {
+							cacheName: 'wasm-v1',
+							expiration: {
+								maxEntries: 5,
+								maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+							},
+							cacheableResponse: {
+								statuses: [200]
+							}
+						}
+					},
+
+					// Legacy: Game data JSON files (kept for backward compatibility)
 					// IMPORTANT: Validates Content-Type to prevent caching HTML fallback pages as JSON
 					{
 						urlPattern: /\/data\/.*\.json$/,
 						handler: 'CacheFirst',
 						options: {
-							cacheName: 'pf2e-game-data-v2026.01.3', // Bumped version to invalidate corrupted cache
+							cacheName: 'pf2e-game-data-v2026.01.3',
 							expiration: {
-								maxEntries: 10000, // Increased to accommodate all data files (5848 feats + ancestries, classes, etc.)
+								maxEntries: 10000,
 								maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
 							},
 							cacheableResponse: {
