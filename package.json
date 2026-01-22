@@ -6,8 +6,10 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"build:db": "node scripts/build-sqlite-database.js",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
+		"prebuild": "npm run build:db",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
@@ -56,5 +58,8 @@
 		"vite-plugin-pwa": "^1.2.0",
 		"vitest": "^4.0.17",
 		"workbox-window": "^7.4.0"
+	},
+	"dependencies": {
+		"sql.js": "^1.13.0"
 	}
 }
