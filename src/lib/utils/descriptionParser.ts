@@ -118,6 +118,82 @@ export function parseDamage(html: string): string {
 }
 
 /**
+ * Simplify Foundry formula references for display
+ * Converts @actor.level, @item.level, etc. to readable text
+ */
+function simplifyFormula(formula: string): string {
+	let simplified = formula;
+
+	// Remove outer parentheses if present
+	if (simplified.startsWith('(') && simplified.endsWith(')')) {
+		simplified = simplified.slice(1, -1);
+	}
+
+	// Replace common Foundry references with readable text
+	simplified = simplified
+		// Item/spell level references
+		.replace(/@item\.level/g, 'spell rank')
+		.replace(/@item\.rank/g, 'spell rank')
+		// Actor level references
+		.replace(/@actor\.level/g, 'level')
+		// Ability modifiers
+		.replace(/@actor\.system\.abilities\.(\w+)\.mod/g, (_, ability) => `${ability.toUpperCase()} modifier`)
+		.replace(/@actor\.abilities\.(\w+)\.mod/g, (_, ability) => `${ability.toUpperCase()} modifier`)
+		// Math functions - make more readable
+		.replace(/ceil\(([^)]+)\)/g, (_, inner) => `${simplifyFormula(inner)} (rounded up)`)
+		.replace(/floor\(([^)]+)\)/g, (_, inner) => `${simplifyFormula(inner)} (rounded down)`)
+		// Clean up math operators
+		.replace(/\*2/g, '×2')
+		.replace(/2\*/g, '2×')
+		.replace(/\//g, '÷');
+
+	return simplified;
+}
+
+/**
+ * Parse Foundry VTT @Damage syntax
+ * Formats:
+ * - @Damage[formula] - just a formula
+ * - @Damage[formula[type]] - formula with damage type
+ * - @Damage[formula[type1,type2]] - formula with multiple types
+ */
+export function parseFoundryDamage(html: string): string {
+	if (!html) return '';
+
+	// Match @Damage[...] patterns
+	// The content can have nested brackets for damage types
+	const damagePattern = /@Damage\[([^\]]+(?:\[[^\]]*\])?)\]/g;
+
+	return html.replace(damagePattern, (match, content) => {
+		// Check if there's a nested bracket for damage types
+		const nestedMatch = content.match(/^(.+?)\[([^\]]*)\]$/);
+
+		let formula: string;
+		let types: string[] = [];
+
+		if (nestedMatch) {
+			formula = nestedMatch[1];
+			types = nestedMatch[2].split(',').map((t: string) => t.trim()).filter(Boolean);
+		} else {
+			formula = content;
+		}
+
+		// Simplify the formula for display
+		const displayFormula = simplifyFormula(formula);
+
+		// Format the damage types
+		const typeStr = types.length > 0 ? ` ${types.join(' ')}` : '';
+
+		// Determine if this is healing or damage
+		const isHealing = types.includes('healing');
+		const className = isHealing ? 'inline-healing' : 'inline-damage';
+		const suffix = isHealing ? '' : ' damage';
+
+		return `<span class="${className}" data-formula="${formula}" data-types="${types.join(',')}">${displayFormula}${typeStr}${suffix}</span>`;
+	});
+}
+
+/**
  * Comprehensive description processor
  * Applies all parsing rules in the correct order
  */
@@ -128,6 +204,7 @@ export function processDescription(html: string): string {
 
 	// Apply transformations in order
 	processed = parseUUIDReferences(processed);
+	processed = parseFoundryDamage(processed); // Parse @Damage[...] syntax first
 	processed = parseInlineRolls(processed);
 	processed = parseTemplates(processed);
 	processed = parseDamage(processed);
