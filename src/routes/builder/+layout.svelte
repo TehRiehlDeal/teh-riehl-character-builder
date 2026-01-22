@@ -1,28 +1,12 @@
 <script lang="ts">
 	/**
-	 * Builder Layout - Data Loading & Caching Strategy
+	 * Builder Layout - Data Loading
 	 *
-	 * PERFORMANCE OPTIMIZATION:
-	 * This layout implements a multi-layer caching strategy to ensure game data
-	 * is loaded only once, regardless of tab switching:
+	 * Data is loaded once from SQLite when the layout first mounts.
+	 * The layout persists when navigating between tabs, so data is only
+	 * fetched once per session.
 	 *
-	 * Layer 1: Repository-level caching
-	 *   - Each repository (ancestryRepository, featRepository, etc.) has an in-memory cache
-	 *   - Data is loaded from JSON files only on the first call
-	 *   - Subsequent calls return the cached data instantly
-	 *
-	 * Layer 2: Layout-level state
-	 *   - Data is loaded once in onMount() when the layout first renders
-	 *   - The layout persists when navigating between child routes (tabs)
-	 *   - onMount() does NOT re-run when switching tabs
-	 *
-	 * Layer 3: Context sharing
-	 *   - Loaded data is shared via Svelte context to all child pages
-	 *   - Child pages access data via getBuilderDataContext()
-	 *   - No data fetching happens at the page level
-	 *
-	 * Result: Data loads once when you first visit /builder, then tab switching
-	 * is instant because all data is already in memory.
+	 * With SQLite, all data loads in parallel in ~50-100ms.
 	 */
 
 	import { onMount } from 'svelte';
@@ -47,70 +31,36 @@
 	let classes = $state<Class[]>([]);
 	let feats = $state<Feat[]>([]);
 
-	let criticalDataLoading = $state(true);
-	let heritagesLoading = $state(true);
-	let featsLoading = $state(true);
+	// Single loading state for all data
+	let loading = $state(true);
 
 	// Flag to ensure data only loads once (defensive against potential double-mounts)
 	let dataLoaded = false;
 
-	// Load data once for all builder pages
-	// This only runs when the layout first mounts, NOT when switching between tabs
+	// Load all data in parallel when the layout mounts
 	onMount(async () => {
-		// Defensive check: if data is already loaded, don't load again
-		if (dataLoaded) {
-			console.log('[Builder Layout] Data already loaded, skipping reload');
-			return;
-		}
-
-		console.log('[Builder Layout] Loading game data for the first time...');
-		const startTime = performance.now();
+		if (dataLoaded) return;
 		dataLoaded = true;
 
 		try {
-			// PHASE 1: Load critical data (ancestries, backgrounds, classes)
-			console.log('[Builder Layout] Phase 1: Loading critical data...');
-			const [ancestryData, backgroundData, classData] = await Promise.all([
+			// Load all data in parallel - SQLite makes this fast
+			const [ancestryData, heritageData, backgroundData, classData, featData] = await Promise.all([
 				ancestryLoader.loadAll(),
+				heritageLoader.loadAll(),
 				backgroundLoader.loadAll(),
-				classLoader.loadAll()
+				classLoader.loadAll(),
+				featLoader.loadAll()
 			]);
 
 			ancestries = ancestryData;
+			heritages = heritageData;
 			backgrounds = backgroundData;
 			classes = classData;
-			criticalDataLoading = false;
-
-			const phase1Time = performance.now() - startTime;
-			console.log(`[Builder Layout] Phase 1 complete (${phase1Time.toFixed(0)}ms): ${ancestryData.length} ancestries, ${backgroundData.length} backgrounds, ${classData.length} classes`);
-
-			// PHASE 2: Load heritages in background
-			console.log('[Builder Layout] Phase 2: Loading heritages...');
-			heritageLoader.loadAll().then((heritageData) => {
-				heritages = heritageData;
-				heritagesLoading = false;
-				const phase2Time = performance.now() - startTime;
-				console.log(`[Builder Layout] Phase 2 complete (${phase2Time.toFixed(0)}ms): ${heritageData.length} heritages`);
-			}).catch((error) => {
-				console.error('Failed to load heritages:', error);
-				heritagesLoading = false;
-			});
-
-			// PHASE 3: Load feats in background
-			console.log('[Builder Layout] Phase 3: Loading feats...');
-			featLoader.loadAll().then((featData) => {
-				feats = featData;
-				featsLoading = false;
-				const phase3Time = performance.now() - startTime;
-				console.log(`[Builder Layout] Phase 3 complete (${phase3Time.toFixed(0)}ms): ${featData.length} feats`);
-				console.log(`[Builder Layout] ✅ All data loaded successfully in ${phase3Time.toFixed(0)}ms`);
-			}).catch((error) => {
-				console.error('Failed to load feats:', error);
-				featsLoading = false;
-			});
+			feats = featData;
+			loading = false;
 		} catch (error) {
-			console.error('Failed to load critical builder data:', error);
-			criticalDataLoading = false;
+			console.error('Failed to load builder data:', error);
+			loading = false;
 		}
 	});
 
@@ -128,9 +78,11 @@
 		get backgrounds() { return backgrounds; },
 		get classes() { return classes; },
 		get feats() { return feats; },
-		get criticalDataLoading() { return criticalDataLoading; },
-		get heritagesLoading() { return heritagesLoading; },
-		get featsLoading() { return featsLoading; },
+		get loading() { return loading; },
+		// Legacy loading states - all point to same loading state for backward compatibility
+		get criticalDataLoading() { return loading; },
+		get heritagesLoading() { return loading; },
+		get featsLoading() { return loading; },
 		getClassFeats: () => classFeats,
 		getAncestryFeats: () => ancestryFeats,
 		getSkillFeats: () => skillFeats,
@@ -159,10 +111,6 @@
 
 	function handleTabClick() {
 		mobileMenuOpen = false;
-	}
-
-	function handleEffectsClose() {
-		effectsPanelOpen = false;
 	}
 </script>
 
