@@ -18,18 +18,29 @@ import type { FoundrySpell } from '../types/foundry';
 import type { Spell } from '../types/app';
 
 /**
+ * Check if a spell is a cantrip by checking for the 'cantrip' trait
+ */
+function isCantrip(foundrySpell: FoundrySpell): boolean {
+	const traits = foundrySpell.system.traits.value;
+	return Array.isArray(traits) && traits.includes('cantrip');
+}
+
+/**
  * Transform a Foundry spell into our app schema
  */
 export function adaptSpell(
 	foundrySpell: FoundrySpell,
 	spellType: 'standard' | 'focus' | 'ritual' = 'standard'
 ): Spell {
+	// Cantrips are treated as level 0 for filtering/display purposes
+	const level = isCantrip(foundrySpell) ? 0 : foundrySpell.system.level.value;
+
 	return {
 		type: 'spell',
 		id: foundrySpell._id,
 		name: foundrySpell.name,
 		description: foundrySpell.system.description.value,
-		level: foundrySpell.system.level.value,
+		level,
 		spellType,
 		traditions: extractTraditions(foundrySpell),
 		castingTime: foundrySpell.system.time.value,
