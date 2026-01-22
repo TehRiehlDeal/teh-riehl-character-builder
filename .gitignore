@@ -53,3 +53,5 @@ pnpm-lock.yaml
 **/dev-dist/
 **/docs/
 .claude/
+**.wasm
+**.db
