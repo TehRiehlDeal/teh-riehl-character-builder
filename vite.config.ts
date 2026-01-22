@@ -81,17 +81,21 @@ export default defineConfig({
 				runtimeCaching: [
 					// Game data - Cache First with data version as cache name
 					// This allows invalidation when data version changes
+					// IMPORTANT: Validates Content-Type to prevent caching HTML fallback pages as JSON
 					{
 						urlPattern: /\/data\/.*\.json$/,
 						handler: 'CacheFirst',
 						options: {
-							cacheName: 'pf2e-game-data-v2026.01.2', // Update this when data version changes
+							cacheName: 'pf2e-game-data-v2026.01.3', // Bumped version to invalidate corrupted cache
 							expiration: {
-								maxEntries: 500,
+								maxEntries: 10000, // Increased to accommodate all data files (5848 feats + ancestries, classes, etc.)
 								maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
 							},
 							cacheableResponse: {
-								statuses: [0, 200]
+								statuses: [200],
+								headers: {
+									'Content-Type': 'application/json'
+								}
 							}
 						}
 					},
