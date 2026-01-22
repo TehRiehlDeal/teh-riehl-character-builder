@@ -16,9 +16,15 @@ export interface BuilderData {
 	classes: Class[];
 	feats: Feat[];
 
-	// Loading states
+	// Single loading state (SQLite loads all data quickly)
+	loading: boolean;
+
+	// Legacy loading states for backward compatibility
+	/** @deprecated Use `loading` instead */
 	criticalDataLoading: boolean;
+	/** @deprecated Use `loading` instead */
 	heritagesLoading: boolean;
+	/** @deprecated Use `loading` instead */
 	featsLoading: boolean;
 
 	// Helper methods

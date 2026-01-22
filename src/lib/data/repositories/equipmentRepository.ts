@@ -1,103 +1,51 @@
 /**
  * Equipment Repository
  *
- * Provides data access methods for equipment (weapons, armor, and other items).
- * Uses lazy loading to avoid loading all equipment into memory at once.
+ * Provides data access methods for equipment using SQLite.
+ * Maintains the same public API as the previous JSON-based implementation.
  */
 
 import type { Equipment, Weapon, Armor } from '../types/app';
-import type { FoundryWeapon, FoundryArmor, FoundryEquipment } from '../types/foundry';
-import { adaptWeapon, adaptArmor, adaptEquipment } from '../adapters/equipmentAdapter';
-import { loadAllData, loadDataById, loadDataByFilter } from '../dataLoader';
-
-/**
- * In-memory cache of loaded equipment
- */
-let equipmentCache: Equipment[] | null = null;
-
-/**
- * Load all equipment from raw data files
- */
-async function loadEquipment(): Promise<Equipment[]> {
-	if (equipmentCache !== null) {
-		return equipmentCache;
-	}
-
-	try {
-		// Load all equipment data from manifest
-		const foundryEquipment = await loadAllData<
-			FoundryWeapon | FoundryArmor | FoundryEquipment
-		>('equipment');
-
-		// Adapt based on type
-		const equipment = foundryEquipment.map((item) => {
-			if (item.type === 'weapon') {
-				return adaptWeapon(item as FoundryWeapon);
-			} else if (item.type === 'armor') {
-				return adaptArmor(item as FoundryArmor);
-			} else {
-				return adaptEquipment(item as FoundryEquipment);
-			}
-		});
-
-		equipmentCache = equipment;
-		return equipment;
-	} catch (error) {
-		console.error('Failed to load equipment:', error);
-		return [];
-	}
-}
+import { DatabaseManager, QueryBuilder, QueryCache, CacheKeys } from '../database';
 
 /**
  * Get all equipment
  */
 export async function getAllEquipment(): Promise<Equipment[]> {
-	return loadEquipment();
+	return QueryCache.getOrFetch(CacheKeys.all('equipment'), () =>
+		QueryBuilder.getAll<Equipment>('equipment')
+	);
 }
 
 /**
  * Get equipment by ID
- *
- * This method loads only the specific equipment file, not all equipment
  */
 export async function getEquipmentById(id: string): Promise<Equipment | null> {
-	try {
-		const foundryItem = await loadDataById<FoundryWeapon | FoundryArmor | FoundryEquipment>(
-			'equipment',
-			id
-		);
-		if (!foundryItem) {
-			return null;
-		}
-
-		// Adapt based on type
-		if (foundryItem.type === 'weapon') {
-			return adaptWeapon(foundryItem as FoundryWeapon);
-		} else if (foundryItem.type === 'armor') {
-			return adaptArmor(foundryItem as FoundryArmor);
-		} else {
-			return adaptEquipment(foundryItem as FoundryEquipment);
-		}
-	} catch (error) {
-		console.error(`Failed to load equipment ${id}:`, error);
-		return null;
-	}
+	return QueryCache.getOrFetch(CacheKeys.byId(id), () => QueryBuilder.getById<Equipment>(id));
 }
 
 /**
  * Get all weapons
  */
 export async function getWeapons(): Promise<Weapon[]> {
-	const equipment = await loadEquipment();
-	return equipment.filter((item) => item.equipmentType === 'weapon') as Weapon[];
+	return QueryCache.getOrFetch(CacheKeys.byCategory('equipment', 'weapon'), async () => {
+		return QueryBuilder.filter<Weapon>({
+			type: 'equipment',
+			equipmentType: 'weapon'
+		});
+	});
 }
 
 /**
  * Get all armor
  */
 export async function getArmor(): Promise<Armor[]> {
-	const equipment = await loadEquipment();
-	return equipment.filter((item) => item.equipmentType === 'armor') as Armor[];
+	return QueryCache.getOrFetch(CacheKeys.byCategory('equipment', 'armor'), async () => {
+		return QueryBuilder.filter<Armor>({
+			type: 'equipment',
+			equipmentType: 'armor'
+		});
+	});
 }
 
 /**
@@ -106,8 +54,12 @@ export async function getArmor(): Promise<Armor[]> {
 export async function getEquipmentByType(
 	equipmentType: 'weapon' | 'armor' | 'shield' | 'consumable' | 'adventuring-gear' | 'other'
 ): Promise<Equipment[]> {
-	const equipment = await loadEquipment();
-	return equipment.filter((item) => item.equipmentType === equipmentType);
+	return QueryCache.getOrFetch(CacheKeys.byCategory('equipment', equipmentType), async () => {
+		return QueryBuilder.filter<Equipment>({
+			type: 'equipment',
+			equipmentType
+		});
+	});
 }
 
 /**
@@ -116,8 +68,11 @@ export async function getEquipmentByType(
 export async function getWeaponsByCategory(
 	category: 'simple' | 'martial' | 'advanced' | 'unarmed'
 ): Promise<Weapon[]> {
-	const weapons = await getWeapons();
-	return weapons.filter((weapon) => weapon.category === category);
+	return QueryBuilder.filter<Weapon>({
+		type: 'equipment',
+		equipmentType: 'weapon',
+		category
+	});
 }
 
 /**
@@ -126,34 +81,37 @@ export async function getWeaponsByCategory(
 export async function getArmorByCategory(
 	category: 'unarmored' | 'light' | 'medium' | 'heavy'
 ): Promise<Armor[]> {
-	const armor = await getArmor();
-	return armor.filter((a) => a.category === category);
+	return QueryBuilder.filter<Armor>({
+		type: 'equipment',
+		equipmentType: 'armor',
+		category
+	});
 }
 
 /**
  * Get equipment by level
  */
 export async function getEquipmentByLevel(level: number): Promise<Equipment[]> {
-	const equipment = await loadEquipment();
-	return equipment.filter((item) => item.level === level);
+	return QueryCache.getOrFetch(CacheKeys.byLevel('equipment', level), () =>
+		QueryBuilder.getByLevel<Equipment>('equipment', level)
+	);
 }
 
 /**
  * Get equipment by trait
  */
 export async function getEquipmentByTrait(trait: string): Promise<Equipment[]> {
-	const equipment = await loadEquipment();
-	return equipment.filter((item) => item.traits.includes(trait));
+	return QueryCache.getOrFetch(CacheKeys.byTrait('equipment', trait), () =>
+		QueryBuilder.getByTrait<Equipment>('equipment', trait)
+	);
 }
 
 /**
  * Search equipment by name
  */
 export async function searchEquipment(query: string): Promise<Equipment[]> {
-	const equipment = await loadEquipment();
-	const lowerQuery = query.toLowerCase();
-
-	return equipment.filter((item) => item.name.toLowerCase().includes(lowerQuery));
+	if (!query || query.trim() === '') return [];
+	return QueryBuilder.searchByName<Equipment>('equipment', query);
 }
 
 /**
@@ -169,41 +127,29 @@ export async function filterEquipment(filters: {
 	weaponCategory?: 'simple' | 'martial' | 'advanced' | 'unarmed';
 	armorCategory?: 'unarmored' | 'light' | 'medium' | 'heavy';
 }): Promise<Equipment[]> {
-	let equipment = await loadEquipment();
+	// Use SQL filters for basic criteria
+	let equipment = await QueryBuilder.filter<Equipment>({
+		type: 'equipment',
+		equipmentType: filters.equipmentType,
+		level: filters.level,
+		minLevel: filters.minLevel,
+		maxLevel: filters.maxLevel,
+		trait: filters.trait,
+		rarity: filters.rarity
+	});
 
-	if (filters.equipmentType) {
-		equipment = equipment.filter((item) => item.equipmentType === filters.equipmentType);
-	}
-
-	if (filters.level !== undefined) {
-		equipment = equipment.filter((item) => item.level === filters.level);
-	}
-
-	if (filters.minLevel !== undefined) {
-		equipment = equipment.filter((item) => item.level >= filters.minLevel!);
-	}
-
-	if (filters.maxLevel !== undefined) {
-		equipment = equipment.filter((item) => item.level <= filters.maxLevel!);
-	}
-
-	if (filters.trait) {
-		equipment = equipment.filter((item) => item.traits.includes(filters.trait!));
-	}
-
-	if (filters.rarity) {
-		equipment = equipment.filter((item) => item.rarity === filters.rarity);
-	}
-
+	// Apply in-memory filters for weapon/armor category (stored in JSON)
 	if (filters.weaponCategory) {
 		equipment = equipment.filter(
-			(item) => item.equipmentType === 'weapon' && (item as Weapon).category === filters.weaponCategory
+			(item) =>
+				item.equipmentType === 'weapon' && (item as Weapon).category === filters.weaponCategory
 		);
 	}
 
 	if (filters.armorCategory) {
 		equipment = equipment.filter(
-			(item) => item.equipmentType === 'armor' && (item as Armor).category === filters.armorCategory
+			(item) =>
+				item.equipmentType === 'armor' && (item as Armor).category === filters.armorCategory
 		);
 	}
 
@@ -212,9 +158,10 @@ export async function filterEquipment(filters: {
 
 /**
  * Clear the equipment cache
- *
- * Useful for testing or when data is updated
  */
 export function clearEquipmentCache(): void {
-	equipmentCache = null;
+	QueryCache.invalidatePrefix('all:equipment');
+	QueryCache.invalidatePrefix('cat:equipment');
+	QueryCache.invalidatePrefix('level:equipment');
+	QueryCache.invalidatePrefix('trait:equipment');
 }

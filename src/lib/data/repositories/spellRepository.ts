@@ -1,89 +1,46 @@
 /**
  * Spell Repository
  *
- * Provides data access methods for spells.
- * Uses lazy loading to avoid loading all spells into memory at once.
+ * Provides data access methods for spells using SQLite.
+ * Maintains the same public API as the previous JSON-based implementation.
  */
 
 import type { Spell } from '../types/app';
-import type { FoundrySpell } from '../types/foundry';
-import { adaptSpell } from '../adapters/spellAdapter';
-import { loadAllData, loadDataById, loadDataByFilter } from '../dataLoader';
-
-/**
- * In-memory cache of loaded spells
- */
-let spellsCache: Spell[] | null = null;
-
-/**
- * Load all spells from raw data files
- */
-async function loadSpells(): Promise<Spell[]> {
-	if (spellsCache !== null) {
-		return spellsCache;
-	}
-
-	try {
-		const foundrySpells = await loadAllData<FoundrySpell>('spells');
-
-		// Determine spell type based on path
-		const spells = foundrySpells.map((foundrySpell: FoundrySpell & { path?: string }) => {
-			let spellType: 'standard' | 'focus' | 'ritual' = 'standard';
-
-			// You could check metadata or path to determine type
-			// For now, we'll default to standard
-			// In a more sophisticated implementation, the manifest could include this info
-
-			return adaptSpell(foundrySpell, spellType);
-		});
-
-		spellsCache = spells;
-		return spells;
-	} catch (error) {
-		console.error('Failed to load spells:', error);
-		return [];
-	}
-}
+import { DatabaseManager, QueryBuilder, QueryCache, CacheKeys } from '../database';
 
 /**
  * Get all spells
  */
 export async function getAllSpells(): Promise<Spell[]> {
-	return loadSpells();
+	return QueryCache.getOrFetch(CacheKeys.all('spell'), () => QueryBuilder.getAll<Spell>('spell'));
 }
 
 /**
  * Get a spell by ID
- *
- * This method loads only the specific spell file, not all spells
  */
 export async function getSpellById(id: string): Promise<Spell | null> {
-	try {
-		const foundrySpell = await loadDataById<FoundrySpell>('spells', id);
-		if (!foundrySpell) {
-			return null;
-		}
-		return adaptSpell(foundrySpell);
-	} catch (error) {
-		console.error(`Failed to load spell ${id}:`, error);
-		return null;
-	}
+	return QueryCache.getOrFetch(CacheKeys.byId(id), () => QueryBuilder.getById<Spell>(id));
 }
 
 /**
  * Get spells by level
  */
 export async function getSpellsByLevel(level: number): Promise<Spell[]> {
-	const spells = await loadSpells();
-	return spells.filter((spell) => spell.level === level);
+	return QueryCache.getOrFetch(CacheKeys.byLevel('spell', level), () =>
+		QueryBuilder.getByLevel<Spell>('spell', level)
+	);
 }
 
 /**
  * Get spells by tradition (arcane, divine, primal, occult)
  */
 export async function getSpellsByTradition(tradition: string): Promise<Spell[]> {
-	const spells = await loadSpells();
-	return spells.filter((spell) => spell.traditions.includes(tradition));
+	return QueryCache.getOrFetch(CacheKeys.byTradition(tradition), async () => {
+		return QueryBuilder.filter<Spell>({
+			type: 'spell',
+			tradition
+		});
+	});
 }
 
 /**
@@ -92,7 +49,8 @@ export async function getSpellsByTradition(tradition: string): Promise<Spell[]> 
 export async function getSpellsByType(
 	spellType: 'standard' | 'focus' | 'ritual'
 ): Promise<Spell[]> {
-	const spells = await loadSpells();
+	// spellType is stored in the JSON data, so we need to filter in memory
+	const spells = await getAllSpells();
 	return spells.filter((spell) => spell.spellType === spellType);
 }
 
@@ -100,18 +58,17 @@ export async function getSpellsByType(
  * Get spells by trait
  */
 export async function getSpellsByTrait(trait: string): Promise<Spell[]> {
-	const spells = await loadSpells();
-	return spells.filter((spell) => spell.traits.includes(trait));
+	return QueryCache.getOrFetch(CacheKeys.byTrait('spell', trait), () =>
+		QueryBuilder.getByTrait<Spell>('spell', trait)
+	);
 }
 
 /**
  * Search spells by name
  */
 export async function searchSpells(query: string): Promise<Spell[]> {
-	const spells = await loadSpells();
-	const lowerQuery = query.toLowerCase();
-
-	return spells.filter((spell) => spell.name.toLowerCase().includes(lowerQuery));
+	if (!query || query.trim() === '') return [];
+	return QueryBuilder.searchByName<Spell>('spell', query);
 }
 
 /**
@@ -132,30 +89,19 @@ export async function filterSpells(filters: {
 	minLevel?: number;
 	maxLevel?: number;
 }): Promise<Spell[]> {
-	let spells = await loadSpells();
+	// Use SQL filters for supported criteria
+	let spells = await QueryBuilder.filter<Spell>({
+		type: 'spell',
+		level: filters.level,
+		tradition: filters.tradition,
+		trait: filters.trait,
+		minLevel: filters.minLevel,
+		maxLevel: filters.maxLevel
+	});
 
-	if (filters.level !== undefined) {
-		spells = spells.filter((spell) => spell.level === filters.level);
-	}
-
-	if (filters.tradition) {
-		spells = spells.filter((spell) => spell.traditions.includes(filters.tradition!));
-	}
-
+	// Apply in-memory filter for spellType (stored in JSON)
 	if (filters.spellType) {
 		spells = spells.filter((spell) => spell.spellType === filters.spellType);
-	}
-
-	if (filters.trait) {
-		spells = spells.filter((spell) => spell.traits.includes(filters.trait!));
-	}
-
-	if (filters.minLevel !== undefined) {
-		spells = spells.filter((spell) => spell.level >= filters.minLevel!);
-	}
-
-	if (filters.maxLevel !== undefined) {
-		spells = spells.filter((spell) => spell.level <= filters.maxLevel!);
 	}
 
 	return spells;
@@ -163,9 +109,10 @@ export async function filterSpells(filters: {
 
 /**
  * Clear the spell cache
- *
- * Useful for testing or when data is updated
  */
 export function clearSpellCache(): void {
-	spellsCache = null;
+	QueryCache.invalidatePrefix('all:spell');
+	QueryCache.invalidatePrefix('level:spell');
+	QueryCache.invalidatePrefix('tradition:');
+	QueryCache.invalidatePrefix('trait:spell');
 }
