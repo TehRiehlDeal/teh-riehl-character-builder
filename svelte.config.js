@@ -13,7 +13,8 @@ const config = {
 			// Output directory for built files (default: 'build')
 			pages: 'build',
 			assets: 'build',
-			fallback: undefined,
+			// Fallback page for SPA routing - serves this HTML for non-matched routes
+			fallback: '200.html',
 			// Enable precompression for faster initial loads
 			precompress: true, // Generates .br and .gz files
 			strict: true
