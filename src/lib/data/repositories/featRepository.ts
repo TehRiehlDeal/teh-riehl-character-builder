@@ -1,62 +1,25 @@
 /**
  * Feat Repository
  *
- * Provides data access methods for feats.
- * Uses lazy loading to avoid loading all feats into memory at once.
+ * Provides data access methods for feats using SQLite.
+ * Maintains the same public API as the previous JSON-based implementation.
  */
 
 import type { Feat } from '../types/app';
-import type { FoundryFeat } from '../types/foundry';
-import { adaptFeat } from '../adapters/featAdapter';
-import { loadAllData, loadDataById } from '../dataLoader';
-
-/**
- * In-memory cache of loaded feats
- */
-let featsCache: Feat[] | null = null;
-
-/**
- * Load all feats from raw data files
- */
-async function loadFeats(): Promise<Feat[]> {
-	if (featsCache !== null) {
-		return featsCache;
-	}
-
-	try {
-		const foundryFeats = await loadAllData<FoundryFeat>('feats');
-		const feats = foundryFeats.map((feat) => adaptFeat(feat));
-		featsCache = feats;
-		return feats;
-	} catch (error) {
-		console.error('Failed to load feats:', error);
-		return [];
-	}
-}
+import { DatabaseManager, QueryBuilder, QueryCache, CacheKeys } from '../database';
 
 /**
  * Get all feats
  */
 export async function getAllFeats(): Promise<Feat[]> {
-	return loadFeats();
+	return QueryCache.getOrFetch(CacheKeys.all('feat'), () => QueryBuilder.getAll<Feat>('feat'));
 }
 
 /**
  * Get a feat by ID
- *
- * This method loads only the specific feat file, not all feats
  */
 export async function getFeatById(id: string): Promise<Feat | null> {
-	try {
-		const foundryFeat = await loadDataById<FoundryFeat>('feats', id);
-		if (!foundryFeat) {
-			return null;
-		}
-		return adaptFeat(foundryFeat);
-	} catch (error) {
-		console.error(`Failed to load feat ${id}:`, error);
-		return null;
-	}
+	return QueryCache.getOrFetch(CacheKeys.byId(id), () => QueryBuilder.getById<Feat>(id));
 }
 
 /**
@@ -65,34 +28,38 @@ export async function getFeatById(id: string): Promise<Feat | null> {
 export async function getFeatsByCategory(
 	category: 'general' | 'skill' | 'class' | 'ancestry' | 'archetype'
 ): Promise<Feat[]> {
-	const feats = await loadFeats();
-	return feats.filter((feat) => feat.category === category);
+	return QueryCache.getOrFetch(CacheKeys.byCategory('feat', category), async () => {
+		return QueryBuilder.filter<Feat>({
+			type: 'feat',
+			category
+		});
+	});
 }
 
 /**
  * Get feats by level
  */
 export async function getFeatsByLevel(level: number): Promise<Feat[]> {
-	const feats = await loadFeats();
-	return feats.filter((feat) => feat.level === level);
+	return QueryCache.getOrFetch(CacheKeys.byLevel('feat', level), () =>
+		QueryBuilder.getByLevel<Feat>('feat', level)
+	);
 }
 
 /**
  * Get feats by trait
  */
 export async function getFeatsByTrait(trait: string): Promise<Feat[]> {
-	const feats = await loadFeats();
-	return feats.filter((feat) => feat.traits.includes(trait));
+	return QueryCache.getOrFetch(CacheKeys.byTrait('feat', trait), () =>
+		QueryBuilder.getByTrait<Feat>('feat', trait)
+	);
 }
 
 /**
  * Search feats by name (case-insensitive)
  */
 export async function searchFeats(query: string): Promise<Feat[]> {
-	const feats = await loadFeats();
-	const lowerQuery = query.toLowerCase();
-
-	return feats.filter((feat) => feat.name.toLowerCase().includes(lowerQuery));
+	if (!query || query.trim() === '') return [];
+	return QueryBuilder.searchByName<Feat>('feat', query);
 }
 
 /**
@@ -104,26 +71,20 @@ export async function getFeats(criteria: {
 	trait?: string;
 	hasPrerequisites?: boolean;
 }): Promise<Feat[]> {
-	let feats = await loadFeats();
+	// Build filter options
+	const feats = await QueryBuilder.filter<Feat>({
+		type: 'feat',
+		category: criteria.category,
+		level: criteria.level,
+		trait: criteria.trait
+	});
 
-	if (criteria.category) {
-		feats = feats.filter((feat) => feat.category === criteria.category);
-	}
-
-	if (criteria.level !== undefined) {
-		feats = feats.filter((feat) => feat.level === criteria.level);
-	}
-
-	if (criteria.trait) {
-		const trait = criteria.trait;
-		feats = feats.filter((feat) => feat.traits.includes(trait));
-	}
-
+	// Filter by prerequisites if specified (requires in-memory filtering)
 	if (criteria.hasPrerequisites !== undefined) {
 		if (criteria.hasPrerequisites) {
-			feats = feats.filter((feat) => feat.prerequisites.length > 0);
+			return feats.filter((feat) => feat.prerequisites.length > 0);
 		} else {
-			feats = feats.filter((feat) => feat.prerequisites.length === 0);
+			return feats.filter((feat) => feat.prerequisites.length === 0);
 		}
 	}
 
@@ -135,13 +96,16 @@ export async function getFeats(criteria: {
  * (feats with level <= characterLevel)
  */
 export async function getFeatsAvailableAtLevel(characterLevel: number): Promise<Feat[]> {
-	const feats = await loadFeats();
-	return feats.filter((feat) => feat.level <= characterLevel);
+	return QueryBuilder.getAvailableAtLevel<Feat>('feat', characterLevel);
 }
 
 /**
  * Clear the feats cache (useful for testing or data updates)
  */
 export function clearFeatsCache(): void {
-	featsCache = null;
+	QueryCache.invalidatePrefix('all:feat');
+	QueryCache.invalidatePrefix('id:');
+	QueryCache.invalidatePrefix('level:feat');
+	QueryCache.invalidatePrefix('cat:feat');
+	QueryCache.invalidatePrefix('trait:feat');
 }

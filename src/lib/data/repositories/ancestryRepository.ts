@@ -1,69 +1,34 @@
 /**
  * Ancestry Repository
  *
- * Provides data access methods for ancestries.
- * Uses lazy loading to avoid loading all ancestries into memory at once.
+ * Provides data access methods for ancestries using SQLite.
+ * Maintains the same public API as the previous JSON-based implementation.
  */
 
 import type { Ancestry } from '../types/app';
-import type { FoundryAncestry } from '../types/foundry';
-import { adaptAncestry } from '../adapters/ancestryAdapter';
-import { loadAllData, loadDataById } from '../dataLoader';
-
-/**
- * In-memory cache of loaded ancestries
- */
-let ancestriesCache: Ancestry[] | null = null;
-
-/**
- * Load all ancestries from raw data files
- */
-async function loadAncestries(): Promise<Ancestry[]> {
-	if (ancestriesCache !== null) {
-		return ancestriesCache;
-	}
-
-	try {
-		const foundryAncestries = await loadAllData<FoundryAncestry>('ancestries');
-		const ancestries = foundryAncestries.map((ancestry) => adaptAncestry(ancestry));
-		ancestriesCache = ancestries;
-		return ancestries;
-	} catch (error) {
-		console.error('Failed to load ancestries:', error);
-		return [];
-	}
-}
+import { DatabaseManager, QueryBuilder, QueryCache, CacheKeys } from '../database';
 
 /**
  * Get all ancestries
  */
 export async function getAllAncestries(): Promise<Ancestry[]> {
-	return loadAncestries();
+	return QueryCache.getOrFetch(CacheKeys.all('ancestry'), () =>
+		QueryBuilder.getAll<Ancestry>('ancestry')
+	);
 }
 
 /**
  * Get an ancestry by ID
- *
- * This method loads only the specific ancestry file, not all ancestries
  */
 export async function getAncestryById(id: string): Promise<Ancestry | null> {
-	try {
-		const foundryAncestry = await loadDataById<FoundryAncestry>('ancestries', id);
-		if (!foundryAncestry) {
-			return null;
-		}
-		return adaptAncestry(foundryAncestry);
-	} catch (error) {
-		console.error(`Failed to load ancestry ${id}:`, error);
-		return null;
-	}
+	return QueryCache.getOrFetch(CacheKeys.byId(id), () => QueryBuilder.getById<Ancestry>(id));
 }
 
 /**
  * Get an ancestry by name (case-insensitive)
  */
 export async function getAncestryByName(name: string): Promise<Ancestry | null> {
-	const ancestries = await loadAncestries();
+	const ancestries = await getAllAncestries();
 	const lowerName = name.toLowerCase();
 	return ancestries.find((ancestry) => ancestry.name.toLowerCase() === lowerName) ?? null;
 }
@@ -72,18 +37,17 @@ export async function getAncestryByName(name: string): Promise<Ancestry | null> 
  * Get ancestries by trait
  */
 export async function getAncestriesByTrait(trait: string): Promise<Ancestry[]> {
-	const ancestries = await loadAncestries();
-	return ancestries.filter((ancestry) => ancestry.traits.includes(trait));
+	return QueryCache.getOrFetch(CacheKeys.byTrait('ancestry', trait), () =>
+		QueryBuilder.getByTrait<Ancestry>('ancestry', trait)
+	);
 }
 
 /**
  * Search ancestries by name (case-insensitive)
  */
 export async function searchAncestries(query: string): Promise<Ancestry[]> {
-	const ancestries = await loadAncestries();
-	const lowerQuery = query.toLowerCase();
-
-	return ancestries.filter((ancestry) => ancestry.name.toLowerCase().includes(lowerQuery));
+	if (!query || query.trim() === '') return [];
+	return QueryBuilder.searchByName<Ancestry>('ancestry', query);
 }
 
 /**
@@ -96,8 +60,15 @@ export async function getAncestries(criteria: {
 	vision?: Ancestry['vision'];
 	trait?: string;
 }): Promise<Ancestry[]> {
-	let ancestries = await loadAncestries();
+	// Start with trait filter if specified, otherwise get all
+	let ancestries: Ancestry[];
+	if (criteria.trait) {
+		ancestries = await getAncestriesByTrait(criteria.trait);
+	} else {
+		ancestries = await getAllAncestries();
+	}
 
+	// Apply in-memory filters for properties stored in JSON
 	if (criteria.minSpeed !== undefined) {
 		ancestries = ancestries.filter((ancestry) => ancestry.speed >= criteria.minSpeed!);
 	}
@@ -114,11 +85,6 @@ export async function getAncestries(criteria: {
 		ancestries = ancestries.filter((ancestry) => ancestry.vision === criteria.vision);
 	}
 
-	if (criteria.trait) {
-		const trait = criteria.trait;
-		ancestries = ancestries.filter((ancestry) => ancestry.traits.includes(trait));
-	}
-
 	return ancestries;
 }
 
@@ -126,7 +92,7 @@ export async function getAncestries(criteria: {
  * Get ancestries with darkvision
  */
 export async function getAncestriesWithDarkvision(): Promise<Ancestry[]> {
-	const ancestries = await loadAncestries();
+	const ancestries = await getAllAncestries();
 	return ancestries.filter((ancestry) => ancestry.vision === 'darkvision');
 }
 
@@ -134,7 +100,7 @@ export async function getAncestriesWithDarkvision(): Promise<Ancestry[]> {
  * Get ancestries with low-light vision
  */
 export async function getAncestriesWithLowLightVision(): Promise<Ancestry[]> {
-	const ancestries = await loadAncestries();
+	const ancestries = await getAllAncestries();
 	return ancestries.filter((ancestry) => ancestry.vision === 'low-light-vision');
 }
 
@@ -144,7 +110,7 @@ export async function getAncestriesWithLowLightVision(): Promise<Ancestry[]> {
 export async function getAncestriesBySize(
 	size: 'tiny' | 'sm' | 'med' | 'lg' | 'huge' | 'grg'
 ): Promise<Ancestry[]> {
-	const ancestries = await loadAncestries();
+	const ancestries = await getAllAncestries();
 	return ancestries.filter((ancestry) => ancestry.size === size);
 }
 
@@ -152,5 +118,6 @@ export async function getAncestriesBySize(
  * Clear the ancestries cache (useful for testing or data updates)
  */
 export function clearAncestriesCache(): void {
-	ancestriesCache = null;
+	QueryCache.invalidatePrefix('all:ancestry');
+	QueryCache.invalidatePrefix('trait:ancestry');
 }

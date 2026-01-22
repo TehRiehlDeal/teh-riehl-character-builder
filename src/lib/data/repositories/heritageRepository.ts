@@ -1,69 +1,34 @@
 /**
  * Heritage Repository
  *
- * Provides data access methods for heritages.
- * Uses lazy loading to avoid loading all heritages into memory at once.
+ * Provides data access methods for heritages using SQLite.
+ * Maintains the same public API as the previous JSON-based implementation.
  */
 
 import type { Heritage } from '../types/app';
-import type { FoundryHeritage } from '../types/foundry';
-import { adaptHeritage } from '../adapters/heritageAdapter';
-import { loadAllData, loadDataById } from '../dataLoader';
-
-/**
- * In-memory cache of loaded heritages
- */
-let heritagesCache: Heritage[] | null = null;
-
-/**
- * Load all heritages from raw data files
- */
-async function loadHeritages(): Promise<Heritage[]> {
-	if (heritagesCache !== null) {
-		return heritagesCache;
-	}
-
-	try {
-		const foundryHeritages = await loadAllData<FoundryHeritage>('heritages');
-		const heritages = foundryHeritages.map((heritage) => adaptHeritage(heritage));
-		heritagesCache = heritages;
-		return heritages;
-	} catch (error) {
-		console.error('Failed to load heritages:', error);
-		return [];
-	}
-}
+import { DatabaseManager, QueryBuilder, QueryCache, CacheKeys } from '../database';
 
 /**
  * Get all heritages
  */
 export async function getAllHeritages(): Promise<Heritage[]> {
-	return loadHeritages();
+	return QueryCache.getOrFetch(CacheKeys.all('heritage'), () =>
+		QueryBuilder.getAll<Heritage>('heritage')
+	);
 }
 
 /**
  * Get a heritage by ID
- *
- * This method loads only the specific heritage file, not all heritages
  */
 export async function getHeritageById(id: string): Promise<Heritage | null> {
-	try {
-		const foundryHeritage = await loadDataById<FoundryHeritage>('heritages', id);
-		if (!foundryHeritage) {
-			return null;
-		}
-		return adaptHeritage(foundryHeritage);
-	} catch (error) {
-		console.error(`Failed to load heritage ${id}:`, error);
-		return null;
-	}
+	return QueryCache.getOrFetch(CacheKeys.byId(id), () => QueryBuilder.getById<Heritage>(id));
 }
 
 /**
  * Get heritages by ancestry name (case-insensitive)
  */
 export async function getHeritagesByAncestry(ancestryName: string): Promise<Heritage[]> {
-	const heritages = await loadHeritages();
+	const heritages = await getAllHeritages();
 	const lowerAncestryName = ancestryName.toLowerCase();
 	return heritages.filter((heritage) => heritage.ancestry.toLowerCase() === lowerAncestryName);
 }
@@ -72,16 +37,19 @@ export async function getHeritagesByAncestry(ancestryName: string): Promise<Heri
  * Get heritages by ancestry slug
  */
 export async function getHeritagesByAncestrySlug(ancestrySlug: string): Promise<Heritage[]> {
-	const heritages = await loadHeritages();
-	const lowerSlug = ancestrySlug.toLowerCase();
-	return heritages.filter((heritage) => heritage.ancestrySlug.toLowerCase() === lowerSlug);
+	return QueryCache.getOrFetch(CacheKeys.byAncestry(ancestrySlug), async () => {
+		return QueryBuilder.filter<Heritage>({
+			type: 'heritage',
+			ancestrySlug
+		});
+	});
 }
 
 /**
  * Get a heritage by name (case-insensitive)
  */
 export async function getHeritageByName(name: string): Promise<Heritage | null> {
-	const heritages = await loadHeritages();
+	const heritages = await getAllHeritages();
 	const lowerName = name.toLowerCase();
 	return heritages.find((heritage) => heritage.name.toLowerCase() === lowerName) ?? null;
 }
@@ -90,18 +58,17 @@ export async function getHeritageByName(name: string): Promise<Heritage | null> 
  * Get heritages by trait
  */
 export async function getHeritagesByTrait(trait: string): Promise<Heritage[]> {
-	const heritages = await loadHeritages();
-	return heritages.filter((heritage) => heritage.traits.includes(trait));
+	return QueryCache.getOrFetch(CacheKeys.byTrait('heritage', trait), () =>
+		QueryBuilder.getByTrait<Heritage>('heritage', trait)
+	);
 }
 
 /**
  * Search heritages by name (case-insensitive)
  */
 export async function searchHeritages(query: string): Promise<Heritage[]> {
-	const heritages = await loadHeritages();
-	const lowerQuery = query.toLowerCase();
-
-	return heritages.filter((heritage) => heritage.name.toLowerCase().includes(lowerQuery));
+	if (!query || query.trim() === '') return [];
+	return QueryBuilder.searchByName<Heritage>('heritage', query);
 }
 
 /**
@@ -113,7 +80,12 @@ export async function getHeritages(criteria: {
 	trait?: string;
 	rarity?: Heritage['rarity'];
 }): Promise<Heritage[]> {
-	let heritages = await loadHeritages();
+	// Use SQL filters when possible
+	if (criteria.ancestrySlug && !criteria.trait && !criteria.rarity && !criteria.ancestry) {
+		return getHeritagesByAncestrySlug(criteria.ancestrySlug);
+	}
+
+	let heritages = await getAllHeritages();
 
 	if (criteria.ancestry) {
 		const lowerAncestry = criteria.ancestry.toLowerCase();
@@ -149,5 +121,7 @@ export async function getVersatileHeritages(): Promise<Heritage[]> {
  * Clear the heritages cache (useful for testing or data updates)
  */
 export function clearHeritagesCache(): void {
-	heritagesCache = null;
+	QueryCache.invalidatePrefix('all:heritage');
+	QueryCache.invalidatePrefix('trait:heritage');
+	QueryCache.invalidatePrefix('ancestry:');
 }
