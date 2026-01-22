@@ -8,6 +8,32 @@
 	 * Displays a list of spells with filtering and search capabilities.
 	 */
 
+	/** Strip HTML tags and Foundry syntax from a string for plain text display */
+	function stripHtml(html: string): string {
+		let text = html;
+
+		// Convert @Damage[formula[types]] to readable text
+		text = text.replace(/@Damage\[([^\]]+(?:\[[^\]]*\])?)\]/g, (match, content) => {
+			const nestedMatch = content.match(/^(.+?)\[([^\]]*)\]$/);
+			if (nestedMatch) {
+				const formula = nestedMatch[1]
+					.replace(/@item\.level/g, 'spell rank')
+					.replace(/@actor\.level/g, 'level')
+					.replace(/ceil\([^)]+\)/g, 'scaling')
+					.replace(/floor\([^)]+\)/g, 'scaling');
+				const types = nestedMatch[2];
+				return `${formula} ${types} damage`;
+			}
+			return content;
+		});
+
+		// Strip other @ references
+		text = text.replace(/@\w+\[[^\]]*\]/g, '');
+
+		// Strip HTML tags and entities
+		return text.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
+	}
+
 	interface Props {
 		/** Array of spells to display */
 		spells: Spell[];
@@ -28,6 +54,34 @@
 
 		/** Title for the list */
 		title?: string;
+
+		/** Filter spells to this tradition only */
+		traditionFilter?: string | null;
+
+		/** IDs of known/prepared spells (to show badge) */
+		knownSpellIds?: string[];
+
+		/** Label for the "known" badge */
+		knownBadgeLabel?: string;
+
+		/** Callback when a spell is added */
+		// eslint-disable-next-line no-unused-vars
+		onAddSpell?: (spell: Spell) => void;
+
+		/** Whether to show add buttons */
+		showAddButtons?: boolean;
+
+		/** Label for the add button */
+		addButtonLabel?: string;
+
+		/** Label for the add button when already added */
+		addedButtonLabel?: string;
+
+		/** Max spell level available (to filter by) */
+		maxSpellLevel?: number;
+
+		/** Whether to show the school/trait filter */
+		showSchoolFilter?: boolean;
 	}
 
 	let {
@@ -36,7 +90,16 @@
 		onViewDetails,
 		onCastSpell,
 		showCastButtons = false,
-		title = 'Spells'
+		title = 'Spells',
+		traditionFilter = null,
+		knownSpellIds = [],
+		knownBadgeLabel = 'In Spellbook',
+		onAddSpell,
+		showAddButtons = false,
+		addButtonLabel = 'Add to Spellbook',
+		addedButtonLabel = 'In Spellbook',
+		maxSpellLevel = 10,
+		showSchoolFilter = false
 	}: Props = $props();
 
 	let searchQuery = $state('');
@@ -48,6 +111,9 @@
 		const uniqueSchools = new Set(spells.map((s) => s.traits).flat());
 		return ['all', ...Array.from(uniqueSchools).sort()];
 	});
+
+	// Create a set of known spell IDs for quick lookup
+	const knownSpellIdSet = $derived(new Set(knownSpellIds));
 
 	// Filter spells
 	const filteredSpells = $derived.by(() => {
@@ -62,8 +128,18 @@
 				return false;
 			}
 
-			// School filter (via traits)
+			// School/trait filter
 			if (filterSchool !== 'all' && !spell.traits?.includes(filterSchool)) {
+				return false;
+			}
+
+			// Tradition filter (if provided)
+			if (traditionFilter && !spell.traditions?.includes(traditionFilter)) {
+				return false;
+			}
+
+			// Max spell level filter
+			if (spell.level > maxSpellLevel) {
 				return false;
 			}
 
@@ -123,12 +199,14 @@
 			{/each}
 		</select>
 
-		<select bind:value={filterSchool} class="filter-select" aria-label="Filter by school">
-			<option value="all">All Schools</option>
-			{#each schools.filter((s) => s !== 'all') as school}
-				<option value={school}>{school}</option>
-			{/each}
-		</select>
+		{#if showSchoolFilter}
+			<select bind:value={filterSchool} class="filter-select" aria-label="Filter by school">
+				<option value="all">All Schools</option>
+				{#each schools.filter((s) => s !== 'all') as school}
+					<option value={school}>{school}</option>
+				{/each}
+			</select>
+		{/if}
 
 		<Button variant="ghost" size="sm" onclick={clearFilters}>Clear</Button>
 	</div>
@@ -151,10 +229,17 @@
 					<div class="spell-cards">
 						{#each levelSpells as spell}
 							{@const isSelected = spell.id === selectedSpellId}
-							<div class="spell-card" class:selected={isSelected}>
+							{@const isKnown = knownSpellIdSet.has(spell.id)}
+							{@const plainText = stripHtml(spell.description)}
+							<div class="spell-card" class:selected={isSelected} class:known={isKnown}>
 								<div class="spell-info">
 									<div class="spell-header-row">
-										<h5 class="spell-name">{spell.name}</h5>
+										<div class="spell-name-row">
+											<h5 class="spell-name">{spell.name}</h5>
+											{#if isKnown}
+												<span class="known-badge">{knownBadgeLabel}</span>
+											{/if}
+										</div>
 										{#if spell.traits && spell.traits.length > 0}
 											<div class="spell-traits">
 												{#each spell.traits.slice(0, 2) as trait}
@@ -182,16 +267,24 @@
 									</div>
 
 									<p class="spell-description">
-										{spell.description.substring(0, 120)}{spell.description.length > 120
-											? '...'
-											: ''}
-									</p>
+									{plainText.substring(0, 120)}{plainText.length > 120 ? '...' : ''}
+								</p>
 								</div>
 
 								<div class="spell-actions">
 									<Button variant="secondary" size="sm" onclick={() => onViewDetails?.(spell)}>
 										Details
 									</Button>
+									{#if showAddButtons && onAddSpell}
+										<Button
+											variant="primary"
+											size="sm"
+											onclick={() => onAddSpell?.(spell)}
+											disabled={isKnown}
+										>
+											{isKnown ? addedButtonLabel : addButtonLabel}
+										</Button>
+									{/if}
 									{#if showCastButtons}
 										<Button variant="primary" size="sm" onclick={() => onCastSpell?.(spell)}>
 											Cast
@@ -324,6 +417,27 @@
 	.spell-card.selected {
 		background-color: rgba(92, 124, 250, 0.1);
 		border-color: var(--link-color, #5c7cfa);
+	}
+
+	.spell-card.known {
+		background-color: rgba(64, 192, 87, 0.05);
+	}
+
+	.spell-name-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.known-badge {
+		padding: 0.125rem 0.5rem;
+		background-color: #40c057;
+		color: white;
+		border-radius: 4px;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.025em;
 	}
 
 	.spell-info {
