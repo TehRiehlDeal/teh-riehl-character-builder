@@ -58,6 +58,23 @@ export function parsePrerequisite(prereqString: string): Prerequisite | null {
 		};
 	}
 
+	// Check for class feature prerequisites
+	// Patterns: "spellcasting class feature", "spellcasting", "rage", etc.
+	// Indicators: contains "class feature", "spellcasting", or ends with "feature"
+	if (
+		lowerTrimmed.includes('class feature') ||
+		lowerTrimmed.includes('spellcasting') ||
+		lowerTrimmed === 'rage' ||
+		lowerTrimmed === 'ki' ||
+		lowerTrimmed === 'focus pool' ||
+		lowerTrimmed.endsWith(' feature')
+	) {
+		return {
+			type: 'feature',
+			feature: trimmed
+		};
+	}
+
 	// If it doesn't match any pattern, assume it's a feat name
 	// (Most prerequisites that don't match the above patterns are feat names)
 	if (trimmed.length > 0) {

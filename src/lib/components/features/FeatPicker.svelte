@@ -111,7 +111,8 @@
 				skills: characterData.skills || { trained: [], expert: [], master: [], legendary: [] },
 				feats: characterData.feats || [],
 				class: characterData.class,
-				ancestry: characterData.ancestry
+				ancestry: characterData.ancestry,
+				classFeatures: characterData.classFeatures || []
 			};
 
 			// Validate prerequisites with slot context and feat traits for Free Archetype waiver
@@ -493,6 +494,7 @@
 		text-overflow: ellipsis;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 	}
 
@@ -591,11 +593,6 @@
 
 	.prereq-errors li {
 		margin-bottom: 0.25rem;
-	}
-
-	.feat-description-full {
-		color: var(--text-primary, #1a1a1a);
-		line-height: 1.6;
 	}
 
 	.trait-list {

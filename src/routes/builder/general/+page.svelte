@@ -187,6 +187,43 @@
 		}
 	});
 
+	// Update class features when character level or class changes
+	$effect(() => {
+		// Wait for classes to load
+		if (builderData.criticalDataLoading || builderData.classes.length === 0) return;
+
+		const currentChar = $character;
+		const currentLevel = currentChar.level;
+
+		// If character has a class, make sure class features are populated
+		if (currentChar.class.name) {
+			const charClass = builderData.classes.find((c) => c.name === currentChar.class.name);
+			if (!charClass) return;
+
+			// Filter class features for the character's current level
+			const relevantClassFeatures = charClass.classFeatures
+				.filter((cf) => cf.level <= currentLevel)
+				.map((cf) => ({
+					level: cf.level,
+					name: cf.name,
+					rules: []
+				}));
+
+			// Only update if the class features have actually changed
+			const currentFeaturesCount = currentChar.classFeatures.length;
+			const newFeaturesCount = relevantClassFeatures.length;
+
+			if (currentFeaturesCount !== newFeaturesCount) {
+				untrack(() => {
+					character.update((char) => ({
+						...char,
+						classFeatures: relevantClassFeatures
+					}));
+				});
+			}
+		}
+	});
+
 	// Restore heritage selections when heritage data loads
 	$effect(() => {
 		if (builderData.heritagesLoading) return;
@@ -410,6 +447,15 @@
 		selectedKeyAbility = null; // Reset key ability when class changes
 		trainedSkills = []; // Reset trained skills for new class
 
+		// Filter class features for the character's current level
+		const relevantClassFeatures = cls.classFeatures
+			.filter((cf) => cf.level <= $character.level)
+			.map((cf) => ({
+				level: cf.level,
+				name: cf.name,
+				rules: [] // We don't have rules in the class features yet, so empty array
+			}));
+
 		// Update character store with class information and proficiencies
 		character.update((char) => ({
 			...char,
@@ -419,6 +465,8 @@
 				subclass: null,
 				keyAbility: null
 			},
+			// Apply class features for the character's current level
+			classFeatures: relevantClassFeatures,
 			// Apply class saving throw proficiencies
 			saves: {
 				fortitude: cls.proficiencies.fortitude,
@@ -1000,6 +1048,24 @@
 											feats={ancestryFeats}
 											selectedFeatId={$character.feats.ancestry[0]?.featId}
 											characterLevel={$character.level}
+											characterData={{
+												abilityScores: $character.abilities,
+												skills: {
+													trained: Object.keys($character.skills).filter(k => $character.skills[k] >= 1),
+													expert: Object.keys($character.skills).filter(k => $character.skills[k] >= 2),
+													master: Object.keys($character.skills).filter(k => $character.skills[k] >= 3),
+													legendary: Object.keys($character.skills).filter(k => $character.skills[k] >= 4)
+												},
+												feats: [
+													...$character.feats.ancestry.map(f => f.name),
+													...$character.feats.class.map(f => f.name),
+													...$character.feats.skill.map(f => f.name),
+													...$character.feats.general.map(f => f.name)
+												],
+												class: $character.class.name ? { name: $character.class.name } : undefined,
+												ancestry: $character.ancestry.name ? { name: $character.ancestry.name } : undefined,
+												classFeatures: $character.classFeatures
+											}}
 											filterCategory="ancestry"
 											filterLevel={1}
 											onSelect={handleAncestryFeatSelect}
@@ -1107,6 +1173,24 @@
 											feats={classFeats}
 											selectedFeatId={$character.feats.class[0]?.featId}
 											characterLevel={$character.level}
+											characterData={{
+												abilityScores: $character.abilities,
+												skills: {
+													trained: Object.keys($character.skills).filter(k => $character.skills[k] >= 1),
+													expert: Object.keys($character.skills).filter(k => $character.skills[k] >= 2),
+													master: Object.keys($character.skills).filter(k => $character.skills[k] >= 3),
+													legendary: Object.keys($character.skills).filter(k => $character.skills[k] >= 4)
+												},
+												feats: [
+													...$character.feats.ancestry.map(f => f.name),
+													...$character.feats.class.map(f => f.name),
+													...$character.feats.skill.map(f => f.name),
+													...$character.feats.general.map(f => f.name)
+												],
+												class: $character.class.name ? { name: $character.class.name } : undefined,
+												ancestry: $character.ancestry.name ? { name: $character.ancestry.name } : undefined,
+												classFeatures: $character.classFeatures
+											}}
 											filterCategory="class"
 											filterLevel={1}
 											onSelect={handleClassFeatSelect}
