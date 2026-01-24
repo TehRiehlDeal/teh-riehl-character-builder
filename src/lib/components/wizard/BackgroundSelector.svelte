@@ -373,10 +373,6 @@
 		color: var(--text-primary, #1a1a1a);
 	}
 
-	.feat-info {
-		color: var(--link-color, #5c7cfa);
-	}
-
 	.card-actions {
 		display: flex;
 		gap: 0.5rem;
@@ -409,12 +405,6 @@
 		color: var(--text-primary, #1a1a1a);
 		padding-bottom: 0.5rem;
 		border-bottom: 2px solid var(--border-color, #e0e0e0);
-	}
-
-	.detail-description {
-		margin: 0;
-		color: var(--text-primary, #1a1a1a);
-		line-height: 1.6;
 	}
 
 	.skill-list {

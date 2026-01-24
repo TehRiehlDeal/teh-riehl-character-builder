@@ -598,9 +598,7 @@
 		font-weight: 600;
 	}
 
-	.feat-description {
-		/* RichDescription component handles its own styling */
-	}
+	/* RichDescription component handles its own styling for .feat-description */
 
 	.prerequisites-list {
 		margin: 0;

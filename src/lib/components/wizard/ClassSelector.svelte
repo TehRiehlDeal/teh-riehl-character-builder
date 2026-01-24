@@ -439,12 +439,6 @@
 		border-bottom: 2px solid var(--border-color, #e0e0e0);
 	}
 
-	.detail-description {
-		margin: 0;
-		color: var(--text-primary, #1a1a1a);
-		line-height: 1.6;
-	}
-
 	.detail-note {
 		margin: 0;
 		font-size: 0.875rem;

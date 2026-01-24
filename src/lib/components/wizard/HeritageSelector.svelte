@@ -297,12 +297,6 @@
 		flex-shrink: 0;
 	}
 
-	.heritage-description {
-		margin: 0;
-		color: var(--text-primary, #1a1a1a);
-		line-height: 1.6;
-	}
-
 	.heritage-traits {
 		display: flex;
 		gap: 0.5rem;
