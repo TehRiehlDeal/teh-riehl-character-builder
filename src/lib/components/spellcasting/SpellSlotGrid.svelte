@@ -38,8 +38,8 @@
 		onRemoveSpellFromSlot?: (level: number, slotIndex: number) => void;
 		/** Callback when cast is clicked on a leveled spell */
 		onCastSpell?: (level: number, slotIndex: number) => void;
-		/** Callback to view spell details */
-		onViewDetails?: (spell: Spell) => void;
+		/** Callback to view spell details (with optional heightened level for slots) */
+		onViewDetails?: (spell: Spell, heightenedLevel?: number) => void;
 	}
 
 	let {
@@ -144,21 +144,30 @@
 				<div class="slots-row">
 					{#each slotsAtLevel as slot, index (index)}
 						{@const spell = getSpell(slot.spellId)}
+						{@const isHeightened = spell && spell.level < level}
 						<div
 							class="spell-slot leveled"
 							class:empty={!spell}
 							class:filled={!!spell}
 							class:cast={slot.cast}
+							class:heightened={isHeightened}
 						>
 							{#if spell}
 								<div class="slot-content">
-									<button
-										class="spell-name-btn"
-										onclick={() => onViewDetails?.(spell)}
-										type="button"
-									>
-										{spell.name}
-									</button>
+									<div class="spell-name-row">
+										<button
+											class="spell-name-btn"
+											onclick={() => onViewDetails?.(spell, level)}
+											type="button"
+										>
+											{spell.name}
+										</button>
+										{#if isHeightened}
+											<span class="heightened-badge" title="Heightened from rank {spell.level} to rank {level}">
+												+{level - spell.level}
+											</span>
+										{/if}
+									</div>
 									<div class="slot-actions">
 										{#if !slot.cast}
 											<Button
@@ -299,10 +308,21 @@
 		border-color: #999;
 	}
 
+	.spell-slot.heightened {
+		border-color: rgba(155, 89, 182, 0.6);
+		background-color: rgba(155, 89, 182, 0.05);
+	}
+
 	.slot-content {
 		padding: 0.75rem;
 		display: flex;
 		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.spell-name-row {
+		display: flex;
+		align-items: center;
 		gap: 0.5rem;
 	}
 
@@ -318,6 +338,21 @@
 		cursor: pointer;
 		text-align: left;
 		word-break: break-word;
+		flex: 1;
+	}
+
+	.heightened-badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.125rem 0.375rem;
+		background-color: rgba(155, 89, 182, 0.2);
+		color: #7d3c98;
+		border-radius: 4px;
+		font-size: 0.6875rem;
+		font-weight: 700;
+		line-height: 1;
+		flex-shrink: 0;
 	}
 
 	.spell-name-btn:hover {
