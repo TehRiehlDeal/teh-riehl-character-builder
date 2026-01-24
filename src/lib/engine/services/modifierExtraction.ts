@@ -145,33 +145,44 @@ export async function extractModifiersFromEquipment(
 					});
 				}
 
-				// Check Penalty
-				if (armor.checkPenalty < 0) {
-					modifiers.push({
-						label: `${armor.name} Check Penalty`,
-						source: armor.name,
-						value: armor.checkPenalty,
-						type: 'item',
-						selector: 'skill-check',
-						alwaysActive: true,
-						enabled: true
-					});
-				}
-
-				// Speed Penalty (with Strength requirement check)
-				const baseSpeedPenalty = armor.speedPenalty;
+				// Get strength information for both check and speed penalties
 				const strengthRequirement = armor.strength || 0;
 				const strengthAbilityScore = character.abilities.strength;
 				const strengthModifier = Math.floor((strengthAbilityScore - 10) / 2);
 
-				// If character's Strength modifier meets or exceeds requirement, reduce penalty by 5
+				// Check Penalty (nullified if Strength requirement is met)
+				const baseCheckPenalty = armor.checkPenalty;
+				let finalCheckPenalty = baseCheckPenalty;
+				let checkPenaltyDescription: string | undefined;
+
+				if (baseCheckPenalty < 0) {
+					if (strengthRequirement > 0 && strengthModifier >= strengthRequirement) {
+						finalCheckPenalty = 0;
+						checkPenaltyDescription = `Base penalty ${baseCheckPenalty}, nullified for meeting Str +${strengthRequirement} requirement`;
+					}
+
+					// Always show the check penalty modifier, even if nullified to 0
+					modifiers.push({
+						label: `${armor.name} Check Penalty`,
+						source: armor.name,
+						value: finalCheckPenalty,
+						type: 'item',
+						selector: 'skill-check',
+						alwaysActive: true,
+						enabled: true,
+						description: checkPenaltyDescription
+					});
+				}
+
+				// Speed Penalty (reduced by 5 ft if Strength requirement is met)
+				const baseSpeedPenalty = armor.speedPenalty;
 				let finalSpeedPenalty = baseSpeedPenalty;
-				let description: string | undefined;
+				let speedPenaltyDescription: string | undefined;
 
 				if (baseSpeedPenalty < 0) {
 					if (strengthRequirement > 0 && strengthModifier >= strengthRequirement) {
 						finalSpeedPenalty = Math.min(0, baseSpeedPenalty + 5);
-						description = `Base penalty ${baseSpeedPenalty} ft, reduced by 5 ft for meeting Str +${strengthRequirement} requirement`;
+						speedPenaltyDescription = `Base penalty ${baseSpeedPenalty} ft, reduced by 5 ft for meeting Str +${strengthRequirement} requirement`;
 					}
 
 					// Always show the speed penalty modifier, even if reduced to 0
@@ -183,7 +194,7 @@ export async function extractModifiersFromEquipment(
 						selector: 'land-speed',
 						alwaysActive: true,
 						enabled: true,
-						description
+						description: speedPenaltyDescription
 					});
 				}
 			}
