@@ -34,6 +34,16 @@
 		return text.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
 	}
 
+	/** Get CSS class for tradition badge color */
+	function getTraditionClass(tradition: string): string {
+		const lower = tradition.toLowerCase();
+		if (lower === 'arcane') return 'tradition-arcane';
+		if (lower === 'divine') return 'tradition-divine';
+		if (lower === 'occult') return 'tradition-occult';
+		if (lower === 'primal') return 'tradition-primal';
+		return 'tradition-other';
+	}
+
 	interface Props {
 		/** Array of spells to display */
 		spells: Spell[];
@@ -77,11 +87,28 @@
 		/** Label for the add button when already added */
 		addedButtonLabel?: string;
 
+		/** Callback when a spell is learned (via "Learn a Spell") */
+		// eslint-disable-next-line no-unused-vars
+		onLearnSpell?: (spell: Spell) => void;
+
+		/** Whether to show learn spell buttons */
+		showLearnButtons?: boolean;
+
 		/** Max spell level available (to filter by) */
 		maxSpellLevel?: number;
 
 		/** Whether to show the school/trait filter */
 		showSchoolFilter?: boolean;
+
+		/** Cross-tradition spell access rules */
+		crossTraditionAccess?: {
+			/** Allow cantrips from other traditions */
+			cantrips?: boolean;
+			/** Allow all spells from other traditions */
+			allSpells?: boolean;
+			/** Specific traditions that can be accessed (e.g., ['arcane', 'divine']) */
+			allowedTraditions?: string[];
+		};
 	}
 
 	let {
@@ -98,8 +125,11 @@
 		showAddButtons = false,
 		addButtonLabel = 'Add to Spellbook',
 		addedButtonLabel = 'In Spellbook',
+		onLearnSpell,
+		showLearnButtons = false,
 		maxSpellLevel = 10,
-		showSchoolFilter = false
+		showSchoolFilter = false,
+		crossTraditionAccess = undefined
 	}: Props = $props();
 
 	let searchQuery = $state('');
@@ -134,8 +164,63 @@
 			}
 
 			// Tradition filter (if provided)
-			if (traditionFilter && !spell.traditions?.includes(traditionFilter)) {
-				return false;
+			if (traditionFilter) {
+				const spellMatchesTradition = spell.traditions?.includes(traditionFilter);
+
+				// If spell matches the tradition, always allow it
+				if (spellMatchesTradition) {
+					// Continue to other filters
+				} else {
+					// Spell is from a different tradition - check cross-tradition access
+					if (crossTraditionAccess) {
+						// Check if spell is from an allowed tradition
+						let isFromAllowedTradition = false;
+						if (crossTraditionAccess.allowedTraditions && spell.traditions) {
+							isFromAllowedTradition = spell.traditions.some(t =>
+								crossTraditionAccess.allowedTraditions!.includes(t.toLowerCase())
+							);
+						}
+
+						// If specific traditions are defined, only allow spells from those traditions
+						if (crossTraditionAccess.allowedTraditions && !isFromAllowedTradition) {
+							return false;
+						}
+
+						// Allow all spells from (allowed) other traditions if allSpells is true
+						if (crossTraditionAccess.allSpells) {
+							// If no specific traditions defined, allow all other traditions
+							if (!crossTraditionAccess.allowedTraditions) {
+								// Continue to other filters
+							}
+							// Otherwise only allow if from allowed tradition (already checked above)
+							else if (isFromAllowedTradition) {
+								// Continue to other filters
+							} else {
+								return false;
+							}
+						}
+						// Allow only cantrips from (allowed) other traditions if cantrips is true
+						else if (crossTraditionAccess.cantrips && spell.level === 0) {
+							// If no specific traditions defined, allow all other traditions
+							if (!crossTraditionAccess.allowedTraditions) {
+								// Continue to other filters
+							}
+							// Otherwise only allow if from allowed tradition (already checked above)
+							else if (isFromAllowedTradition) {
+								// Continue to other filters
+							} else {
+								return false;
+							}
+						}
+						// Otherwise, filter out this spell
+						else {
+							return false;
+						}
+					} else {
+						// No cross-tradition access, filter out
+						return false;
+					}
+				}
 			}
 
 			// Max spell level filter
@@ -236,6 +321,15 @@
 									<div class="spell-header-row">
 										<div class="spell-name-row">
 											<h5 class="spell-name">{spell.name}</h5>
+											{#if spell.traditions && spell.traditions.length > 0}
+												<div class="tradition-badges">
+													{#each spell.traditions as tradition}
+														<span class="tradition-badge {getTraditionClass(tradition)}">
+															{tradition}
+														</span>
+													{/each}
+												</div>
+											{/if}
 											{#if isKnown}
 												<span class="known-badge">{knownBadgeLabel}</span>
 											{/if}
@@ -283,6 +377,16 @@
 											disabled={isKnown}
 										>
 											{isKnown ? addedButtonLabel : addButtonLabel}
+										</Button>
+									{/if}
+									{#if showLearnButtons && onLearnSpell && spell.level > 0}
+										<Button
+											variant="ghost"
+											size="sm"
+											onclick={() => onLearnSpell?.(spell)}
+											disabled={isKnown}
+										>
+											{isKnown ? 'Learned' : 'Learn Spell'}
 										</Button>
 									{/if}
 									{#if showCastButtons}
@@ -369,6 +473,28 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
+		max-height: 1100px;
+		overflow-y: auto;
+		padding-right: 0.5rem;
+	}
+
+	/* Scrollbar styling */
+	.spell-groups::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.spell-groups::-webkit-scrollbar-track {
+		background: var(--surface-2, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.spell-groups::-webkit-scrollbar-thumb {
+		background: var(--border-color, #e0e0e0);
+		border-radius: 4px;
+	}
+
+	.spell-groups::-webkit-scrollbar-thumb:hover {
+		background: var(--text-secondary, #999);
 	}
 
 	.level-group {
@@ -427,6 +553,42 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
+	}
+
+	.tradition-badges {
+		display: flex;
+		gap: 0.25rem;
+		flex-wrap: wrap;
+	}
+
+	.tradition-badge {
+		padding: 0.125rem 0.5rem;
+		color: white;
+		border-radius: 4px;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		text-transform: capitalize;
+		letter-spacing: 0.025em;
+	}
+
+	.tradition-arcane {
+		background-color: #5c7cfa;
+	}
+
+	.tradition-divine {
+		background-color: #fab005;
+	}
+
+	.tradition-occult {
+		background-color: #ae3ec9;
+	}
+
+	.tradition-primal {
+		background-color: #40c057;
+	}
+
+	.tradition-other {
+		background-color: #868e96;
 	}
 
 	.known-badge {
