@@ -156,15 +156,60 @@ function simplifyFormula(formula: string): string {
  * - @Damage[formula] - just a formula
  * - @Damage[formula[type]] - formula with damage type
  * - @Damage[formula[type1,type2]] - formula with multiple types
+ *
+ * @param html - HTML content to parse
+ * @param context - Optional context for evaluating formulas
  */
-export function parseFoundryDamage(html: string): string {
+export function parseFoundryDamage(
+	html: string,
+	context?: { spellLevel?: number; characterLevel?: number }
+): string {
 	if (!html) return '';
 
-	// Match @Damage[...] patterns
-	// The content can have nested brackets for damage types
-	const damagePattern = /@Damage\[([^\]]+(?:\[[^\]]*\])?)\]/g;
+	console.log('[parseFoundryDamage] Context:', context);
 
-	return html.replace(damagePattern, (match, content) => {
+	// Match @Damage[...] patterns with proper bracket counting
+	// This handles nested brackets like @Damage[(ceil(@item.level/2))[persistent,acid]]
+	const matches: Array<{ fullMatch: string; content: string; start: number }> = [];
+	let i = 0;
+
+	while (i < html.length) {
+		// Look for @Damage[
+		const damageStart = html.indexOf('@Damage[', i);
+		if (damageStart === -1) break;
+
+		// Count brackets to find the closing ]
+		let bracketCount = 0;
+		let contentStart = damageStart + 8; // Length of '@Damage['
+		let j = contentStart;
+
+		while (j < html.length) {
+			if (html[j] === '[') {
+				bracketCount++;
+			} else if (html[j] === ']') {
+				if (bracketCount === 0) {
+					// Found the closing bracket
+					const content = html.substring(contentStart, j);
+					matches.push({
+						fullMatch: html.substring(damageStart, j + 1),
+						content,
+						start: damageStart
+					});
+					break;
+				}
+				bracketCount--;
+			}
+			j++;
+		}
+
+		i = j + 1;
+	}
+
+	// Replace matches in reverse order to maintain correct positions
+	let result = html;
+	for (let i = matches.length - 1; i >= 0; i--) {
+		const { fullMatch, content, start } = matches[i];
+
 		// Check if there's a nested bracket for damage types
 		const nestedMatch = content.match(/^(.+?)\[([^\]]*)\]$/);
 
@@ -178,8 +223,16 @@ export function parseFoundryDamage(html: string): string {
 			formula = content;
 		}
 
-		// Simplify the formula for display
-		const displayFormula = simplifyFormula(formula);
+		// Calculate formula if context provided, otherwise simplify for display
+		let displayFormula: string;
+		if (context?.spellLevel !== undefined) {
+			displayFormula = evaluateFormulaForDisplay(formula, {
+				spellLevel: context.spellLevel,
+				characterLevel: context.characterLevel
+			});
+		} else {
+			displayFormula = simplifyFormula(formula);
+		}
 
 		// Format the damage types
 		const typeStr = types.length > 0 ? ` ${types.join(' ')}` : '';
@@ -189,22 +242,170 @@ export function parseFoundryDamage(html: string): string {
 		const className = isHealing ? 'inline-healing' : 'inline-damage';
 		const suffix = isHealing ? '' : ' damage';
 
-		return `<span class="${className}" data-formula="${formula}" data-types="${types.join(',')}">${displayFormula}${typeStr}${suffix}</span>`;
-	});
+		const replacement = `<span class="${className}" data-formula="${formula}" data-types="${types.join(',')}">${displayFormula}${typeStr}${suffix}</span>`;
+
+		result = result.substring(0, start) + replacement + result.substring(start + fullMatch.length);
+	}
+
+	return result;
+}
+
+/**
+ * Helper function to find matching closing parenthesis
+ */
+function findMatchingParen(str: string, startPos: number): number {
+	let depth = 1;
+	for (let i = startPos + 1; i < str.length; i++) {
+		if (str[i] === '(') depth++;
+		if (str[i] === ')') depth--;
+		if (depth === 0) return i;
+	}
+	return -1;
+}
+
+/**
+ * Evaluate formula for display (with actual calculated values)
+ */
+function evaluateFormulaForDisplay(
+	formula: string,
+	context: { spellLevel: number; characterLevel?: number }
+): string {
+	console.log('[evaluateFormulaForDisplay] Input:', formula, 'spellLevel:', context.spellLevel);
+	let evaluated = formula;
+
+	// Remove outer parentheses if they wrap the entire expression
+	if (evaluated.startsWith('(') && evaluated.endsWith(')')) {
+		let depth = 0;
+		let isOuter = true;
+		for (let i = 0; i < evaluated.length; i++) {
+			if (evaluated[i] === '(') depth++;
+			if (evaluated[i] === ')') depth--;
+			// If depth hits 0 before the end, these aren't outer parens
+			if (depth === 0 && i < evaluated.length - 1) {
+				isOuter = false;
+				break;
+			}
+		}
+		if (isOuter) {
+			evaluated = evaluated.slice(1, -1);
+		}
+	}
+
+	// Replace @item.level and @item.rank with spell level
+	evaluated = evaluated.replace(/@item\.level/g, String(context.spellLevel));
+	evaluated = evaluated.replace(/@item\.rank/g, String(context.spellLevel));
+
+	// Replace @actor.level with character level if provided
+	if (context.characterLevel !== undefined) {
+		evaluated = evaluated.replace(/@actor\.level/g, String(context.characterLevel));
+	}
+
+	// Evaluate mathematical expressions
+	try {
+		// Handle ceil() and floor() functions with proper parenthesis matching
+		let hasFunction = true;
+		while (hasFunction) {
+			hasFunction = false;
+
+			// Process ceil() functions
+			let ceilPos = evaluated.indexOf('ceil(');
+			while (ceilPos !== -1) {
+				hasFunction = true;
+				const closingPos = findMatchingParen(evaluated, ceilPos + 4);
+				if (closingPos === -1) break;
+
+				const innerExpr = evaluated.substring(ceilPos + 5, closingPos);
+				const value = evaluateSimpleExpression(innerExpr);
+				const result = String(Math.ceil(value));
+
+				evaluated = evaluated.substring(0, ceilPos) + result + evaluated.substring(closingPos + 1);
+				ceilPos = evaluated.indexOf('ceil(');
+			}
+
+			// Process floor() functions
+			let floorPos = evaluated.indexOf('floor(');
+			while (floorPos !== -1) {
+				hasFunction = true;
+				const closingPos = findMatchingParen(evaluated, floorPos + 5);
+				if (closingPos === -1) break;
+
+				const innerExpr = evaluated.substring(floorPos + 6, closingPos);
+				const value = evaluateSimpleExpression(innerExpr);
+				const result = String(Math.floor(value));
+
+				evaluated = evaluated.substring(0, floorPos) + result + evaluated.substring(closingPos + 1);
+				floorPos = evaluated.indexOf('floor(');
+			}
+		}
+
+		// Check if we have dice notation with a calculable prefix
+		// Patterns like: "3d6", "floor(...)/2d6", "1+2d6"
+		const dicePattern = /^(.+?)d(\d+)$/;
+		const diceMatch = evaluated.match(dicePattern);
+
+		if (diceMatch) {
+			const [, diceCount, dieSize] = diceMatch;
+			// Try to evaluate the dice count expression
+			try {
+				const count = evaluateSimpleExpression(diceCount);
+				if (!isNaN(count) && count > 0) {
+					evaluated = `${count}d${dieSize}`;
+				}
+			} catch {
+				// Leave as-is if can't evaluate
+			}
+		} else if (!/d\d+/.test(evaluated)) {
+			// No dice notation at all, try to evaluate as pure arithmetic
+			const value = evaluateSimpleExpression(evaluated);
+			if (!isNaN(value)) {
+				evaluated = String(value);
+			}
+		}
+	} catch (e) {
+		// If evaluation fails, use simplified formula
+		console.warn('[evaluateFormulaForDisplay] Error evaluating:', e);
+		evaluated = simplifyFormula(formula);
+	}
+
+	console.log('[evaluateFormulaForDisplay] Output:', evaluated);
+	return evaluated;
+}
+
+/**
+ * Evaluate simple arithmetic expressions (no dice notation)
+ */
+function evaluateSimpleExpression(expr: string): number {
+	// Replace division and multiplication symbols
+	const normalized = expr.replace(/÷/g, '/').replace(/×/g, '*');
+
+	// Basic safety check - only allow numbers and basic operators
+	if (!/^[\d\s+\-*/.()]+$/.test(normalized)) {
+		throw new Error('Invalid expression');
+	}
+
+	// Use Function constructor for safe evaluation (no access to scope)
+	// eslint-disable-next-line no-new-func
+	return new Function(`return ${normalized}`)() as number;
 }
 
 /**
  * Comprehensive description processor
  * Applies all parsing rules in the correct order
+ *
+ * @param html - HTML content to process
+ * @param context - Optional context for evaluating formulas (spell level, character level)
  */
-export function processDescription(html: string): string {
+export function processDescription(
+	html: string,
+	context?: { spellLevel?: number; characterLevel?: number }
+): string {
 	if (!html) return '';
 
 	let processed = html;
 
 	// Apply transformations in order
 	processed = parseUUIDReferences(processed);
-	processed = parseFoundryDamage(processed); // Parse @Damage[...] syntax first
+	processed = parseFoundryDamage(processed, context); // Parse @Damage[...] syntax first
 	processed = parseInlineRolls(processed);
 	processed = parseTemplates(processed);
 	processed = parseDamage(processed);

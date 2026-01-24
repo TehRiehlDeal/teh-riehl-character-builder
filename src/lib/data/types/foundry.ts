@@ -214,6 +214,7 @@ export interface FoundrySpell extends FoundryItemBase {
 				basic: boolean;
 			};
 		} | null;
+		damage?: Record<string, unknown>; // Spell damage data
 		heightening?: {
 			type: 'fixed' | 'interval';
 			levels?: Record<string, unknown>;

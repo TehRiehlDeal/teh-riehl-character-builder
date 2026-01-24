@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { processDescription } from '$lib/utils/descriptionParser';
+	import { character } from '$lib/stores/character';
 	import {
 		featLoader,
 		spellLoader,
@@ -46,6 +47,9 @@
 	}
 
 	let { content, class: className = '' }: Props = $props();
+
+	// Get character level for spell damage calculation
+	const characterLevel = $derived($character.level);
 
 	// Process the description to handle UUID links and other Foundry syntax
 	const processedContent = $derived(processDescription(content));
@@ -459,7 +463,7 @@
 <FeatDetailModal bind:open={featModalOpen} feat={selectedFeat} />
 
 <!-- Modal for displaying linked spell details -->
-<SpellDetailModal bind:open={spellModalOpen} spell={selectedSpell} />
+<SpellDetailModal bind:open={spellModalOpen} spell={selectedSpell} {characterLevel} />
 
 <!-- Modal for displaying linked ancestry details -->
 <AncestryDetailModal bind:open={ancestryModalOpen} ancestry={selectedAncestry} />

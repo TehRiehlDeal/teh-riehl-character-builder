@@ -3,17 +3,56 @@
 	import Modal from './Modal.svelte';
 	import Button from './Button.svelte';
 	import RichDescription from './RichDescription.svelte';
+	import { processDescription } from '$lib/utils/descriptionParser';
+	import { calculateSpellDamage, formatDamageCompact, getCantripHeightenLevel } from '$lib/utils/spellDamage';
 
 	interface Props {
 		/** Whether the modal is open */
 		open?: boolean;
 		/** The spell to display */
 		spell: Spell | null;
+		/** Character level (for cantrip scaling) */
+		characterLevel?: number;
+		/** Heightened level for the spell (defaults to base level or cantrip scaling) */
+		heightenedLevel?: number;
 		/** Callback when modal is closed */
 		onClose?: () => void;
 	}
 
-	let { open = $bindable(false), spell, onClose }: Props = $props();
+	let { open = $bindable(false), spell, characterLevel, heightenedLevel, onClose }: Props = $props();
+
+	// Calculate effective heightened level
+	const effectiveHeightenedLevel = $derived.by(() => {
+		if (!spell) return 0;
+
+		// If heightenedLevel is explicitly provided, use it
+		if (heightenedLevel !== undefined) {
+			return heightenedLevel;
+		}
+
+		// For cantrips, calculate based on character level
+		if (spell.level === 0 && characterLevel !== undefined) {
+			return getCantripHeightenLevel(characterLevel);
+		}
+
+		// Default to base spell level
+		return spell.level;
+	});
+
+	// Calculate spell damage
+	const spellDamage = $derived.by(() => {
+		if (!spell) return [];
+		return calculateSpellDamage(spell, effectiveHeightenedLevel, characterLevel);
+	});
+
+	// Process description with context for damage calculation
+	const processedDescription = $derived.by(() => {
+		if (!spell) return '';
+		return processDescription(spell.description, {
+			spellLevel: effectiveHeightenedLevel,
+			characterLevel
+		});
+	});
 
 	function handleClose() {
 		open = false;
@@ -58,17 +97,34 @@
 		<div class="spell-detail">
 			<!-- Header Info -->
 			<div class="spell-header">
-				<div class="spell-meta">
-					<span class="meta-badge level-badge">
-						{getSpellTypeLabel(spell.level, spell.spellType)}
-					</span>
+				<div class="spell-meta-row">
+					<div class="spell-meta">
+						<span class="meta-badge level-badge">
+							{getSpellTypeLabel(spell.level, spell.spellType)}
+						</span>
 
-					{#if spell.traditions && spell.traditions.length > 0}
-						<span class="meta-badge tradition-badge">{formatTraditions(spell.traditions)}</span>
-					{/if}
+						{#if spell.traditions && spell.traditions.length > 0}
+							<span class="meta-badge tradition-badge">{formatTraditions(spell.traditions)}</span>
+						{/if}
 
-					{#if spell.rarity && spell.rarity !== 'common'}
-						<span class="meta-badge rarity-badge rarity-{spell.rarity}">{spell.rarity}</span>
+						{#if spell.rarity && spell.rarity !== 'common'}
+							<span class="meta-badge rarity-badge rarity-{spell.rarity}">{spell.rarity}</span>
+						{/if}
+					</div>
+
+					<!-- Damage Display -->
+					{#if spellDamage.length > 0}
+						<div class="spell-damage-display">
+							{#each spellDamage as damage, i (i)}
+								<div class="damage-entry" class:splash={damage.category === 'splash'} class:persistent={damage.category === 'persistent'}>
+									<span class="damage-formula">{damage.formula}</span>
+									<span class="damage-type">{damage.type}</span>
+									{#if damage.category}
+										<span class="damage-category">({damage.category})</span>
+									{/if}
+								</div>
+							{/each}
+						</div>
 					{/if}
 				</div>
 			</div>
@@ -131,7 +187,9 @@
 			<!-- Description -->
 			<div class="detail-section">
 				<h4>Description</h4>
-				<RichDescription content={spell.description} class="spell-description-content" />
+				<div class="spell-description-content">
+					{@html processedDescription}
+				</div>
 			</div>
 
 			<!-- Heightening -->
@@ -191,10 +249,63 @@
 		border-bottom: 2px solid var(--border-color, #e0e0e0);
 	}
 
+	.spell-meta-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
 	.spell-meta {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
+	}
+
+	.spell-damage-display {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		align-items: flex-end;
+	}
+
+	.damage-entry {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.375rem 0.75rem;
+		background-color: rgba(224, 49, 49, 0.1);
+		border: 1px solid rgba(224, 49, 49, 0.3);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.damage-entry.splash {
+		background-color: rgba(250, 176, 5, 0.1);
+		border-color: rgba(250, 176, 5, 0.3);
+	}
+
+	.damage-entry.persistent {
+		background-color: rgba(174, 62, 201, 0.1);
+		border-color: rgba(174, 62, 201, 0.3);
+	}
+
+	.damage-formula {
+		color: var(--text-primary, #1a1a1a);
+		font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+	}
+
+	.damage-type {
+		color: var(--text-secondary, #666);
+		text-transform: capitalize;
+	}
+
+	.damage-category {
+		color: var(--text-secondary, #666);
+		font-size: 0.75rem;
+		font-style: italic;
 	}
 
 	.meta-badge {
@@ -356,8 +467,33 @@
 		text-transform: uppercase;
 	}
 
-	/* Ensure nested RichDescription styles work */
-	.spell-detail :global(.spell-description-content) {
+	/* Description content styles */
+	.spell-description-content {
 		color: var(--text-primary, #1a1a1a);
+		line-height: 1.6;
+	}
+
+	.spell-description-content :global(p) {
+		margin: 0 0 0.75rem 0;
+	}
+
+	.spell-description-content :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.spell-description-content :global(.inline-damage) {
+		color: #e03131;
+		font-weight: 600;
+		padding: 0.125rem 0.25rem;
+		background-color: rgba(224, 49, 49, 0.1);
+		border-radius: 3px;
+	}
+
+	.spell-description-content :global(.inline-healing) {
+		color: #2f9e44;
+		font-weight: 600;
+		padding: 0.125rem 0.25rem;
+		background-color: rgba(47, 158, 68, 0.1);
+		border-radius: 3px;
 	}
 </style>

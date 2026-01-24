@@ -538,16 +538,6 @@
 		color: #fab005;
 	}
 
-	.info-box {
-		padding: 1rem;
-		background-color: rgba(92, 124, 250, 0.1);
-		border-left: 3px solid var(--link-color, #5c7cfa);
-		border-radius: 4px;
-		font-size: 0.9375rem;
-		color: var(--text-primary, #1a1a1a);
-		line-height: 1.6;
-	}
-
 	/* Mobile */
 	@media (max-width: 640px) {
 		.skill-grid {

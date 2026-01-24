@@ -21,10 +21,16 @@
 		hasSpellbook,
 		getSpellbookCapacity
 	} from '$lib/utils/spellcasting';
+	import {
+		getCrossTraditionAccess,
+		getCrossTraditionDescription,
+		type MagicalTradition
+	} from '$lib/utils/crossTraditionSpells';
 
 	let spells = $state<Spell[]>([]);
 	let loading = $state(true);
 	let selectedSpell = $state<Spell | null>(null);
+	let selectedSpellHeightenedLevel = $state<number | undefined>(undefined);
 	let showSpellDetail = $state(false);
 
 	// State for slot selection modal
@@ -43,6 +49,26 @@
 	// Resolve spell tradition from class and selections
 	const resolvedTradition = $derived(resolveSpellTradition(className, ruleSelections));
 
+	// Get all character feats for cross-tradition access checking
+	const allCharacterFeats = $derived.by(() => {
+		return [
+			...$character.feats.ancestry,
+			...$character.feats.class,
+			...$character.feats.skill,
+			...$character.feats.general
+		];
+	});
+
+	// Check for feats that allow cross-tradition spell access
+	const crossTraditionAccess = $derived.by(() => {
+		return getCrossTraditionAccess(allCharacterFeats, resolvedTradition);
+	});
+
+	// Get user-friendly description of cross-tradition access
+	const crossTraditionDescription = $derived.by(() => {
+		return getCrossTraditionDescription(allCharacterFeats, resolvedTradition);
+	});
+
 	// Get spellcasting config
 	const spellcastingConfig = $derived(className ? getSpellcastingConfig(className) : null);
 	const spellcastingType = $derived(spellcastingConfig?.type ?? null);
@@ -57,7 +83,7 @@
 
 	// Get spellbook capacity
 	const spellbookCapacity = $derived(
-		className ? getSpellbookCapacity(className, characterLevel) : { cantrips: 0, spells: {} }
+		className ? getSpellbookCapacity(className, characterLevel) : { cantrips: 0, totalSpells: 0, maxSpellLevel: 0 }
 	);
 
 	// Get max spell level available
@@ -81,6 +107,7 @@
 	const spellbookIds = $derived.by(() => {
 		return [
 			...$character.spellcasting.knownSpells,
+			...$character.spellcasting.learnedSpells,
 			...$character.spellcasting.cantripsKnown
 		];
 	});
@@ -89,14 +116,75 @@
 	const spellsForSlotSelection = $derived.by(() => {
 		if (selectingSlotLevel === 'cantrip') {
 			// Show cantrips from spellbook
-			return $character.spellcasting.cantripsKnown
+			const spellbookCantrips = $character.spellcasting.cantripsKnown
 				.map(id => spellsByIdMap.get(id))
 				.filter((s): s is Spell => s !== undefined);
+
+			// If character has cross-tradition access, also show spells from allowed traditions
+			if (crossTraditionAccess.hasAccess && crossTraditionAccess.cantripsOnly && resolvedTradition) {
+				const crossTraditionCantrips = spells.filter(spell => {
+					if (spell.level !== 0 || !spell.traditions) return false;
+
+					// Check if spell is from an allowed tradition
+					return spell.traditions.some(tradition =>
+						crossTraditionAccess.allowedTraditions.includes(tradition.toLowerCase() as MagicalTradition)
+					);
+				});
+
+				// Combine and remove duplicates (in case a cantrip is in the spellbook already)
+				const allCantrips = [...spellbookCantrips];
+				const existingIds = new Set(spellbookCantrips.map(s => s.id));
+
+				for (const cantrip of crossTraditionCantrips) {
+					if (!existingIds.has(cantrip.id)) {
+						allCantrips.push(cantrip);
+					}
+				}
+
+				return allCantrips.sort((a, b) => a.name.localeCompare(b.name));
+			}
+
+			return spellbookCantrips;
 		} else {
-			// Show spells of the appropriate level from spellbook
-			return $character.spellcasting.knownSpells
+			// selectingSlotLevel is a number at this point
+			const slotLevel = selectingSlotLevel as number;
+
+			// Show spells up to and including the slot level from spellbook
+			// This allows preparing lower-level spells in higher-level slots (auto-heightening)
+			// Include both knownSpells and learnedSpells
+			const allSpellIds = [
+				...$character.spellcasting.knownSpells,
+				...$character.spellcasting.learnedSpells
+			];
+			const spellbookSpells = allSpellIds
 				.map(id => spellsByIdMap.get(id))
-				.filter((s): s is Spell => s !== undefined && s.level === selectingSlotLevel);
+				.filter((s): s is Spell => s !== undefined && s.level <= slotLevel);
+
+			// If character has cross-tradition access for all spells, also show those
+			if (crossTraditionAccess.hasAccess && crossTraditionAccess.allSpells && resolvedTradition) {
+				const crossTraditionSpells = spells.filter(spell => {
+					if (spell.level > slotLevel || !spell.traditions) return false;
+
+					// Check if spell is from an allowed tradition
+					return spell.traditions.some(tradition =>
+						crossTraditionAccess.allowedTraditions.includes(tradition.toLowerCase() as MagicalTradition)
+					);
+				});
+
+				// Combine and remove duplicates
+				const allSpells = [...spellbookSpells];
+				const existingIds = new Set(spellbookSpells.map(s => s.id));
+
+				for (const spell of crossTraditionSpells) {
+					if (!existingIds.has(spell.id)) {
+						allSpells.push(spell);
+					}
+				}
+
+				return allSpells.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+			}
+
+			return spellbookSpells.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
 		}
 	});
 
@@ -147,14 +235,16 @@
 		character.recoverAllPreparedSlots();
 	}
 
-	function handleViewDetails(spell: Spell) {
+	function handleViewDetails(spell: Spell, heightenedLevel?: number) {
 		selectedSpell = spell;
+		selectedSpellHeightenedLevel = heightenedLevel;
 		showSpellDetail = true;
 	}
 
 	function handleCloseDetail() {
 		showSpellDetail = false;
 		selectedSpell = null;
+		selectedSpellHeightenedLevel = undefined;
 	}
 
 	// Add spell to spellbook
@@ -174,6 +264,16 @@
 	// Remove cantrip from spellbook
 	function handleRemoveCantrip(spellId: string) {
 		character.removeCantrip(spellId);
+	}
+
+	// Learn a spell (from "Learn a Spell" activity)
+	function handleLearnSpell(spell: Spell) {
+		character.addLearnedSpell(spell.id);
+	}
+
+	// Remove learned spell from spellbook
+	function handleRemoveLearnedSpell(spellId: string) {
+		character.removeLearnedSpell(spellId);
 	}
 
 	// Open slot selection modal for cantrip
@@ -310,9 +410,19 @@
 			<!-- Spellbook Section -->
 			{#if classHasSpellbook || requiresPreparation}
 				<section class="content-section" aria-labelledby="spellbook">
-					<h2 id="spellbook" class="section-title">Spellbook</h2>
+					<div class="section-header-row">
+						<h2 id="spellbook" class="section-title">Spellbook</h2>
+						{#if classHasSpellbook}
+							<span class="capacity-badge" class:over={$character.spellcasting.knownSpells.length > spellbookCapacity.totalSpells}>
+								{$character.spellcasting.knownSpells.length}/{spellbookCapacity.totalSpells} spells
+							</span>
+						{/if}
+					</div>
 					<p class="section-description">
 						Spells inscribed in your spellbook. Add spells from the available spells list below.
+						{#if classHasSpellbook}
+							You can inscribe up to {spellbookCapacity.totalSpells} spells of any rank up to {spellbookCapacity.maxSpellLevel}.
+						{/if}
 					</p>
 					<div class="section-body">
 						<div class="spellbook-contents">
@@ -347,23 +457,20 @@
 								</div>
 							{/if}
 
-							<!-- Leveled spells in spellbook -->
-							{#each Object.entries(spellbookCapacity.spells).sort((a, b) => Number(a[0]) - Number(b[0])) as [level, capacity] (level)}
-								{@const spellLevel = Number(level)}
+							<!-- Free spells in spellbook grouped by rank -->
+							{#each Array.from({ length: spellbookCapacity.maxSpellLevel }, (_, i) => i + 1) as level (level)}
 								{@const spellsAtLevel = $character.spellcasting.knownSpells.filter(id => {
 									const s = spellsByIdMap.get(id);
-									return s && s.level === spellLevel;
+									return s && s.level === level;
 								})}
-								<div class="spellbook-level">
-									<div class="spellbook-level-header">
-										<h4>Level {level}</h4>
-										<span class="capacity-badge" class:over={spellsAtLevel.length > capacity}>
-											{spellsAtLevel.length}/{capacity}
-										</span>
-									</div>
-									{#if spellsAtLevel.length === 0}
-										<p class="empty-text">No level {level} spells inscribed yet.</p>
-									{:else}
+								{#if spellsAtLevel.length > 0}
+									<div class="spellbook-level">
+										<div class="spellbook-level-header">
+											<h4>Rank {level}</h4>
+											<span class="spell-count-badge">
+												{spellsAtLevel.length} {spellsAtLevel.length === 1 ? 'spell' : 'spells'}
+											</span>
+										</div>
 										<div class="spell-chips">
 											{#each spellsAtLevel as spellId (spellId)}
 												{@const spell = spellsByIdMap.get(spellId)}
@@ -379,9 +486,54 @@
 												{/if}
 											{/each}
 										</div>
-									{/if}
-								</div>
+									</div>
+								{/if}
 							{/each}
+
+							<!-- Learned spells section -->
+							{#if $character.spellcasting.learnedSpells.length > 0}
+								<div class="learned-spells-section">
+									<div class="learned-spells-header">
+										<h4>Learned Spells</h4>
+										<span class="spell-count-badge learned">
+											{$character.spellcasting.learnedSpells.length} {$character.spellcasting.learnedSpells.length === 1 ? 'spell' : 'spells'}
+										</span>
+									</div>
+									<p class="learned-spells-description">
+										Spells learned through "Learn a Spell" activities. These don't count toward your free spells.
+									</p>
+
+									<!-- Group learned spells by rank -->
+									{#each Array.from({ length: spellbookCapacity.maxSpellLevel }, (_, i) => i + 1) as level (level)}
+										{@const learnedAtLevel = $character.spellcasting.learnedSpells.filter(id => {
+											const s = spellsByIdMap.get(id);
+											return s && s.level === level;
+										})}
+										{#if learnedAtLevel.length > 0}
+											<div class="spellbook-sublevel">
+												<div class="spellbook-sublevel-header">
+													<h5>Rank {level}</h5>
+												</div>
+												<div class="spell-chips">
+													{#each learnedAtLevel as spellId (spellId)}
+														{@const spell = spellsByIdMap.get(spellId)}
+														{#if spell}
+															<div class="spell-chip learned">
+																<button class="spell-chip-name" onclick={() => handleViewDetails(spell)}>
+																	{spell.name}
+																</button>
+																<button class="spell-chip-remove" onclick={() => handleRemoveLearnedSpell(spellId)} aria-label="Remove {spell.name}">
+																	×
+																</button>
+															</div>
+														{/if}
+													{/each}
+												</div>
+											</div>
+										{/if}
+									{/each}
+								</div>
+							{/if}
 						</div>
 					</div>
 				</section>
@@ -396,6 +548,11 @@
 				</h2>
 				<p class="section-description">
 					Browse and add spells to your spellbook.
+					{#if crossTraditionDescription}
+						<span class="cross-tradition-note">
+							({crossTraditionDescription})
+						</span>
+					{/if}
 				</p>
 				<div class="section-body">
 					{#if loading}
@@ -419,9 +576,16 @@
 							showAddButtons={true}
 							addButtonLabel="Add to Spellbook"
 							addedButtonLabel="In Spellbook"
+							onLearnSpell={handleLearnSpell}
+							showLearnButtons={classHasSpellbook}
 							{maxSpellLevel}
 							showSchoolFilter={false}
 							title="Spells"
+							crossTraditionAccess={crossTraditionAccess.hasAccess ? {
+								cantrips: crossTraditionAccess.cantripsOnly,
+								allSpells: crossTraditionAccess.allSpells,
+								allowedTraditions: crossTraditionAccess.allowedTraditions
+							} : undefined}
 						/>
 					{/if}
 				</div>
@@ -436,6 +600,8 @@
 	open={showSpellDetail}
 	onClose={handleCloseDetail}
 	showCastButton={false}
+	characterLevel={characterLevel}
+	heightenedLevel={selectedSpellHeightenedLevel}
 />
 
 <!-- Slot Selection Modal -->
@@ -444,8 +610,14 @@
 		<p class="slot-select-info">
 			{#if selectingSlotLevel === 'cantrip'}
 				Select a cantrip from your spellbook to prepare in this slot.
+				{#if crossTraditionAccess.hasAccess && crossTraditionAccess.cantripsOnly}
+					Your feats also allow you to prepare cantrips from {crossTraditionAccess.allowedTraditions.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')} traditions.
+				{/if}
 			{:else}
-				Select a level {selectingSlotLevel} spell from your spellbook to prepare.
+				Select a spell from your spellbook to prepare in this rank {selectingSlotLevel} slot. Lower-level spells will be automatically heightened.
+				{#if crossTraditionAccess.hasAccess && crossTraditionAccess.allSpells}
+					Your feats also allow you to prepare spells from {crossTraditionAccess.allowedTraditions.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')} traditions.
+				{/if}
 			{/if}
 		</p>
 
@@ -455,16 +627,31 @@
 					{#if selectingSlotLevel === 'cantrip'}
 						No cantrips in your spellbook. Add cantrips from the Available Spells list first.
 					{:else}
-						No level {selectingSlotLevel} spells in your spellbook. Add spells from the Available Spells list first.
+						No spells in your spellbook. Add spells from the Available Spells list first.
 					{/if}
 				</p>
 			</div>
 		{:else}
 			<div class="spell-select-list">
 				{#each spellsForSlotSelection as spell (spell.id)}
+					{@const isFromOtherTradition = resolvedTradition && spell.traditions && !spell.traditions.includes(resolvedTradition)}
 					<button class="spell-select-item" onclick={() => handlePrepareSpellInSlot(spell)}>
-						<span class="spell-select-name">{spell.name}</span>
-						<span class="spell-select-meta">{spell.castingTime}</span>
+						<div class="spell-select-main">
+							<div class="spell-select-name-row">
+								<span class="spell-select-name">{spell.name}</span>
+								{#if isFromOtherTradition}
+									<span class="cross-tradition-badge">{spell.traditions[0]}</span>
+								{/if}
+							</div>
+							<span class="spell-select-meta">
+								{#if selectingSlotLevel !== 'cantrip' && spell.level < selectingSlotLevel}
+									Rank {spell.level} (heightened to {selectingSlotLevel})
+								{:else if selectingSlotLevel !== 'cantrip'}
+									Rank {spell.level}
+								{/if}
+							</span>
+						</div>
+						<span class="spell-select-casting">{spell.castingTime}</span>
 					</button>
 				{/each}
 			</div>
@@ -550,6 +737,14 @@
 		color: var(--text-secondary, #666666);
 	}
 
+	.cross-tradition-note {
+		display: block;
+		margin-top: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--link-color, #5c7cfa);
+		font-style: italic;
+	}
+
 	.section-header-row .section-title {
 		margin: 0;
 	}
@@ -601,6 +796,19 @@
 		font-weight: 600;
 	}
 
+	.spell-count-badge {
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: var(--text-secondary, #666666);
+	}
+
+	.spell-count-badge.learned {
+		background-color: rgba(52, 152, 219, 0.1);
+		color: #2980b9;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+	}
+
 	.empty-text {
 		margin: 0;
 		font-size: 0.875rem;
@@ -628,6 +836,11 @@
 	.spell-chip.cantrip {
 		background-color: rgba(155, 89, 182, 0.1);
 		border-color: rgba(155, 89, 182, 0.3);
+	}
+
+	.spell-chip.learned {
+		background-color: rgba(52, 152, 219, 0.1);
+		border-color: rgba(52, 152, 219, 0.3);
 	}
 
 	.spell-chip-name {
@@ -666,6 +879,48 @@
 		color: #c0392b;
 	}
 
+	.learned-spells-section {
+		margin-top: 2rem;
+		padding-top: 1.5rem;
+		border-top: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.learned-spells-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+
+	.learned-spells-header h4 {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.learned-spells-description {
+		margin: 0 0 1rem 0;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #666666);
+		font-style: italic;
+	}
+
+	.spellbook-sublevel {
+		margin-top: 1rem;
+	}
+
+	.spellbook-sublevel-header {
+		margin-bottom: 0.5rem;
+	}
+
+	.spellbook-sublevel-header h5 {
+		margin: 0;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
 	/* Slot Selection Modal */
 	.slot-select-content {
 		min-height: 200px;
@@ -696,6 +951,7 @@
 		transition: all 0.2s;
 		text-align: left;
 		font: inherit;
+		gap: 1rem;
 	}
 
 	.spell-select-item:hover {
@@ -703,14 +959,44 @@
 		background-color: rgba(92, 124, 250, 0.05);
 	}
 
+	.spell-select-main {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		flex: 1;
+	}
+
+	.spell-select-name-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
 	.spell-select-name {
 		font-weight: 600;
 		color: var(--text-primary, #1a1a1a);
 	}
 
+	.cross-tradition-badge {
+		font-size: 0.6875rem;
+		font-weight: 500;
+		padding: 0.125rem 0.375rem;
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+		border-radius: 3px;
+		text-transform: capitalize;
+	}
+
 	.spell-select-meta {
+		font-size: 0.75rem;
+		color: var(--text-secondary, #666666);
+		font-style: italic;
+	}
+
+	.spell-select-casting {
 		font-size: 0.8125rem;
 		color: var(--text-secondary, #666666);
+		flex-shrink: 0;
 	}
 
 	.loading-state,

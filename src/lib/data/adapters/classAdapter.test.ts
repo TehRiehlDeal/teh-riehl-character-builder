@@ -83,7 +83,7 @@ describe('Class Adapter', () => {
 			const classData = adaptClass(mockFoundryClass);
 
 			expect(classData.hp).toBe(10);
-			expect(classData.keyAbility).toEqual(['str', 'dex']);
+			expect(classData.keyAbility).toEqual(['Strength', 'Dexterity']);
 		});
 
 		it('should extract proficiencies', () => {

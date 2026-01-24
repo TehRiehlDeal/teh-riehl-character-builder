@@ -61,6 +61,8 @@ function validatePrerequisite(
 			return validateAncestryPrerequisite(prerequisite, character);
 		case 'proficiency':
 			return validateProficiencyPrerequisite(prerequisite, character);
+		case 'feature':
+			return validateFeaturePrerequisite(prerequisite, character);
 		default:
 			return null;
 	}
@@ -222,6 +224,60 @@ function validateProficiencyPrerequisite(
 }
 
 /**
+ * Validate class feature requirement
+ */
+function validateFeaturePrerequisite(
+	prerequisite: { type: 'feature'; feature: string },
+	character: Character
+): ValidationError | null {
+	const featureName = prerequisite.feature.toLowerCase();
+
+	// Check if character has any class features
+	if (!character.classFeatures || character.classFeatures.length === 0) {
+		return {
+			type: 'feature',
+			message: `Requires ${prerequisite.feature}`,
+			prerequisite
+		};
+	}
+
+	// Check for spellcasting class feature
+	if (featureName.includes('spellcasting')) {
+		// Look for any class feature with "spellcasting" in the name
+		const hasSpellcasting = character.classFeatures.some(cf =>
+			cf.name.toLowerCase().includes('spellcasting')
+		);
+
+		if (!hasSpellcasting) {
+			return {
+				type: 'feature',
+				message: `Requires ${prerequisite.feature}`,
+				prerequisite
+			};
+		}
+		return null;
+	}
+
+	// For other features, check for exact or partial match
+	const hasFeature = character.classFeatures.some(cf => {
+		const cfNameLower = cf.name.toLowerCase();
+		return cfNameLower === featureName ||
+		       cfNameLower.includes(featureName) ||
+		       featureName.includes(cfNameLower);
+	});
+
+	if (!hasFeature) {
+		return {
+			type: 'feature',
+			message: `Requires ${prerequisite.feature}`,
+			prerequisite
+		};
+	}
+
+	return null;
+}
+
+/**
  * Helper to check if a character can select a specific feat
  */
 export function canSelectFeat(
@@ -253,6 +309,8 @@ export function getPrerequisiteDescription(prerequisite: Prerequisite): string {
 			return `${prerequisite.ancestry} ancestry`;
 		case 'proficiency':
 			return `${prerequisite.rank} in ${prerequisite.proficiency}`;
+		case 'feature':
+			return prerequisite.feature;
 		default:
 			return 'Unknown prerequisite';
 	}

@@ -18,6 +18,7 @@ export interface Character {
 	ancestry?: {
 		name: string;
 	};
+	classFeatures?: Array<{ level: number; name: string; rules: any[] }>;
 }
 
 /**
@@ -30,7 +31,8 @@ export type PrerequisiteType =
 	| 'feat'
 	| 'class'
 	| 'ancestry'
-	| 'proficiency';
+	| 'proficiency'
+	| 'feature';
 
 export interface LevelPrerequisite {
 	type: 'level';
@@ -71,6 +73,11 @@ export interface ProficiencyPrerequisite {
 	rank: 'trained' | 'expert' | 'master' | 'legendary';
 }
 
+export interface FeaturePrerequisite {
+	type: 'feature';
+	feature: string;
+}
+
 export type Prerequisite =
 	| LevelPrerequisite
 	| AbilityPrerequisite
@@ -78,7 +85,8 @@ export type Prerequisite =
 	| FeatPrerequisite
 	| ClassPrerequisite
 	| AncestryPrerequisite
-	| ProficiencyPrerequisite;
+	| ProficiencyPrerequisite
+	| FeaturePrerequisite;
 
 /**
  * Validation result

@@ -379,8 +379,6 @@
 					</div>
 					{#if status === 'current'}
 						<span class="level-badge current-badge">Current</span>
-					{:else if status === 'past'}
-						<span class="level-badge past-badge">Complete</span>
 					{/if}
 				</button>
 
@@ -667,8 +665,7 @@
 	}
 
 	.level-block.past {
-		background-color: #f8f9fa;
-		opacity: 0.7;
+		background-color: var(--surface-1, #ffffff);
 	}
 
 	.level-block.future {
@@ -738,11 +735,6 @@
 	.current-badge {
 		background-color: var(--link-color, #5c7cfa);
 		color: white;
-	}
-
-	.past-badge {
-		background-color: var(--surface-3, #e0e0e0);
-		color: var(--text-secondary, #666666);
 	}
 
 	.level-features {
@@ -896,11 +888,6 @@
 		outline: none;
 		border-color: var(--focus-color, #5c7cfa);
 		box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.1);
-	}
-
-	.selection-input.small {
-		padding: 0.875rem 1rem;
-		font-size: 0.875rem;
 	}
 
 	.ability-boost-grid {

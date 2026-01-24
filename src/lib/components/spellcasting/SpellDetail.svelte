@@ -3,6 +3,7 @@
 	import Modal from '../common/Modal.svelte';
 	import Button from '../common/Button.svelte';
 	import { processDescription } from '$lib/utils/descriptionParser';
+	import { calculateSpellDamage, getCantripHeightenLevel } from '$lib/utils/spellDamage';
 
 	/**
 	 * SpellDetail Component
@@ -30,6 +31,12 @@
 
 		/** Available spell slots by level (for heightening selection) */
 		availableSlots?: Record<number, number>;
+
+		/** Character level (for cantrip scaling) */
+		characterLevel?: number;
+
+		/** Heightened level (when viewing from a prepared slot) */
+		heightenedLevel?: number;
 	}
 
 	let {
@@ -38,7 +45,9 @@
 		onClose,
 		onCast,
 		showCastButton = false,
-		availableSlots = {}
+		availableSlots = {},
+		characterLevel,
+		heightenedLevel
 	}: Props = $props();
 
 	let selectedHeightenLevel = $state<number | undefined>(undefined);
@@ -47,7 +56,16 @@
 	// Reset state when spell changes
 	$effect(() => {
 		if (spell) {
-			selectedHeightenLevel = spell.level;
+			// Use heightenedLevel if provided (from prepared slot)
+			if (heightenedLevel !== undefined) {
+				selectedHeightenLevel = heightenedLevel;
+			}
+			// For cantrips, set to character-level scaled version
+			else if (spell.level === 0 && characterLevel !== undefined) {
+				selectedHeightenLevel = getCantripHeightenLevel(characterLevel);
+			} else {
+				selectedHeightenLevel = spell.level;
+			}
 			showHeighteningDetails = false;
 		}
 	});
@@ -76,8 +94,24 @@
 		return levels.sort((a, b) => a - b);
 	});
 
-	// Process description to handle Foundry VTT syntax
-	const processedDescription = $derived(spell ? processDescription(spell.description) : '');
+	// Calculate effective heightened level for damage
+	const effectiveHeightenedLevel = $derived(selectedHeightenLevel ?? spell?.level ?? 0);
+
+	// Calculate spell damage
+	const spellDamage = $derived.by(() => {
+		if (!spell) return [];
+		return calculateSpellDamage(spell, effectiveHeightenedLevel, characterLevel);
+	});
+
+	// Process description to handle Foundry VTT syntax with context
+	const processedDescription = $derived(
+		spell
+			? processDescription(spell.description, {
+					spellLevel: effectiveHeightenedLevel,
+					characterLevel
+			  })
+			: ''
+	);
 
 	function handleCast() {
 		if (spell && onCast) {
@@ -99,6 +133,16 @@
 		}
 		return '';
 	}
+
+	/** Get CSS class for tradition badge color */
+	function getTraditionClass(tradition: string): string {
+		const lower = tradition.toLowerCase();
+		if (lower === 'arcane') return 'tradition-arcane';
+		if (lower === 'divine') return 'tradition-divine';
+		if (lower === 'occult') return 'tradition-occult';
+		if (lower === 'primal') return 'tradition-primal';
+		return 'tradition-other';
+	}
 </script>
 
 <Modal {open} {onClose} size="lg" title={spell?.name}>
@@ -106,27 +150,52 @@
 		<div class="spell-detail">
 			<!-- Header Info -->
 			<div class="spell-header">
-				<div class="spell-level-info">
-					<span class="spell-level">
-						{spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`}
-					</span>
-					<span class="spell-type">{spell.spellType}</span>
-				</div>
+				<div class="spell-header-row">
+					<div class="spell-header-left">
+						<div class="spell-level-info">
+							<span class="spell-level">
+								{spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`}
+							</span>
+							<span class="spell-type">{spell.spellType}</span>
+						</div>
 
-				{#if spell.traits && spell.traits.length > 0}
-					<div class="spell-traits">
-						{#each spell.traits as trait}
-							<span class="trait-badge">{trait}</span>
-						{/each}
+						{#if spell.traits && spell.traits.length > 0}
+							<div class="spell-traits">
+								{#each spell.traits as trait}
+									<span class="trait-badge">{trait}</span>
+								{/each}
+							</div>
+						{/if}
 					</div>
-				{/if}
+
+					<!-- Damage Display -->
+					{#if spellDamage.length > 0}
+						<div class="spell-damage-display">
+							{#each spellDamage as damage, i (i)}
+								<div class="damage-entry" class:splash={damage.category === 'splash'} class:persistent={damage.category === 'persistent'}>
+									<span class="damage-formula">{damage.formula}</span>
+									<span class="damage-type">{damage.type}</span>
+									{#if damage.category}
+										<span class="damage-category">({damage.category})</span>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			<!-- Traditions -->
 			{#if spell.traditions && spell.traditions.length > 0}
 				<div class="spell-meta-row">
 					<strong>Traditions:</strong>
-					<span>{spell.traditions.join(', ')}</span>
+					<div class="tradition-badges">
+						{#each spell.traditions as tradition}
+							<span class="tradition-badge {getTraditionClass(tradition)}">
+								{tradition}
+							</span>
+						{/each}
+					</div>
 				</div>
 			{/if}
 
@@ -272,10 +341,70 @@
 		border-bottom: 2px solid var(--border-color, #e0e0e0);
 	}
 
+	.spell-header-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.spell-header-left {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		flex: 1;
+	}
+
 	.spell-level-info {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
+	}
+
+	.spell-damage-display {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		align-items: flex-end;
+	}
+
+	.damage-entry {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.375rem 0.75rem;
+		background-color: rgba(224, 49, 49, 0.1);
+		border: 1px solid rgba(224, 49, 49, 0.3);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.damage-entry.splash {
+		background-color: rgba(250, 176, 5, 0.1);
+		border-color: rgba(250, 176, 5, 0.3);
+	}
+
+	.damage-entry.persistent {
+		background-color: rgba(174, 62, 201, 0.1);
+		border-color: rgba(174, 62, 201, 0.3);
+	}
+
+	.damage-formula {
+		color: var(--text-primary, #1a1a1a);
+		font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+	}
+
+	.damage-type {
+		color: var(--text-secondary, #666);
+		text-transform: capitalize;
+	}
+
+	.damage-category {
+		color: var(--text-secondary, #666);
+		font-size: 0.75rem;
+		font-style: italic;
 	}
 
 	.spell-level {
@@ -314,10 +443,47 @@
 		display: flex;
 		gap: 0.5rem;
 		font-size: 0.9375rem;
+		align-items: center;
 	}
 
 	.spell-meta-row strong {
 		color: var(--text-primary, #1a1a1a);
+	}
+
+	.tradition-badges {
+		display: flex;
+		gap: 0.375rem;
+		flex-wrap: wrap;
+	}
+
+	.tradition-badge {
+		padding: 0.25rem 0.625rem;
+		color: white;
+		border-radius: 4px;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		text-transform: capitalize;
+		letter-spacing: 0.025em;
+	}
+
+	.tradition-arcane {
+		background-color: #5c7cfa;
+	}
+
+	.tradition-divine {
+		background-color: #fab005;
+	}
+
+	.tradition-occult {
+		background-color: #ae3ec9;
+	}
+
+	.tradition-primal {
+		background-color: #40c057;
+	}
+
+	.tradition-other {
+		background-color: #868e96;
 	}
 
 	.spell-meta-grid {

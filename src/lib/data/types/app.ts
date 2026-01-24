@@ -204,6 +204,7 @@ export interface Spell extends GameItem {
 	duration: string; // e.g., "1 minute", "sustained up to 1 minute"
 	sustained: boolean;
 	defense?: string; // e.g., "basic Reflex", "Will"
+	damage?: Record<string, unknown>; // Base damage data from Foundry
 	heightening?: {
 		type: 'fixed' | 'interval';
 		levels?: Record<number, unknown>; // Detailed heightening data
