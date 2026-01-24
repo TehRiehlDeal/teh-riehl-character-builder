@@ -123,8 +123,10 @@ export interface Character {
 
 	/** Spellcasting data */
 	spellcasting: {
-		/** Known/inscribed spells in spellbook by spell ID (leveled spells only) */
+		/** Known/inscribed spells in spellbook by spell ID (leveled spells only) - gained for free at level up */
 		knownSpells: string[];
+		/** Spells learned through "Learn a Spell" activity (no limit, doesn't count toward free spells) */
+		learnedSpells: string[];
 		/** Known/inscribed cantrips in spellbook by spell ID */
 		cantripsKnown: string[];
 		/** Focus points */
@@ -294,6 +296,7 @@ export function createNewCharacter(): Character {
 		activeSpellsAndEffects: [],
 		spellcasting: {
 			knownSpells: [],
+			learnedSpells: [],
 			cantripsKnown: [],
 			focusPoints: { max: 0, current: 0 },
 			tradition: null,
@@ -400,6 +403,7 @@ function loadFromStorage(): Character {
 			if (!parsed.spellcasting) {
 				parsed.spellcasting = {
 					knownSpells: [],
+					learnedSpells: [],
 					cantripsKnown: [],
 					focusPoints: { max: 0, current: 0 },
 					tradition: null,
@@ -429,6 +433,10 @@ function loadFromStorage(): Character {
 				}
 				if (!parsed.spellcasting.preparedSlots) {
 					parsed.spellcasting.preparedSlots = {};
+				}
+				// Learned spells field (for "Learn a Spell" activity)
+				if (!parsed.spellcasting.learnedSpells) {
+					parsed.spellcasting.learnedSpells = [];
 				}
 			}
 
@@ -1172,6 +1180,48 @@ function createCharacterStore() {
 		},
 
 		/**
+		 * Add a learned spell (from "Learn a Spell" activity)
+		 */
+		addLearnedSpell: (spellId: string) => {
+			update((char) => {
+				if (!char.spellcasting.learnedSpells.includes(spellId)) {
+					return {
+						...char,
+						spellcasting: {
+							...char.spellcasting,
+							learnedSpells: [...char.spellcasting.learnedSpells, spellId]
+						}
+					};
+				}
+				return char;
+			});
+		},
+
+		/**
+		 * Remove a learned spell (also removes from prepared slots)
+		 */
+		removeLearnedSpell: (spellId: string) => {
+			update((char) => {
+				// Also remove from prepared slots at all levels
+				const newPreparedSlots: Record<number, Array<{ spellId: string | null; cast: boolean }>> = {};
+				for (const [level, slots] of Object.entries(char.spellcasting.preparedSlots)) {
+					newPreparedSlots[Number(level)] = slots.map(slot =>
+						slot.spellId === spellId ? { spellId: null, cast: false } : slot
+					);
+				}
+
+				return {
+					...char,
+					spellcasting: {
+						...char.spellcasting,
+						learnedSpells: char.spellcasting.learnedSpells.filter((id) => id !== spellId),
+						preparedSlots: newPreparedSlots
+					}
+				};
+			});
+		},
+
+		/**
 		 * Initialize spell slots based on class and level
 		 */
 		initializeSpellSlots: (slots: Array<{ level: number; total: number }>) => {
@@ -1194,6 +1244,7 @@ function createCharacterStore() {
 					char.spellcasting.tradition === null &&
 					char.spellcasting.spellcastingType === null &&
 					char.spellcasting.knownSpells.length === 0 &&
+					char.spellcasting.learnedSpells.length === 0 &&
 					char.spellcasting.cantripsKnown.length === 0 &&
 					char.spellcasting.preparedCantrips.length === 0 &&
 					Object.keys(char.spellcasting.preparedSlots).length === 0
@@ -1204,6 +1255,7 @@ function createCharacterStore() {
 					...char,
 					spellcasting: {
 						knownSpells: [],
+						learnedSpells: [],
 						cantripsKnown: [],
 						focusPoints: { max: 0, current: 0 },
 						tradition: null,
@@ -1230,6 +1282,7 @@ function createCharacterStore() {
 				},
 				spellcasting: {
 					knownSpells: [],
+					learnedSpells: [],
 					cantripsKnown: [],
 					focusPoints: { max: 0, current: 0 },
 					tradition: null,

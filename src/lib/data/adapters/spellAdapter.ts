@@ -57,6 +57,7 @@ export function adaptSpell(
 			license: foundrySpell.system.publication.license,
 			remaster: foundrySpell.system.publication.remaster
 		},
+		damage: foundrySpell.system.damage,
 		heightening: foundrySpell.system.heightening,
 		rules: foundrySpell.system.rules
 	};

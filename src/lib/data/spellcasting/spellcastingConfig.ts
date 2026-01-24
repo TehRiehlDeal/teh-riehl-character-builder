@@ -81,7 +81,7 @@ const FULL_CASTER_SLOTS: SpellSlotProgression = {
 };
 
 /**
- * Bounded caster spell slot progression (Magus, Summoner)
+ * Bounded caster spell slot progression (Summoner)
  * Generally 1 slot per available level
  */
 const BOUNDED_CASTER_SLOTS: SpellSlotProgression = {
@@ -105,6 +105,34 @@ const BOUNDED_CASTER_SLOTS: SpellSlotProgression = {
 	18: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1 },
 	19: { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 2 },
 	20: { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 2 }
+};
+
+/**
+ * Magus spell slot progression
+ * Levels 1-2: 1 slot at highest rank
+ * Levels 3+: 2 slots at highest rank, 2 slots at 1 rank lower
+ */
+const MAGUS_SPELL_SLOTS: SpellSlotProgression = {
+	1: { 1: 1 },
+	2: { 1: 1 },
+	3: { 1: 2, 2: 2 },
+	4: { 1: 2, 2: 2 },
+	5: { 2: 2, 3: 2 },
+	6: { 2: 2, 3: 2 },
+	7: { 3: 2, 4: 2 },
+	8: { 3: 2, 4: 2 },
+	9: { 4: 2, 5: 2 },
+	10: { 4: 2, 5: 2 },
+	11: { 5: 2, 6: 2 },
+	12: { 5: 2, 6: 2 },
+	13: { 6: 2, 7: 2 },
+	14: { 6: 2, 7: 2 },
+	15: { 7: 2, 8: 2 },
+	16: { 7: 2, 8: 2 },
+	17: { 8: 2, 9: 2 },
+	18: { 8: 2, 9: 2 },
+	19: { 9: 2, 10: 2 },
+	20: { 9: 2, 10: 2 }
 };
 
 // =============================================================================
@@ -320,7 +348,7 @@ export const CLASS_SPELLCASTING: Record<string, SpellcastingConfig | null> = {
 	magus: {
 		tradition: 'arcane',
 		type: 'bounded',
-		spellSlots: BOUNDED_CASTER_SLOTS,
+		spellSlots: MAGUS_SPELL_SLOTS,
 		spellsKnown: BOUNDED_SPELLS_KNOWN,
 		cantrips: BOUNDED_CANTRIPS,
 		spellbook: {
@@ -517,15 +545,15 @@ export function hasSpellbook(className: string): boolean {
 
 /**
  * Get spellbook capacity for a class at a given character level
- * Returns the max number of spells that can be inscribed at each spell level
+ * Returns the total number of spells that can be inscribed (at any level up to max)
  */
 export function getSpellbookCapacity(
 	className: string,
 	characterLevel: number
-): { cantrips: number; spells: Record<number, number> } {
+): { cantrips: number; totalSpells: number; maxSpellLevel: number } {
 	const config = getSpellcastingConfig(className);
 	if (!config?.spellbook) {
-		return { cantrips: 0, spells: {} };
+		return { cantrips: 0, totalSpells: 0, maxSpellLevel: 0 };
 	}
 
 	const sb = config.spellbook;
@@ -534,35 +562,15 @@ export function getSpellbookCapacity(
 	// Calculate cantrip capacity
 	const cantrips = sb.startingCantrips + (sb.cantripsPerLevel * levelsGained);
 
-	// Calculate spell capacity per level
-	const spells: Record<number, number> = {};
+	// Calculate total spell capacity
+	// Starting spells (usually at level 1)
+	const startingSpellCount = Object.values(sb.startingSpells).reduce((sum, count) => sum + count, 0);
+
+	// Add spells gained per level
+	const totalSpells = startingSpellCount + (sb.spellsPerLevel * levelsGained);
+
+	// Get max spell level available
 	const maxSpellLevel = getMaxSpellLevel(characterLevel);
 
-	// Start with starting spells
-	for (const [level, count] of Object.entries(sb.startingSpells)) {
-		const spellLevel = parseInt(level);
-		if (spellLevel <= maxSpellLevel) {
-			spells[spellLevel] = count;
-		}
-	}
-
-	// Add spells gained per level (distributed to available spell levels)
-	// For simplicity, add to the highest available spell level or distribute
-	const totalGainedSpells = sb.spellsPerLevel * levelsGained;
-
-	// Distribute gained spells: roughly even across available levels
-	// In practice, players usually add to the highest levels they have access to
-	// For now, just add to the max available level
-	if (maxSpellLevel > 0 && totalGainedSpells > 0) {
-		for (let level = 1; level <= maxSpellLevel; level++) {
-			if (!spells[level]) {
-				spells[level] = 0;
-			}
-		}
-		// Simple distribution: add 2 per level gained to each spell level as it becomes available
-		// This is a simplification - in reality players choose where to add spells
-		spells[maxSpellLevel] = (spells[maxSpellLevel] || 0) + totalGainedSpells;
-	}
-
-	return { cantrips, spells };
+	return { cantrips, totalSpells, maxSpellLevel };
 }
