@@ -2,7 +2,7 @@
 	import type { Spell } from '$lib/data/types/app';
 	import Modal from '../common/Modal.svelte';
 	import Button from '../common/Button.svelte';
-	import { processDescription } from '$lib/utils/descriptionParser';
+	import RichDescription from '../common/RichDescription.svelte';
 	import { calculateSpellDamage, getCantripHeightenLevel } from '$lib/utils/spellDamage';
 
 	/**
@@ -103,15 +103,6 @@
 		return calculateSpellDamage(spell, effectiveHeightenedLevel, characterLevel);
 	});
 
-	// Process description to handle Foundry VTT syntax with context
-	const processedDescription = $derived(
-		spell
-			? processDescription(spell.description, {
-					spellLevel: effectiveHeightenedLevel,
-					characterLevel
-			  })
-			: ''
-	);
 
 	function handleCast() {
 		if (spell && onCast) {
@@ -245,9 +236,12 @@
 
 			<!-- Description -->
 			<div class="spell-description">
-				<div class="description-content">
-					{@html processedDescription}
-				</div>
+				<RichDescription
+					content={spell.description}
+					spellLevel={effectiveHeightenedLevel}
+					{characterLevel}
+					class="description-content"
+				/>
 			</div>
 
 			<!-- Heightening -->

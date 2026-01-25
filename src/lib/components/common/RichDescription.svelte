@@ -44,15 +44,27 @@
 		content: string;
 		/** Optional CSS class for styling */
 		class?: string;
+		/** Optional spell level for damage calculation context */
+		spellLevel?: number;
+		/** Optional character level for damage calculation context */
+		characterLevel?: number;
 	}
 
-	let { content, class: className = '' }: Props = $props();
+	let { content, class: className = '', spellLevel, characterLevel: characterLevelProp }: Props = $props();
+
+	// Get character level for spell damage calculation (use prop if provided, otherwise use store)
+	const characterLevel = $derived(characterLevelProp ?? $character.level);
 
 	// Get character level for spell damage calculation
 	const characterLevel = $derived($character.level);
 
 	// Process the description to handle UUID links and other Foundry syntax
-	const processedContent = $derived(processDescription(content));
+	const processedContent = $derived(
+		processDescription(content, {
+			spellLevel,
+			characterLevel
+		})
+	);
 
 	// Modal state for viewing linked content
 	let featModalOpen = $state(false);
@@ -86,11 +98,15 @@
 	async function handleLinkClick(event: MouseEvent) {
 		const target = event.target as HTMLElement;
 
+		// Find the closest anchor tag (in case we clicked on a child element)
+		const anchor = target.closest('a');
+		if (!anchor) return;
+
 		// Check if the clicked element is a journal link
-		if (target.classList.contains('journal-link')) {
+		if (anchor.classList.contains('journal-link')) {
 			event.preventDefault();
 
-			const pageId = target.getAttribute('data-page-id');
+			const pageId = anchor.getAttribute('data-page-id');
 			if (!pageId) return;
 
 			await loadAndShowJournalPage(pageId);
@@ -98,10 +114,10 @@
 		}
 
 		// Check if the clicked element is a UUID link
-		if (target.classList.contains('uuid-link')) {
+		if (anchor.classList.contains('uuid-link')) {
 			event.preventDefault();
 
-			const uuidData = target.getAttribute('data-uuid');
+			const uuidData = anchor.getAttribute('data-uuid');
 			if (!uuidData) return;
 
 			// Parse the UUID to extract type and ID
@@ -132,7 +148,7 @@
 				await loadAndShowAction(itemId);
 			} else if (compendiumType === 'conditionitems') {
 				await loadAndShowCondition(itemId);
-			} else if (compendiumType === 'feat-effects') {
+			} else if (compendiumType === 'feat-effects' || compendiumType === 'spell-effects') {
 				await loadAndShowEffect(itemId);
 			}
 		}
@@ -447,7 +463,12 @@
 	});
 </script>
 
-<div class="rich-description {className}" role="region" aria-label="Description" bind:this={descriptionRef}>
+<div
+	class="rich-description {className}"
+	role="region"
+	aria-label="Description"
+	bind:this={descriptionRef}
+>
 	{@html processedContent}
 </div>
 
