@@ -55,6 +55,9 @@
 	// Get character level for spell damage calculation (use prop if provided, otherwise use store)
 	const characterLevel = $derived(characterLevelProp ?? $character.level);
 
+	// Get character level for spell damage calculation
+	const characterLevel = $derived($character.level);
+
 	// Process the description to handle UUID links and other Foundry syntax
 	const processedContent = $derived(
 		processDescription(content, {
