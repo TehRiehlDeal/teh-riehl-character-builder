@@ -3,8 +3,7 @@
 	import Modal from './Modal.svelte';
 	import Button from './Button.svelte';
 	import RichDescription from './RichDescription.svelte';
-	import { processDescription } from '$lib/utils/descriptionParser';
-	import { calculateSpellDamage, formatDamageCompact, getCantripHeightenLevel } from '$lib/utils/spellDamage';
+	import { calculateSpellDamage, getCantripHeightenLevel } from '$lib/utils/spellDamage';
 
 	interface Props {
 		/** Whether the modal is open */
@@ -43,15 +42,6 @@
 	const spellDamage = $derived.by(() => {
 		if (!spell) return [];
 		return calculateSpellDamage(spell, effectiveHeightenedLevel, characterLevel);
-	});
-
-	// Process description with context for damage calculation
-	const processedDescription = $derived.by(() => {
-		if (!spell) return '';
-		return processDescription(spell.description, {
-			spellLevel: effectiveHeightenedLevel,
-			characterLevel
-		});
 	});
 
 	function handleClose() {
@@ -187,9 +177,12 @@
 			<!-- Description -->
 			<div class="detail-section">
 				<h4>Description</h4>
-				<div class="spell-description-content">
-					{@html processedDescription}
-				</div>
+				<RichDescription
+					content={spell.description}
+					spellLevel={effectiveHeightenedLevel}
+					{characterLevel}
+					class="spell-description-content"
+				/>
 			</div>
 
 			<!-- Heightening -->

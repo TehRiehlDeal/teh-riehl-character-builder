@@ -52,17 +52,19 @@ export function parseUUIDReferences(html: string): string {
 			'actions': 'actions',
 			'actionspf2e': 'actions',
 			'conditionitems': 'conditions',
-			'feat-effects': 'effects'
+			'feat-effects': 'effects',
+			'spell-effects': 'effects'
 		};
 
 		const route = compendiumRoutes[compendium] || compendium;
-		const slug = itemName.toLowerCase().replace(/\s+/g, '-');
+		const slug = itemName.toLowerCase().replace(/[:\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
 
 		// Construct clean UUID for data attribute (without display text to avoid escaping issues)
 		const cleanUuid = `@UUID[Compendium.pf2e.${compendium}.Item.${itemName}]`;
 
 		// Return an anchor tag with appropriate styling class
-		return `<a href="/${route}/${slug}" class="uuid-link" data-uuid="${cleanUuid}" data-compendium="${compendium}" data-item="${itemName}">${readableName}</a>`;
+		// Use href="#" to prevent navigation - click handler will intercept
+		return `<a href="#" class="uuid-link" data-uuid="${cleanUuid}" data-compendium="${compendium}" data-item="${itemName}">${readableName}</a>`;
 	});
 
 	return html;
