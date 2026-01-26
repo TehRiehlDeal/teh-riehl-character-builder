@@ -37,6 +37,8 @@
 	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
 	let availableClassArchetypes = $state<ClassArchetype[]>([]);
 	let selectedClassArchetype = $state<ClassArchetype | null>(null);
+	let archetypeDetailModalOpen = $state(false);
+	let archetypeForDetails = $state<ClassArchetype | null>(null);
 	let hasRestoredData = $state(false);
 
 	// State for class change confirmation modal
@@ -473,6 +475,15 @@
 	function handleClassArchetypeClear() {
 		selectedClassArchetype = null;
 		character.clearClassArchetype();
+	}
+
+	function viewArchetypeDetails(archetype: ClassArchetype) {
+		archetypeForDetails = archetype;
+		archetypeDetailModalOpen = true;
+	}
+
+	function closeArchetypeDetails() {
+		archetypeDetailModalOpen = false;
 	}
 
 	function handleAncestryFeatSelect(feat: Feat) {
@@ -1292,9 +1303,14 @@
 												<div class="archetype-card-description">
 													<RichDescription content={archetype.description.substring(0, 200) + '...'} />
 												</div>
-												<Button variant="primary" size="sm" onclick={() => handleClassArchetypeSelect(archetype)}>
-													Select {archetype.name}
-												</Button>
+												<div class="archetype-card-actions">
+													<Button variant="secondary" size="sm" onclick={() => viewArchetypeDetails(archetype)}>
+														Details
+													</Button>
+													<Button variant="primary" size="sm" onclick={() => handleClassArchetypeSelect(archetype)}>
+														Select
+													</Button>
+												</div>
 											</div>
 										{/each}
 									</div>
@@ -1457,6 +1473,83 @@
 		</div>
 	{/snippet}
 </Modal>
+
+<!-- Class Archetype Details Modal -->
+{#if archetypeForDetails}
+	<Modal bind:open={archetypeDetailModalOpen} onClose={closeArchetypeDetails} title={archetypeForDetails.name} size="lg">
+		<div class="archetype-detail">
+			<!-- Rarity Badge -->
+			{#if archetypeForDetails.rarity && archetypeForDetails.rarity !== 'common'}
+				<div class="archetype-detail-header">
+					<span class="archetype-rarity rarity-{archetypeForDetails.rarity}">{archetypeForDetails.rarity}</span>
+					{#if archetypeForDetails.isUniversal}
+						<span class="universal-badge">Universal (Any Spellcaster)</span>
+					{:else if archetypeForDetails.baseClass}
+						<span class="base-class-badge">{archetypeForDetails.baseClass} Archetype</span>
+					{/if}
+				</div>
+			{/if}
+
+			<!-- Description -->
+			<div class="detail-section">
+				<h4>Description</h4>
+				<RichDescription content={archetypeForDetails.description} />
+			</div>
+
+			<!-- Suppressed Features -->
+			{#if archetypeForDetails.suppressedFeatures.length > 0}
+				<div class="detail-section">
+					<h4>Replaces Base Class Features</h4>
+					<div class="suppressed-features-detail">
+						<p class="warning-note">This archetype replaces the following base class features:</p>
+						<ul class="suppressed-list">
+							{#each archetypeForDetails.suppressedFeatures as feature}
+								<li>{feature}</li>
+							{/each}
+						</ul>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Traits -->
+			{#if archetypeForDetails.traits && archetypeForDetails.traits.length > 0}
+				<div class="detail-section">
+					<h4>Traits</h4>
+					<div class="trait-list">
+						{#each archetypeForDetails.traits as trait}
+							<span class="trait-badge">{trait}</span>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Source -->
+			<div class="detail-section">
+				<h4>Source</h4>
+				<p>
+					{archetypeForDetails.source.title}
+					{#if archetypeForDetails.source.remaster}
+						<span class="remaster-badge">Remaster</span>
+					{/if}
+				</p>
+			</div>
+		</div>
+
+		{#snippet footer()}
+			<Button variant="secondary" onclick={closeArchetypeDetails}>Close</Button>
+			{#if !selectedClassArchetype && archetypeForDetails}
+				<Button variant="primary" onclick={() => {
+					if (archetypeForDetails) {
+						handleClassArchetypeSelect(archetypeForDetails);
+						closeArchetypeDetails();
+					}
+				}}>
+					Select {archetypeForDetails.name}
+				</Button>
+			{/if}
+		{/snippet}
+	</Modal>
+{/if}
 
 <style>
 	.page-content {
@@ -1908,10 +2001,119 @@
 		color: var(--text-secondary, #666666);
 	}
 
+	.archetype-card-actions {
+		display: flex;
+		gap: 0.5rem;
+		margin-top: auto;
+	}
+
+	/* Archetype Detail Modal */
+	.archetype-detail {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.archetype-detail-header {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.universal-badge {
+		padding: 0.375rem 0.75rem;
+		background-color: rgba(92, 124, 250, 0.1);
+		color: var(--link-color, #5c7cfa);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.base-class-badge {
+		padding: 0.375rem 0.75rem;
+		background-color: var(--surface-2, #f5f5f5);
+		color: var(--text-secondary, #666666);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-transform: capitalize;
+	}
+
+	.detail-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.detail-section h4 {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		padding-bottom: 0.5rem;
+		border-bottom: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.suppressed-features-detail {
+		padding: 1rem;
+		background-color: rgba(255, 193, 7, 0.1);
+		border-left: 4px solid var(--warning-color, #ffc107);
+		border-radius: 4px;
+	}
+
+	.warning-note {
+		margin: 0 0 0.75rem 0;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.suppressed-list {
+		margin: 0;
+		padding-left: 1.5rem;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.suppressed-list li {
+		margin-bottom: 0.25rem;
+	}
+
+	.trait-list {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.trait-badge {
+		padding: 0.375rem 0.75rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border: 1px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: var(--text-secondary, #666666);
+	}
+
+	.remaster-badge {
+		display: inline-block;
+		padding: 0.25rem 0.5rem;
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		margin-left: 0.5rem;
+	}
+
 	/* Mobile Adjustments */
 	@media (max-width: 768px) {
 		.archetype-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.archetype-card-actions {
+			flex-direction: column;
 		}
 	}
 </style>
