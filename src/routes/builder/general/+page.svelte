@@ -869,6 +869,11 @@
 			// Reset all class-related data first
 			character.resetClassData();
 
+			// Clear local state variables
+			selectedClassArchetype = null;
+			classFeatureChoiceSelections = {};
+			availableClassArchetypes = [];
+
 			// Then apply the new class
 			applyClassSelection(pendingClassChange);
 		}
@@ -1703,18 +1708,24 @@
 </div>
 
 <!-- Class Change Confirmation Modal -->
-<Modal open={showClassChangeModal} onClose={handleCancelClassChange} title="Change Class?">
+<Modal open={showClassChangeModal} onClose={handleCancelClassChange} title="⚠️ Change Class?">
 	<div class="class-change-modal-content">
 		<p class="warning-text">
-			Changing your class from <strong>{selectedClass?.name}</strong> to <strong>{pendingClassChange?.name}</strong> will reset the following:
+			Changing your class from <strong>{selectedClass?.name}</strong> to <strong>{pendingClassChange?.name}</strong> will <strong>permanently reset</strong> the following to baseline:
 		</p>
 		<ul class="reset-list">
-			<li>All class feats</li>
-			<li>All spellcasting choices (known spells, prepared spells, spell slots)</li>
-			<li>Trained skill selections</li>
+			<li><strong>Class archetype</strong> (if selected)</li>
+			<li><strong>Subclass</strong> and <strong>key ability</strong></li>
+			<li><strong>All class feats</strong> (level 1+)</li>
+			<li><strong>All class features</strong> (e.g., Hybrid Study, Arcane School, Barbarian Instinct, etc.)</li>
+			<li><strong>All spellcasting data</strong> (known spells, prepared spells, cantrips, spell slots, focus points)</li>
+			<li><strong>All trained skill selections</strong></li>
 		</ul>
+		<p class="preserve-text">
+			<strong>Will NOT be reset:</strong> Ancestry, Background, Heritage, Ancestry/Skill/General Feats, Equipment, Wealth
+		</p>
 		<p class="confirm-text">
-			Are you sure you want to continue?
+			<strong>This cannot be undone.</strong> Are you sure you want to continue?
 		</p>
 	</div>
 
@@ -2139,29 +2150,54 @@
 	.class-change-modal-content {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 1.25rem;
 	}
 
 	.warning-text {
 		margin: 0;
+		padding: 1rem;
+		background-color: rgba(250, 82, 82, 0.1);
+		border-left: 4px solid var(--danger-color, #fa5252);
+		border-radius: 4px;
 		color: var(--text-primary, #1a1a1a);
 		line-height: 1.6;
+		font-size: 1rem;
 	}
 
 	.reset-list {
 		margin: 0;
 		padding-left: 1.5rem;
-		color: var(--text-secondary, #666666);
+		color: var(--text-primary, #1a1a1a);
+		background-color: var(--surface-2, #f8f9fa);
+		padding: 1rem 1.5rem;
+		border-radius: 4px;
 	}
 
 	.reset-list li {
 		margin-bottom: 0.5rem;
+		line-height: 1.5;
+	}
+
+	.preserve-text {
+		margin: 0;
+		padding: 0.75rem;
+		background-color: rgba(55, 178, 77, 0.1);
+		border-left: 4px solid var(--success-color, #37b24d);
+		border-radius: 4px;
+		color: var(--text-primary, #1a1a1a);
+		line-height: 1.6;
+		font-size: 0.9375rem;
 	}
 
 	.confirm-text {
 		margin: 0;
+		padding: 0.75rem;
 		font-weight: 600;
-		color: var(--text-primary, #1a1a1a);
+		color: var(--danger-color, #fa5252);
+		background-color: rgba(250, 82, 82, 0.05);
+		border-radius: 4px;
+		text-align: center;
+		font-size: 1rem;
 	}
 
 	.modal-actions {

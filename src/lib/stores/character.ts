@@ -1278,15 +1278,28 @@ function createCharacterStore() {
 
 		/**
 		 * Reset all class-related data (when changing classes)
-		 * Clears class feats, spellcasting, and class-specific rule selections
+		 * Clears class feats, spellcasting, class features, skills, and class-specific rule selections
+		 * Does NOT clear: ancestry, background, general/skill/ancestry feats, equipment, wealth
 		 */
 		resetClassData: () => {
 			update((char) => ({
 				...char,
+				// Clear class information
+				class: {
+					id: null,
+					name: null,
+					subclass: null,
+					keyAbility: null,
+					classArchetype: null
+				},
+				// Clear class feats only (keep ancestry, skill, general feats)
 				feats: {
 					...char.feats,
-					class: [] // Clear class feats
+					class: []
 				},
+				// Clear class features
+				classFeatures: [],
+				// Clear all spellcasting data
 				spellcasting: {
 					knownSpells: [],
 					learnedSpells: [],
@@ -1319,10 +1332,15 @@ function createCharacterStore() {
 					survival: 0,
 					thievery: 0
 				},
-				// Clear class-related rule selections
+				// Clear ALL class-related rule selections (keep only ancestry, background, heritage, and planning selections)
 				ruleSelections: Object.fromEntries(
 					Object.entries(char.ruleSelections).filter(
-						([key]) => !key.startsWith('trained-skills')
+						([key]) =>
+							key.startsWith('ancestry-boost-') ||
+							key.startsWith('background-boost-') ||
+							key.startsWith('heritage-') ||
+							key.startsWith('plan-level-') ||
+							key.startsWith('free-boost-')
 					)
 				)
 			}));
