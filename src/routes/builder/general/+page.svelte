@@ -582,12 +582,14 @@
 			const classFeature = allClassFeatures.find((cf) => cf.name === featureName);
 			if (!classFeature) continue;
 
-			// Check if it has a choice flag we can set
-			const choiceInfo = extractChoiceInfo(classFeature);
-			if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
-				const choiceFlag = choiceInfo.choiceFlag; // Type guard
-				// Auto-select this feature (the UUID itself is the selection)
-				// For example, for arcane-school, we want to select the specific school
+			// The granted feature is an option within a parent choice set
+			// Find which choice set this feature belongs to
+			const parentChoice = Object.entries(classFeatureChoiceInfo).find(([flag, info]) => {
+				return info.choices.some((choice) => choice.value === classFeature.id);
+			});
+
+			if (parentChoice) {
+				const [choiceFlag, choiceInfo] = parentChoice;
 				const choiceValue = classFeature.id;
 
 				classFeatureChoiceSelections[choiceFlag] = choiceValue;

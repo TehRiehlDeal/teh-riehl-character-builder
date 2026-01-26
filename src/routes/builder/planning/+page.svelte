@@ -28,7 +28,9 @@
 	import RichDescription from '$lib/components/common/RichDescription.svelte';
 	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
 	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo, resolveSpecializedClassFeature } from '$lib/utils/classFeatureChoices';
-	import type { ClassFeature } from '$lib/data/types/app';
+	import type { ClassFeature, ClassArchetype } from '$lib/data/types/app';
+	import { getClassArchetypeById } from '$lib/data/repositories/classArchetypeRepository';
+	import { extractItemNameFromUUID } from '$lib/utils/classArchetypeUtils';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -76,6 +78,42 @@
 	// All class features (for resolving tag-based choices)
 	let allClassFeatures = $state<ClassFeature[]>([]);
 	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
+	let selectedClassArchetype = $state<ClassArchetype | null>(null);
+
+	// Filter class feature choices based on archetype suppressions
+	const filteredClassFeatureChoiceInfo = $derived.by(() => {
+		if (!selectedClassArchetype) {
+			return classFeatureChoiceInfo;
+		}
+
+		const filtered: Record<string, ClassFeatureChoiceInfo> = {};
+
+		// Get the flags of suppressed features by looking them up in allClassFeatures
+		const suppressedFlags = new Set<string>();
+		for (const suppressedUUID of selectedClassArchetype.suppressedFeatures) {
+			const suppressedName = extractItemNameFromUUID(suppressedUUID);
+			if (!suppressedName) continue;
+
+			// Find the class feature with this name
+			const suppressedFeature = allClassFeatures.find((cf) => cf.name === suppressedName);
+			if (suppressedFeature) {
+				// Extract the choice flag from this feature
+				const choiceInfo = extractChoiceInfo(suppressedFeature);
+				if (choiceInfo.choiceFlag) {
+					suppressedFlags.add(choiceInfo.choiceFlag);
+				}
+			}
+		}
+
+		// Filter out suppressed choices
+		for (const [flag, info] of Object.entries(classFeatureChoiceInfo)) {
+			if (!suppressedFlags.has(flag)) {
+				filtered[flag] = info;
+			}
+		}
+
+		return filtered;
+	});
 
 	// Skills list - matches character store structure
 	const SKILLS = [
@@ -257,6 +295,13 @@
 				}
 			}
 		}
+
+		// Load selected class archetype if present
+		if (char.class.classArchetype) {
+			selectedClassArchetype = await getClassArchetypeById(char.class.classArchetype);
+		} else {
+			selectedClassArchetype = null;
+		}
 	});
 
 	function handleFeatSelection(level: number, featType: 'classFeat' | 'freeArchetypeFeat' | 'ancestryFeat' | 'skillFeat' | 'generalFeat', featName: string) {
@@ -420,8 +465,8 @@
 											</span>
 
 											<!-- Class Feature Choice Selector -->
-											{#if choiceInfo && choiceInfo.hasChoice && choiceInfo.choiceFlag}
-												{@const choices = classFeatureChoiceInfo[choiceInfo.choiceFlag]?.choices || choiceInfo.choices}
+											{#if choiceInfo && choiceInfo.hasChoice && choiceInfo.choiceFlag && filteredClassFeatureChoiceInfo[choiceInfo.choiceFlag]}
+												{@const choices = filteredClassFeatureChoiceInfo[choiceInfo.choiceFlag]?.choices || choiceInfo.choices}
 												{@const selectedChoice = classFeatureChoiceSelections[choiceInfo.choiceFlag]}
 												<div class="class-feature-choice">
 													<select
