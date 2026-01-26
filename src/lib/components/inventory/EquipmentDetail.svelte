@@ -21,11 +21,15 @@
 		/** Callback when modal closes */
 		onClose?: () => void;
 
-		/** Callback when equipment is added to inventory */
+		/** Callback when equipment is added to inventory (free/loot) */
 		// eslint-disable-next-line no-unused-vars
 		onAddToInventory?: (equipment: Equipment, quantity: number) => void;
 
-		/** Whether to show the add button */
+		/** Callback when equipment is purchased (costs money) */
+		// eslint-disable-next-line no-unused-vars
+		onPurchase?: (equipment: Equipment, quantity: number) => void;
+
+		/** Whether to show the add buttons */
 		showAddButton?: boolean;
 	}
 
@@ -34,6 +38,7 @@
 		open = $bindable(false),
 		onClose,
 		onAddToInventory,
+		onPurchase,
 		showAddButton = false
 	}: Props = $props();
 
@@ -42,6 +47,14 @@
 	function handleAdd() {
 		if (equipment && onAddToInventory) {
 			onAddToInventory(equipment, quantity);
+			quantity = 1; // Reset quantity
+			onClose?.();
+		}
+	}
+
+	function handlePurchase() {
+		if (equipment && onPurchase) {
+			onPurchase(equipment, quantity);
 			quantity = 1; // Reset quantity
 			onClose?.();
 		}
@@ -231,7 +244,7 @@
 
 		{#snippet footer()}
 			<div class="modal-actions">
-				{#if showAddButton && onAddToInventory}
+				{#if showAddButton && (onAddToInventory || onPurchase)}
 					<div class="add-controls">
 						<label for="quantity-input" class="quantity-label">Quantity:</label>
 						<input
@@ -243,7 +256,18 @@
 							max="999"
 						/>
 					</div>
-					<Button variant="primary" onclick={handleAdd}>Add to Inventory</Button>
+					<div class="button-group">
+						{#if onAddToInventory}
+							<Button variant="primary" onclick={handleAdd}>
+								Add (Free)
+							</Button>
+						{/if}
+						{#if onPurchase}
+							<Button variant="primary" onclick={handlePurchase}>
+								Buy
+							</Button>
+						{/if}
+					</div>
 				{/if}
 				<Button variant="secondary" onclick={onClose}>Close</Button>
 			</div>
@@ -487,6 +511,12 @@
 		align-items: center;
 		gap: 0.5rem;
 		margin-right: auto;
+	}
+
+	.button-group {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
 	}
 
 	.quantity-label {
