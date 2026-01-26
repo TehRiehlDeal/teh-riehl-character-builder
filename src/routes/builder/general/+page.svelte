@@ -18,6 +18,7 @@
 	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo } from '$lib/utils/classFeatureChoices';
 	import { getClassArchetypesForClass } from '$lib/data/repositories/classArchetypeRepository';
 	import type { ClassArchetype } from '$lib/data/types/app';
+	import { extractGrantedItems, extractItemNameFromUUID, getImmediateClassFeatures } from '$lib/utils/classArchetypeUtils';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -317,6 +318,46 @@
 		classFeatureChoiceInfo = newChoiceInfo;
 	}
 
+	// Filter class feature choices based on archetype suppressions
+	const filteredClassFeatureChoiceInfo = $derived.by(() => {
+		if (!selectedClassArchetype) {
+			return classFeatureChoiceInfo;
+		}
+
+		const filtered: Record<string, ClassFeatureChoiceInfo> = {};
+		const suppressedNames = selectedClassArchetype.suppressedFeatures.map((uuid) =>
+			extractItemNameFromUUID(uuid)
+		);
+
+		for (const [flag, info] of Object.entries(classFeatureChoiceInfo)) {
+			// Check if this choice relates to a suppressed feature
+			// For example, if "Arcane Thesis" is suppressed, don't show the thesis choice
+			const isSuppressed = suppressedNames.some(
+				(suppressedName) => suppressedName && flag.toLowerCase().includes(suppressedName.toLowerCase().replace(/ /g, '-'))
+			);
+
+			if (!isSuppressed) {
+				filtered[flag] = info;
+			}
+		}
+
+		return filtered;
+	});
+
+	// Check if a class feature choice is auto-granted by archetype (should be readonly)
+	function isAutoGrantedFeature(choiceFlag: string): boolean {
+		if (!selectedClassArchetype) return false;
+
+		const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+		return grantedFeatures.some((granted) => {
+			const featureName = extractItemNameFromUUID(granted.uuid);
+			if (!featureName) return false;
+
+			// Check if the flag matches this feature
+			return choiceFlag.toLowerCase().includes(featureName.toLowerCase().replace(/ /g, '-'));
+		});
+	}
+
 	// Update class feature choices when selectedClass changes
 	$effect(() => {
 		if (selectedClass && allClassFeatures.length > 0) {
@@ -470,11 +511,89 @@
 	function handleClassArchetypeSelect(archetype: ClassArchetype) {
 		selectedClassArchetype = archetype;
 		character.setClassArchetype(archetype.id);
+
+		// Auto-apply granted class features
+		applyArchetypeGrantedFeatures(archetype);
+	}
+
+	/**
+	 * Apply auto-granted class features from archetype
+	 * For example, Runelord auto-selects School of Thassilonian Rune Magic
+	 */
+	function applyArchetypeGrantedFeatures(archetype: ClassArchetype) {
+		const immediateFeatures = getImmediateClassFeatures(archetype);
+
+		for (const grantedItem of immediateFeatures) {
+			const featureName = extractItemNameFromUUID(grantedItem.uuid);
+			if (!featureName) continue;
+
+			// Find if this feature is in our class features
+			const classFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!classFeature) continue;
+
+			// Check if it has a choice flag we can set
+			const choiceInfo = extractChoiceInfo(classFeature);
+			if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+				const choiceFlag = choiceInfo.choiceFlag; // Type guard
+				// Auto-select this feature (the UUID itself is the selection)
+				// For example, for arcane-school, we want to select the specific school
+				const choiceValue = classFeature.id;
+
+				classFeatureChoiceSelections[choiceFlag] = choiceValue;
+
+				// Save to character store
+				character.update((char) => ({
+					...char,
+					ruleSelections: {
+						...char.ruleSelections,
+						[choiceFlag]: choiceValue
+					}
+				}));
+			}
+		}
 	}
 
 	function handleClassArchetypeClear() {
+		// Clear auto-granted features before removing archetype
+		if (selectedClassArchetype) {
+			clearArchetypeGrantedFeatures(selectedClassArchetype);
+		}
+
 		selectedClassArchetype = null;
 		character.clearClassArchetype();
+	}
+
+	/**
+	 * Clear auto-granted class features from archetype
+	 */
+	function clearArchetypeGrantedFeatures(archetype: ClassArchetype) {
+		const immediateFeatures = getImmediateClassFeatures(archetype);
+
+		for (const grantedItem of immediateFeatures) {
+			const featureName = extractItemNameFromUUID(grantedItem.uuid);
+			if (!featureName) continue;
+
+			const classFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!classFeature) continue;
+
+			const choiceInfo = extractChoiceInfo(classFeature);
+			if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+				const choiceFlag = choiceInfo.choiceFlag;
+
+				// Clear the selection
+				delete classFeatureChoiceSelections[choiceFlag];
+
+				// Clear from character store
+				character.update((char) => {
+					const newSelections = { ...char.ruleSelections };
+					delete newSelections[choiceFlag];
+					return {
+						...char,
+						ruleSelections: newSelections
+					};
+				});
+			}
+		}
 	}
 
 	function viewArchetypeDetails(archetype: ClassArchetype) {
@@ -1319,22 +1438,27 @@
 						{/if}
 
 						<!-- Class Feature Choices (e.g., Barbarian Instinct, Alchemist Research Field) -->
-						{#if Object.keys(classFeatureChoiceInfo).length > 0}
+						{#if Object.keys(filteredClassFeatureChoiceInfo).length > 0}
 							<div class="subsection">
 								<h3 class="subsection-title">Class Features</h3>
 								<p class="subsection-description">
 									Your class grants you special features that require choices.
 								</p>
-								{#each Object.entries(classFeatureChoiceInfo) as [choiceFlag, choiceInfo]}
+								{#each Object.entries(filteredClassFeatureChoiceInfo) as [choiceFlag, choiceInfo]}
+									{@const isAutoGranted = isAutoGrantedFeature(choiceFlag)}
 									<div class="class-feature-choice">
 										<label for="class-choice-{choiceFlag}" class="choice-label">
 											{choiceInfo.choices.length > 0 ? `Choose your ${choiceFlag.replace(/-/g, ' ')}` : 'Class Feature'}:
+											{#if isAutoGranted}
+												<span class="auto-granted-badge">Auto-selected by archetype</span>
+											{/if}
 										</label>
 										<select
 											id="class-choice-{choiceFlag}"
 											class="choice-select"
 											value={classFeatureChoiceSelections[choiceFlag] || ''}
 											onchange={(e) => handleClassFeatureChoiceSelection(choiceFlag, e.currentTarget.value)}
+											disabled={isAutoGranted}
 										>
 											<option value="">-- Select an option --</option>
 											{#each choiceInfo.choices as choice}
@@ -1719,6 +1843,24 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		margin-bottom: 1rem;
+	}
+
+	.auto-granted-badge {
+		display: inline-block;
+		margin-left: 0.5rem;
+		padding: 0.25rem 0.5rem;
+		background-color: rgba(92, 124, 250, 0.1);
+		color: var(--link-color, #5c7cfa);
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.choice-select:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		background-color: var(--surface-2, #f5f5f5);
 	}
 
 	.choice-label {
