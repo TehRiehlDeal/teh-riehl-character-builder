@@ -21,6 +21,24 @@ export interface ClassFeatureChoiceInfo {
 }
 
 /**
+ * Extract the item name from a Compendium UUID
+ * @example "Compendium.pf2e.classfeatures.Item.Pride" -> "Pride"
+ */
+function extractItemNameFromUUID(uuid: string): string | null {
+	if (!uuid.includes('Compendium.')) {
+		return null;
+	}
+
+	const parts = uuid.split('.');
+	// Format: Compendium.pf2e.collection.Item.Name Here
+	if (parts.length >= 5) {
+		return parts.slice(4).join('.');
+	}
+
+	return null;
+}
+
+/**
  * Extract choice information from a class feature's rules
  */
 export function extractChoiceInfo(classFeature: ClassFeature): ClassFeatureChoiceInfo {
@@ -50,10 +68,18 @@ export function extractChoiceInfo(classFeature: ClassFeature): ClassFeatureChoic
 		return {
 			hasChoice: true,
 			choiceFlag,
-			choices: choiceSetRule.choices.map((choice: any) => ({
-				label: choice.label,
-				value: choice.value
-			})),
+			choices: choiceSetRule.choices.map((choice: any) => {
+				// If label is provided, use it; otherwise extract from UUID
+				let label = choice.label;
+				if (!label && choice.value) {
+					label = extractItemNameFromUUID(choice.value) || choice.value;
+				}
+
+				return {
+					label,
+					value: choice.value
+				};
+			}),
 			choiceType: 'inline'
 		};
 	}
