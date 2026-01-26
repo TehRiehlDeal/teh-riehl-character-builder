@@ -471,7 +471,7 @@
 						{#if isAutoGranted}
 							<div class="auto-granted-feat-notice">
 								<span class="auto-granted-label">Class Feat (Auto-granted by archetype):</span>
-								{@const feat = builderData.feats.find(f => f.id === selections.classFeat)}
+								{@const feat = classFeats.find(f => f.id === selections.classFeat)}
 								{#if feat}
 									<span class="auto-granted-feat-name">{feat.name}</span>
 								{/if}
