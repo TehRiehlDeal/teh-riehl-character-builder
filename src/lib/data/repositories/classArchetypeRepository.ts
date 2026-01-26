@@ -4,36 +4,19 @@
  * Class archetypes are special variants of base classes that players can select
  * at level 1. They modify class features, grant different abilities, and can
  * suppress certain base class features.
+ *
+ * Class archetypes are stored as class features (feats with category 'classfeature')
+ * with the 'class-archetype' trait in the otherTags array.
  */
 
 import type { ClassArchetype } from '../types/app';
-import type { FoundryFeat } from '../types/foundry';
-import { adaptClassArchetype } from '../adapters/classArchetypeAdapter';
-
-// Class archetype files
-const CLASS_ARCHETYPE_FILES = [
-	'avenger',
-	'battle-creed',
-	'bloodrager',
-	'eldritch-trickster',
-	'elemental-magic',
-	'flexible-spell-preparation',
-	'light-mortar-innovation',
-	'palatine-detective',
-	'runelord',
-	'seneschal',
-	'vindicator',
-	'war-mage',
-	'warrior-of-legend',
-	'way-of-the-spellshot',
-	'wellspring-magic'
-];
+import { QueryBuilder, QueryCache } from '../database';
 
 // Cache for loaded class archetypes
 let classArchetypesCache: ClassArchetype[] | null = null;
 
 /**
- * Load all class archetypes from JSON files
+ * Load all class archetypes from the database
  */
 export async function loadAllClassArchetypes(): Promise<ClassArchetype[]> {
 	// Return cached data if available
@@ -41,26 +24,23 @@ export async function loadAllClassArchetypes(): Promise<ClassArchetype[]> {
 		return classArchetypesCache;
 	}
 
-	const classArchetypes: ClassArchetype[] = [];
+	return QueryCache.getOrFetch('all:class-archetype', async () => {
+		// Get all class features (feats with category 'classfeature')
+		const allClassFeatures = await QueryBuilder.filter<ClassArchetype>({
+			type: 'feat',
+			category: 'classfeature'
+		});
 
-	for (const fileName of CLASS_ARCHETYPE_FILES) {
-		try {
-			// Dynamic import of JSON file
-			const module = await import(`../raw/classfeatures/${fileName}.json`);
-			const foundryData: FoundryFeat = module.default;
+		// Filter for class archetypes (have 'class-archetype' in traits)
+		const classArchetypes = allClassFeatures.filter((cf) =>
+			cf.traits.some((trait) => trait.toLowerCase() === 'class-archetype')
+		);
 
-			// Adapt to our schema
-			const classArchetype = adaptClassArchetype(foundryData);
-			classArchetypes.push(classArchetype);
-		} catch (error) {
-			console.error(`Failed to load class archetype: ${fileName}`, error);
-		}
-	}
+		// Cache the results
+		classArchetypesCache = classArchetypes;
 
-	// Cache the results
-	classArchetypesCache = classArchetypes;
-
-	return classArchetypes;
+		return classArchetypes;
+	});
 }
 
 /**
@@ -184,4 +164,5 @@ export async function getClassArchetypeByName(name: string): Promise<ClassArchet
  */
 export function clearClassArchetypeCache(): void {
 	classArchetypesCache = null;
+	QueryCache.invalidate('all:class-archetype');
 }
