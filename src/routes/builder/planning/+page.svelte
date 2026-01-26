@@ -30,7 +30,7 @@
 	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo, resolveSpecializedClassFeature } from '$lib/utils/classFeatureChoices';
 	import type { ClassFeature, ClassArchetype } from '$lib/data/types/app';
 	import { getClassArchetypeById } from '$lib/data/repositories/classArchetypeRepository';
-	import { extractItemNameFromUUID } from '$lib/utils/classArchetypeUtils';
+	import { extractItemNameFromUUID, getImmediateClassFeatures } from '$lib/utils/classArchetypeUtils';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -105,10 +105,51 @@
 			}
 		}
 
-		// Filter out suppressed choices
+		// Filter out suppressed choices and add granted features to their parent choices
 		for (const [flag, info] of Object.entries(classFeatureChoiceInfo)) {
 			if (!suppressedFlags.has(flag)) {
-				filtered[flag] = info;
+				// Clone the choice info to avoid mutating the original
+				const modifiedInfo = { ...info, choices: [...info.choices] };
+
+				// Add granted features that belong to this choice set
+				const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+				for (const granted of grantedFeatures) {
+					const featureName = extractItemNameFromUUID(granted.uuid);
+					if (!featureName) continue;
+
+					const grantedFeature = allClassFeatures.find((cf) => cf.name === featureName);
+					if (!grantedFeature) continue;
+
+					// Check if this granted feature should be in this choice set
+					const alreadyExists = modifiedInfo.choices.some((c) => c.value === grantedFeature.id);
+					if (!alreadyExists) {
+						// For tag-based choices, check if the ARCHETYPE has the filter tag
+						// (indicating it grants features for this choice type)
+						// or if the granted feature itself has the filter tag
+						let shouldAdd = false;
+
+						if (info.choiceType === 'tag-based' && info.filterTag) {
+							// Check if the archetype itself has the filter tag
+							// (e.g., Runelord has "wizard-arcane-school" tag)
+							if (selectedClassArchetype.traits.includes(info.filterTag)) {
+								shouldAdd = true;
+							}
+							// Or check if granted feature has the filter tag
+							else if (grantedFeature.traits.includes(info.filterTag)) {
+								shouldAdd = true;
+							}
+						}
+
+						if (shouldAdd) {
+							modifiedInfo.choices.push({
+								value: grantedFeature.id,
+								label: grantedFeature.name
+							});
+						}
+					}
+				}
+
+				filtered[flag] = modifiedInfo;
 			}
 		}
 
