@@ -716,6 +716,23 @@
 		archetypeDetailModalOpen = false;
 	}
 
+	/**
+	 * Convert camelCase or kebab-case to Title Case
+	 * Examples: "hybridStudy" -> "Hybrid Study", "arcane-school" -> "Arcane School"
+	 */
+	function formatChoiceLabel(choiceFlag: string): string {
+		// First convert from camelCase to space-separated
+		let formatted = choiceFlag.replace(/([A-Z])/g, ' $1');
+		// Also handle kebab-case
+		formatted = formatted.replace(/-/g, ' ');
+		// Trim and capitalize first letter of each word
+		return formatted
+			.trim()
+			.split(' ')
+			.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(' ');
+	}
+
 	function handleAncestryFeatSelect(feat: Feat) {
 		// Remove existing level 1 ancestry feat if any
 		const existingFeat = $character.feats.ancestry.find((f) => f.level === 1);
@@ -1559,7 +1576,7 @@
 									{@const isAutoGranted = isAutoGrantedFeature(choiceFlag)}
 									<div class="class-feature-choice">
 										<label for="class-choice-{choiceFlag}" class="choice-label">
-											{choiceInfo.choices.length > 0 ? `Choose your ${choiceFlag.replace(/-/g, ' ')}` : 'Class Feature'}:
+											{choiceInfo.choices.length > 0 ? `Choose your ${formatChoiceLabel(choiceFlag)}` : 'Class Feature'}:
 											{#if isAutoGranted}
 												<span class="auto-granted-badge">Auto-selected by archetype</span>
 											{/if}
