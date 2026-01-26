@@ -13,8 +13,11 @@
 	import FeatPicker from '$lib/components/features/FeatPicker.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Button from '$lib/components/common/Button.svelte';
+	import RichDescription from '$lib/components/common/RichDescription.svelte';
 	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
 	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo } from '$lib/utils/classFeatureChoices';
+	import { getClassArchetypesForClass } from '$lib/data/repositories/classArchetypeRepository';
+	import type { ClassArchetype } from '$lib/data/types/app';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -32,6 +35,8 @@
 	let classFeatureChoiceSelections = $state<Record<string, string>>({}); // Maps choiceFlag to selected value
 	let allClassFeatures = $state<ClassFeature[]>([]);
 	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
+	let availableClassArchetypes = $state<ClassArchetype[]>([]);
+	let selectedClassArchetype = $state<ClassArchetype | null>(null);
 	let hasRestoredData = $state(false);
 
 	// State for class change confirmation modal
@@ -317,6 +322,31 @@
 		}
 	});
 
+	// Load available class archetypes when class is selected
+	$effect(() => {
+		if (selectedClass) {
+			loadAvailableClassArchetypes(selectedClass.name);
+		} else {
+			availableClassArchetypes = [];
+		}
+	});
+
+	// Restore selected class archetype from character store
+	$effect(() => {
+		const char = $character;
+		if (char.class.classArchetype && !selectedClassArchetype && availableClassArchetypes.length > 0) {
+			const archetype = availableClassArchetypes.find(a => a.id === char.class.classArchetype);
+			if (archetype) {
+				selectedClassArchetype = archetype;
+			}
+		}
+	});
+
+	async function loadAvailableClassArchetypes(className: string) {
+		const archetypes = await getClassArchetypesForClass(className);
+		availableClassArchetypes = archetypes;
+	}
+
 	// Filter heritages based on selected ancestry
 	const availableHeritages = $derived.by(() => {
 		if (!selectedAncestry) return [];
@@ -435,6 +465,16 @@
 		}));
 	}
 
+	function handleClassArchetypeSelect(archetype: ClassArchetype) {
+		selectedClassArchetype = archetype;
+		character.setClassArchetype(archetype.id);
+	}
+
+	function handleClassArchetypeClear() {
+		selectedClassArchetype = null;
+		character.clearClassArchetype();
+	}
+
 	function handleAncestryFeatSelect(feat: Feat) {
 		// Remove existing level 1 ancestry feat if any
 		const existingFeat = $character.feats.ancestry.find((f) => f.level === 1);
@@ -538,7 +578,8 @@
 				id: cls.id,
 				name: cls.name,
 				subclass: null,
-				keyAbility: null
+				keyAbility: null,
+				classArchetype: null
 			},
 			// Apply class features for the character's current level
 			classFeatures: relevantClassFeatures,
@@ -693,7 +734,8 @@
 				id: '',
 				name: '',
 				subclass: null,
-				keyAbility: null
+				keyAbility: null,
+				classArchetype: null
 			},
 			ruleSelections: {},
 			feats: {
@@ -1212,6 +1254,54 @@
 					<ClassSelector classes={builderData.classes} {selectedClass} onSelect={handleClassSelect} />
 
 					{#if selectedClass}
+						<!-- Class Archetype Selector -->
+						{#if availableClassArchetypes.length > 0}
+							<div class="subsection class-archetype-section">
+								<h3 class="subsection-title">Class Archetype (Optional)</h3>
+								<p class="subsection-description">
+									Class archetypes are special variants of your class that modify your features at level 1.
+									They replace some base class features and grant unique abilities.
+								</p>
+
+								{#if selectedClassArchetype}
+									<div class="selected-archetype">
+										<div class="archetype-info">
+											<h4 class="archetype-name">{selectedClassArchetype.name}</h4>
+											<div class="archetype-description">
+												<RichDescription content={selectedClassArchetype.description} />
+											</div>
+											{#if selectedClassArchetype.suppressedFeatures.length > 0}
+												<div class="suppressed-features">
+													<strong>Replaces:</strong>
+													{selectedClassArchetype.suppressedFeatures.join(', ')}
+												</div>
+											{/if}
+										</div>
+										<Button variant="secondary" size="sm" onclick={handleClassArchetypeClear}>
+											Remove Archetype
+										</Button>
+									</div>
+								{:else}
+									<div class="archetype-grid">
+										{#each availableClassArchetypes as archetype}
+											<div class="archetype-card">
+												<h4 class="archetype-card-name">{archetype.name}</h4>
+												{#if archetype.rarity && archetype.rarity !== 'common'}
+													<span class="archetype-rarity rarity-{archetype.rarity}">{archetype.rarity}</span>
+												{/if}
+												<div class="archetype-card-description">
+													<RichDescription content={archetype.description.substring(0, 200) + '...'} />
+												</div>
+												<Button variant="primary" size="sm" onclick={() => handleClassArchetypeSelect(archetype)}>
+													Select {archetype.name}
+												</Button>
+											</div>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/if}
+
 						<!-- Class Feature Choices (e.g., Barbarian Instinct, Alchemist Research Field) -->
 						{#if Object.keys(classFeatureChoiceInfo).length > 0}
 							<div class="subsection">
@@ -1715,5 +1805,113 @@
 		display: flex;
 		gap: 0.75rem;
 		justify-content: flex-end;
+	}
+
+	/* Class Archetype Styles */
+	.class-archetype-section {
+		padding: 1.5rem;
+		background-color: rgba(92, 124, 250, 0.05);
+		border-left: 4px solid var(--link-color, #5c7cfa);
+		border-radius: 8px;
+	}
+
+	.selected-archetype {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 1rem;
+		background-color: var(--surface-1, #ffffff);
+		border: 2px solid var(--link-color, #5c7cfa);
+		border-radius: 8px;
+	}
+
+	.archetype-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.archetype-name {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--link-color, #5c7cfa);
+	}
+
+	.archetype-description {
+		line-height: 1.6;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.suppressed-features {
+		padding: 0.75rem;
+		background-color: rgba(255, 193, 7, 0.1);
+		border-left: 3px solid var(--warning-color, #ffc107);
+		border-radius: 4px;
+		font-size: 0.9375rem;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.archetype-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+	.archetype-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem;
+		background-color: var(--surface-1, #ffffff);
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 8px;
+		transition: all var(--transition-fast);
+	}
+
+	.archetype-card:hover {
+		border-color: var(--link-color, #5c7cfa);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.archetype-card-name {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.archetype-rarity {
+		display: inline-block;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.rarity-uncommon {
+		background-color: rgba(40, 167, 69, 0.2);
+		color: var(--success-color, #28a745);
+	}
+
+	.rarity-rare {
+		background-color: rgba(0, 123, 255, 0.2);
+		color: #007bff;
+	}
+
+	.archetype-card-description {
+		flex-grow: 1;
+		font-size: 0.875rem;
+		line-height: 1.6;
+		color: var(--text-secondary, #666666);
+	}
+
+	/* Mobile Adjustments */
+	@media (max-width: 768px) {
+		.archetype-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>
