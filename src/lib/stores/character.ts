@@ -1625,6 +1625,35 @@ function createCharacterStore() {
 			}));
 		},
 
+		/**
+		 * Stow an item into a container
+		 * Automatically removes worn status when stowing
+		 */
+		stowItem: (itemId: string, containerId: string) => {
+			update((char) => ({
+				...char,
+				inventory: char.inventory.map((item) =>
+					item.itemId === itemId
+						? { ...item, containerId, worn: false }
+						: item
+				)
+			}));
+		},
+
+		/**
+		 * Remove an item from its container
+		 */
+		unstowItem: (itemId: string) => {
+			update((char) => ({
+				...char,
+				inventory: char.inventory.map((item) =>
+					item.itemId === itemId
+						? { ...item, containerId: undefined }
+						: item
+				)
+			}));
+		},
+
 		// ====================
 		// Wealth Management
 		// ====================
