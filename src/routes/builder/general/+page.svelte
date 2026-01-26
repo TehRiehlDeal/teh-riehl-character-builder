@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { untrack, onMount } from 'svelte';
 	import { character } from '$lib/stores/character';
 	import { getBuilderDataContext } from '$lib/contexts/builderDataContext.svelte';
-	import type { Ancestry, Heritage, Background, Class, Feat } from '$lib/data/types/app';
+	import type { Ancestry, Heritage, Background, Class, Feat, ClassFeature } from '$lib/data/types/app';
 	import AncestrySelector from '$lib/components/wizard/AncestrySelector.svelte';
 	import HeritageSelector from '$lib/components/wizard/HeritageSelector.svelte';
 	import BackgroundSelector from '$lib/components/wizard/BackgroundSelector.svelte';
@@ -13,6 +13,8 @@
 	import FeatPicker from '$lib/components/features/FeatPicker.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Button from '$lib/components/common/Button.svelte';
+	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
+	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo } from '$lib/utils/classFeatureChoices';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -27,6 +29,9 @@
 	let freeAbilityBoosts: (string | null)[] = $state([null, null, null, null]);
 	let trainedSkills: string[] = $state([]);
 	let heritageChoices: Record<string, string> = $state({}); // Key: flag name, Value: selected value
+	let classFeatureChoiceSelections = $state<Record<string, string>>({}); // Maps choiceFlag to selected value
+	let allClassFeatures = $state<ClassFeature[]>([]);
+	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
 	let hasRestoredData = $state(false);
 
 	// State for class change confirmation modal
@@ -255,6 +260,63 @@
 		}
 	});
 
+	// Load class features and extract choice information on mount
+	onMount(async () => {
+		// Load all class features for resolving tag-based choices
+		allClassFeatures = await loadAllClassFeatures();
+
+		// Load class feature choice selections from character store
+		const char = $character;
+		if (char.ruleSelections) {
+			// Extract all class feature choice selections
+			Object.entries(char.ruleSelections).forEach(([key, value]) => {
+				// Skip planning selections and other known prefixes
+				if (!key.startsWith('plan-level-') &&
+					!key.startsWith('heritage-') &&
+					!key.startsWith('ancestry-boost-') &&
+					!key.startsWith('background-boost-') &&
+					!key.startsWith('free-boost-') &&
+					key !== 'trained-skills' &&
+					typeof value === 'string') {
+					classFeatureChoiceSelections[key] = value;
+				}
+			});
+		}
+
+		// Process class features to build choice info map when class is selected
+		if (selectedClass) {
+			await loadClassFeatureChoices(selectedClass);
+		}
+	});
+
+	// Function to load class feature choices for a given class
+	async function loadClassFeatureChoices(cls: Class) {
+		const newChoiceInfo: Record<string, ClassFeatureChoiceInfo> = {};
+
+		// Get level 1 class features
+		const level1Features = cls.classFeatures.filter(cf => cf.level === 1);
+
+		for (const cf of level1Features) {
+			// Find the full class feature data
+			const fullClassFeature = allClassFeatures.find(acf => acf.name === cf.name);
+			if (fullClassFeature) {
+				const choiceInfo = await getCompleteChoiceInfo(fullClassFeature, allClassFeatures);
+				if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+					newChoiceInfo[choiceInfo.choiceFlag] = choiceInfo;
+				}
+			}
+		}
+
+		classFeatureChoiceInfo = newChoiceInfo;
+	}
+
+	// Update class feature choices when selectedClass changes
+	$effect(() => {
+		if (selectedClass && allClassFeatures.length > 0) {
+			loadClassFeatureChoices(selectedClass);
+		}
+	});
+
 	// Filter heritages based on selected ancestry
 	const availableHeritages = $derived.by(() => {
 		if (!selectedAncestry) return [];
@@ -356,6 +418,19 @@
 			ruleSelections: {
 				...char.ruleSelections,
 				[`heritage-${flag}`]: value
+			}
+		}));
+	}
+
+	function handleClassFeatureChoiceSelection(choiceFlag: string, value: string) {
+		classFeatureChoiceSelections[choiceFlag] = value;
+
+		// Save to character store
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				[choiceFlag]: value
 			}
 		}));
 	}
@@ -1137,6 +1212,36 @@
 					<ClassSelector classes={builderData.classes} {selectedClass} onSelect={handleClassSelect} />
 
 					{#if selectedClass}
+						<!-- Class Feature Choices (e.g., Barbarian Instinct, Alchemist Research Field) -->
+						{#if Object.keys(classFeatureChoiceInfo).length > 0}
+							<div class="subsection">
+								<h3 class="subsection-title">Class Features</h3>
+								<p class="subsection-description">
+									Your class grants you special features that require choices.
+								</p>
+								{#each Object.entries(classFeatureChoiceInfo) as [choiceFlag, choiceInfo]}
+									<div class="class-feature-choice">
+										<label for="class-choice-{choiceFlag}" class="choice-label">
+											{choiceInfo.choices.length > 0 ? `Choose your ${choiceFlag.replace(/-/g, ' ')}` : 'Class Feature'}:
+										</label>
+										<select
+											id="class-choice-{choiceFlag}"
+											class="choice-select"
+											value={classFeatureChoiceSelections[choiceFlag] || ''}
+											onchange={(e) => handleClassFeatureChoiceSelection(choiceFlag, e.currentTarget.value)}
+										>
+											<option value="">-- Select an option --</option>
+											{#each choiceInfo.choices as choice}
+												<option value={choice.value}>
+													{choice.label}
+												</option>
+											{/each}
+										</select>
+									</div>
+								{/each}
+							</div>
+						{/if}
+
 						{#if needsKeyAbilitySelection}
 							<div class="subsection">
 								<h3 class="subsection-title">Key Ability</h3>
@@ -1425,7 +1530,8 @@
 		gap: 1.5rem;
 	}
 
-	.heritage-choice {
+	.heritage-choice,
+	.class-feature-choice {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
