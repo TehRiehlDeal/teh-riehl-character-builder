@@ -26,11 +26,17 @@ export function adaptClassArchetype(foundryData: FoundryFeat): ClassArchetype {
 	const license = foundryData.system.publication?.license === 'ORC' ? 'ORC' : 'OGL';
 	const remaster = foundryData.system.publication?.remaster ?? false;
 
+	// Combine traits.value and traits.otherTags for complete trait list
+	const traits = [
+		...(foundryData.system.traits?.value || []),
+		...(foundryData.system.traits?.otherTags || [])
+	];
+
 	return {
 		id: foundryData._id,
 		name: foundryData.name,
 		description: foundryData.system.description?.value || '',
-		traits: foundryData.system.traits?.value || [],
+		traits: traits,
 		rarity: (foundryData.system.traits?.rarity as any) || 'common',
 		source: {
 			title: foundryData.system.publication?.title || 'Unknown',
