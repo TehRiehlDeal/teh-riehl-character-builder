@@ -23,6 +23,7 @@ const CLASS_ARCHETYPE_FILES = [
 	'runelord',
 	'seneschal',
 	'vindicator',
+	'war-mage',
 	'warrior-of-legend',
 	'way-of-the-spellshot',
 	'wellspring-magic'
