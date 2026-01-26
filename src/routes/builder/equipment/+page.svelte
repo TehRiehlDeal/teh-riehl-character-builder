@@ -4,7 +4,7 @@
 	import { getAllEquipment, getEquipmentById } from '$lib/data/repositories/equipmentRepository';
 	import { character } from '$lib/stores/character';
 	import BulkTracker from '$lib/components/inventory/BulkTracker.svelte';
-	import InventoryList from '$lib/components/inventory/InventoryList.svelte';
+	import TabbedInventory from '$lib/components/inventory/TabbedInventory.svelte';
 	import EquipmentDetail from '$lib/components/inventory/EquipmentDetail.svelte';
 	import EquipmentBrowser from '$lib/components/inventory/EquipmentBrowser.svelte';
 	import WealthTracker from '$lib/components/inventory/WealthTracker.svelte';
@@ -15,6 +15,7 @@
 	let selectedEquipment = $state<Equipment | null>(null);
 	let showEquipmentDetail = $state(false);
 	let showBrowser = $state(false);
+	let activeInventoryTab = $state<'weapons' | 'armor' | 'gear'>('weapons');
 
 	// Load equipment data for inventory items
 	let inventoryItems = $state<InventoryItem[]>([]);
@@ -75,10 +76,80 @@
 		}
 	});
 
-	// Calculate total bulk
-	const totalBulk = $derived(
-		inventoryItems.reduce((sum, item) => sum + item.equipment.bulk.value * item.quantity, 0)
-	);
+	// Helper: Check if an item is a container
+	function isContainer(item: InventoryItem): boolean {
+		const traits = item.equipment.traits || [];
+		const name = item.equipment.name.toLowerCase();
+
+		// Check for container trait
+		if (traits.some((t) => t.toLowerCase() === 'container')) {
+			return true;
+		}
+
+		// Check for common container names in adventuring gear
+		if (item.equipment.equipmentType === 'adventuring-gear') {
+			const containerKeywords = ['backpack', 'bag', 'pouch', 'sack', 'case', 'chest', 'box'];
+			return containerKeywords.some((keyword) => name.includes(keyword));
+		}
+
+		return false;
+	}
+
+	// Helper: Check if container has special bulk rules (extradimensional)
+	function hasSpecialBulkRules(item: InventoryItem): boolean {
+		const traits = item.equipment.traits || [];
+		const name = item.equipment.name.toLowerCase();
+
+		// Items with extradimensional trait count as fixed bulk regardless of contents
+		if (traits.some((t) => t.toLowerCase() === 'extradimensional')) {
+			return true;
+		}
+
+		// Spacious pouches specifically have this rule (extradimensional containers)
+		// They always weigh 1 Bulk regardless of contents
+		if (name.includes('spacious pouch')) {
+			return true;
+		}
+
+		// Bags of Holding also have extradimensional properties
+		if (name.includes('bag of holding')) {
+			return true;
+		}
+
+		// Regular backpacks, bags, sacks do NOT have special bulk rules
+		// They weigh their own bulk + the bulk of items inside
+		return false;
+	}
+
+	// Calculate total bulk with container rules
+	const totalBulk = $derived.by(() => {
+		let total = 0;
+
+		for (const item of inventoryItems) {
+			// For containers with special bulk rules (extradimensional), use fixed bulk
+			if (isContainer(item) && hasSpecialBulkRules(item)) {
+				// Use the container's own bulk value (e.g., 1 for spacious pouch)
+				// Items inside are NOT counted separately
+				total += item.equipment.bulk.value * item.quantity;
+			} else if (item.containerId) {
+				// Item is inside a container
+				const container = inventoryItems.find((c) => c.equipment.id === item.containerId);
+
+				// If container has special bulk rules, skip this item (already counted in container)
+				if (container && hasSpecialBulkRules(container)) {
+					continue;
+				}
+
+				// Otherwise, count this item (for regular containers like backpacks)
+				total += item.equipment.bulk.value * item.quantity;
+			} else {
+				// Normal items or regular containers (add their bulk)
+				total += item.equipment.bulk.value * item.quantity;
+			}
+		}
+
+		return total;
+	});
 
 	function handleViewDetails(item: InventoryItem) {
 		selectedEquipment = item.equipment;
@@ -197,6 +268,26 @@
 	function handleUpdateWealth(pp: number, gp: number, sp: number, cp: number) {
 		character.updateWealth(pp, gp, sp, cp);
 	}
+
+	function handleStowItem(itemId: string, containerId: string) {
+		character.stowItem(itemId, containerId);
+	}
+
+	function handleUnstowItem(itemId: string) {
+		character.unstowItem(itemId);
+	}
+
+	// Map active tab to browser type filter
+	const browserTypeFilter = $derived.by(() => {
+		switch (activeInventoryTab) {
+			case 'weapons':
+				return 'weapon';
+			case 'armor':
+				return 'armor';
+			case 'gear':
+				return 'adventuring-gear';
+		}
+	});
 </script>
 
 <svelte:head>
@@ -262,12 +353,16 @@
 						<p class="empty-help">Use the "Browse Equipment Shop" button above to add items.</p>
 					</div>
 				{:else}
-					<InventoryList
+					<TabbedInventory
 						items={inventoryItems}
+						bind:activeTab={activeInventoryTab}
+						onTabChange={(tab) => (activeInventoryTab = tab)}
 						onViewDetails={handleViewDetails}
 						onToggleWorn={handleToggleWorn}
 						onToggleInvested={handleToggleInvested}
 						onRemoveItem={handleRemoveItem}
+						onStowItem={handleStowItem}
+						onUnstowItem={handleUnstowItem}
 					/>
 				{/if}
 			</div>
@@ -304,7 +399,9 @@
 						{:else}
 							<EquipmentBrowser
 								equipment={allEquipment}
-								onAddToInventory={handlePurchaseEquipment}
+								initialTypeFilter={browserTypeFilter}
+								onAddToInventory={handleAddToInventory}
+								onPurchase={handlePurchaseEquipment}
 							/>
 						{/if}
 					</div>

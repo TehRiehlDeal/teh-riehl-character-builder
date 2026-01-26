@@ -39,6 +39,9 @@
 
 		/** Title for the list */
 		title?: string;
+
+		/** External type filter (from tabs) - when set, disables the type dropdown */
+		externalTypeFilter?: string[];
 	}
 
 	let {
@@ -47,7 +50,8 @@
 		onToggleWorn,
 		onToggleInvested,
 		onRemoveItem,
-		title = 'Inventory'
+		title = 'Inventory',
+		externalTypeFilter
 	}: Props = $props();
 
 	let searchQuery = $state('');
@@ -63,13 +67,18 @@
 	// Filter items
 	const filteredItems = $derived.by(() => {
 		return items.filter((item) => {
+			// External filter from tabs (takes precedence)
+			if (externalTypeFilter && !externalTypeFilter.includes(item.equipment.equipmentType)) {
+				return false;
+			}
+
 			// Search filter
 			if (searchQuery && !item.equipment.name.toLowerCase().includes(searchQuery.toLowerCase())) {
 				return false;
 			}
 
-			// Type filter
-			if (filterType !== 'all' && item.equipment.equipmentType !== filterType) {
+			// Type filter (only if no external filter)
+			if (!externalTypeFilter && filterType !== 'all' && item.equipment.equipmentType !== filterType) {
 				return false;
 			}
 
@@ -145,7 +154,12 @@
 			aria-label="Search items"
 		/>
 
-		<select bind:value={filterType} class="filter-select" aria-label="Filter by type">
+		<select
+			bind:value={filterType}
+			class="filter-select"
+			aria-label="Filter by type"
+			disabled={!!externalTypeFilter}
+		>
 			{#each equipmentTypes as type}
 				<option value={type}>{type === 'all' ? 'All Types' : formatEquipmentType(type)}</option>
 			{/each}
