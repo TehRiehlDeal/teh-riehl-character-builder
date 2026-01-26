@@ -469,9 +469,9 @@
 					{#if levelPlan.featSlots.classFeat}
 						{@const isAutoGranted = autoGrantedFeats[levelPlan.level]?.classFeat}
 						{#if isAutoGranted}
+							{@const feat = classFeats.find(f => f.id === selections.classFeat)}
 							<div class="auto-granted-feat-notice">
 								<span class="auto-granted-label">Class Feat (Auto-granted by archetype):</span>
-								{@const feat = classFeats.find(f => f.id === selections.classFeat)}
 								{#if feat}
 									<span class="auto-granted-feat-name">{feat.name}</span>
 								{/if}

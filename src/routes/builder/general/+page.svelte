@@ -401,7 +401,7 @@
 			// For example, "School of Thassilonian Rune Magic" is a choice within "Arcane School"
 			// We can check if this feature has the tag that matches the choice filter
 			const parentChoice = Object.entries(classFeatureChoiceInfo).find(([flag, info]) => {
-				return info.choices.some((choice) => choice.id === grantedClassFeature.id);
+				return info.choices.some((choice) => choice.value === grantedClassFeature.id);
 			});
 
 			return parentChoice?.[0] === choiceFlag;
