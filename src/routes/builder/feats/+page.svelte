@@ -201,11 +201,16 @@
 					<div class="feat-slots">
 						{#each availableSlots.class as level}
 							{@const selectedFeat = getFeatForSlot('class', level)}
-							<div class="feat-slot" class:filled={isSlotFilled('class', level)}>
+							{@const isAutoGranted = selectedFeat?.autoGranted ?? false}
+							<div class="feat-slot" class:filled={isSlotFilled('class', level)} class:auto-granted={isAutoGranted}>
 								<div class="slot-header">
 									<span class="slot-level">Level {level}</span>
 									{#if selectedFeat}
-										<span class="slot-status filled">Selected</span>
+										{#if isAutoGranted}
+											<span class="slot-status auto-granted">Auto-Granted</span>
+										{:else}
+											<span class="slot-status filled">Selected</span>
+										{/if}
 									{:else}
 										<span class="slot-status empty">Empty</span>
 									{/if}
@@ -214,22 +219,26 @@
 								{#if selectedFeat}
 									<div class="selected-feat">
 										<span class="feat-name">{selectedFeat.name}</span>
-										<div class="feat-actions">
-											<Button
-												variant="secondary"
-												size="sm"
-												onclick={() => handleSelectFeat('class', level)}
-											>
-												Change
-											</Button>
-											<Button
-												variant="danger"
-												size="sm"
-												onclick={() => handleRemoveFeat('class', selectedFeat.featId)}
-											>
-												Remove
-											</Button>
-										</div>
+										{#if isAutoGranted}
+											<p class="auto-granted-note">Granted by class archetype</p>
+										{:else}
+											<div class="feat-actions">
+												<Button
+													variant="secondary"
+													size="sm"
+													onclick={() => handleSelectFeat('class', level)}
+												>
+													Change
+												</Button>
+												<Button
+													variant="danger"
+													size="sm"
+													onclick={() => handleRemoveFeat('class', selectedFeat.featId)}
+												>
+													Remove
+												</Button>
+											</div>
+										{/if}
 									</div>
 								{:else}
 									<Button
@@ -481,6 +490,11 @@
 		background-color: rgba(92, 124, 250, 0.05);
 	}
 
+	.feat-slot.auto-granted {
+		border-color: var(--success-color, #37b24d);
+		background-color: rgba(55, 178, 77, 0.05);
+	}
+
 	.feat-slot:hover {
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
@@ -518,6 +532,11 @@
 		color: #868e96;
 	}
 
+	.slot-status.auto-granted {
+		background-color: rgba(55, 178, 77, 0.1);
+		color: #37b24d;
+	}
+
 	.selected-feat {
 		display: flex;
 		flex-direction: column;
@@ -533,6 +552,13 @@
 	.feat-actions {
 		display: flex;
 		gap: 0.5rem;
+	}
+
+	.auto-granted-note {
+		font-size: 0.875rem;
+		font-style: italic;
+		color: var(--success-color, #37b24d);
+		margin: 0.5rem 0 0 0;
 	}
 
 	/* Mobile Responsive */

@@ -84,10 +84,10 @@ export interface Character {
 
 	/** Selected feats by category and level */
 	feats: {
-		ancestry: Array<{ level: number; featId: string; name: string }>;
-		class: Array<{ level: number; featId: string; name: string }>;
-		skill: Array<{ level: number; featId: string; name: string }>;
-		general: Array<{ level: number; featId: string; name: string }>;
+		ancestry: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
+		class: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
+		skill: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
+		general: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
 	};
 
 	/** Active class features (automatic based on class and level) */
@@ -602,13 +602,17 @@ function createCharacterStore() {
 			category: keyof Character['feats'],
 			level: number,
 			featId: string,
-			name: string
+			name: string,
+			autoGranted?: boolean
 		) => {
 			update((char) => ({
 				...char,
 				feats: {
 					...char.feats,
-					[category]: [...char.feats[category], { level, featId, name }]
+					[category]: [
+						...char.feats[category],
+						{ level, featId, name, ...(autoGranted && { autoGranted: true }) }
+					]
 				}
 			}));
 		},

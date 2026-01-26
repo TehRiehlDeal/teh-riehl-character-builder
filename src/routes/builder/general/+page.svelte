@@ -18,7 +18,7 @@
 	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo } from '$lib/utils/classFeatureChoices';
 	import { getClassArchetypesForClass } from '$lib/data/repositories/classArchetypeRepository';
 	import type { ClassArchetype } from '$lib/data/types/app';
-	import { extractGrantedItems, extractItemNameFromUUID, getImmediateClassFeatures } from '$lib/utils/classArchetypeUtils';
+	import { extractGrantedItems, extractItemNameFromUUID, getImmediateClassFeatures, getDedicationFeat } from '$lib/utils/classArchetypeUtils';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -517,12 +517,13 @@
 	}
 
 	/**
-	 * Apply auto-granted class features from archetype
-	 * For example, Runelord auto-selects School of Thassilonian Rune Magic
+	 * Apply auto-granted class features and feats from archetype
+	 * For example, Runelord auto-selects School of Thassilonian Rune Magic and grants Runelord Dedication at level 2
 	 */
 	function applyArchetypeGrantedFeatures(archetype: ClassArchetype) {
 		const immediateFeatures = getImmediateClassFeatures(archetype);
 
+		// Auto-grant immediate class features (level 1)
 		for (const grantedItem of immediateFeatures) {
 			const featureName = extractItemNameFromUUID(grantedItem.uuid);
 			if (!featureName) continue;
@@ -551,6 +552,29 @@
 				}));
 			}
 		}
+
+		// Auto-grant dedication feat at level 2
+		const dedicationFeat = getDedicationFeat(archetype);
+		if (dedicationFeat) {
+			const featName = extractItemNameFromUUID(dedicationFeat.uuid);
+			if (featName) {
+				// Find the feat in our data
+				const feat = builderData.feats.find((f) => f.name === featName);
+				if (feat) {
+					// Remove any existing feat at level 2 class slot (in case user already selected one)
+					character.update((char) => ({
+						...char,
+						feats: {
+							...char.feats,
+							class: char.feats.class.filter((f) => f.level !== 2)
+						}
+					}));
+
+					// Add the dedication feat as auto-granted
+					character.addFeat('class', 2, feat.id, feat.name, true);
+				}
+			}
+		}
 	}
 
 	function handleClassArchetypeClear() {
@@ -564,11 +588,12 @@
 	}
 
 	/**
-	 * Clear auto-granted class features from archetype
+	 * Clear auto-granted class features and feats from archetype
 	 */
 	function clearArchetypeGrantedFeatures(archetype: ClassArchetype) {
 		const immediateFeatures = getImmediateClassFeatures(archetype);
 
+		// Clear immediate class features
 		for (const grantedItem of immediateFeatures) {
 			const featureName = extractItemNameFromUUID(grantedItem.uuid);
 			if (!featureName) continue;
@@ -592,6 +617,25 @@
 						ruleSelections: newSelections
 					};
 				});
+			}
+		}
+
+		// Remove auto-granted dedication feat at level 2
+		const dedicationFeat = getDedicationFeat(archetype);
+		if (dedicationFeat) {
+			const featName = extractItemNameFromUUID(dedicationFeat.uuid);
+			if (featName) {
+				const feat = builderData.feats.find((f) => f.name === featName);
+				if (feat) {
+					// Remove the auto-granted dedication feat
+					character.update((char) => ({
+						...char,
+						feats: {
+							...char.feats,
+							class: char.feats.class.filter((f) => !(f.level === 2 && f.autoGranted))
+						}
+					}));
+				}
 			}
 		}
 	}
