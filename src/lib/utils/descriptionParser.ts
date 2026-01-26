@@ -71,6 +71,28 @@ export function parseUUIDReferences(html: string): string {
 }
 
 /**
+ * Parse @Embed references in Foundry content
+ * These should inline the referenced content instead of creating a link
+ *
+ * Format: @Embed[Compendium.pf2e.{compendium}.Item.{ItemID} inline]
+ *
+ * Returns HTML with a special marker that RichDescription component will replace with actual content
+ */
+export function parseEmbedReferences(html: string): string {
+	if (!html) return '';
+
+	// Pattern: @Embed[Compendium.pf2e.{compendium}.Item.{ItemID} inline]
+	const embedPattern = /@Embed\[Compendium\.pf2e\.([^.]+)\.Item\.([^\s\]]+)(?:\s+inline)?\]/g;
+	html = html.replace(embedPattern, (match, compendium, itemId) => {
+		// Create a placeholder that RichDescription component will replace with actual content
+		// Use a data attribute to store the reference information
+		return `<div class="embed-placeholder" data-compendium="${compendium}" data-item-id="${itemId}"></div>`;
+	});
+
+	return html;
+}
+
+/**
  * Parse Pathfinder 2e inline rolls and checks
  * Format: [[/r 1d20+5]] or @Check[type:dc:traits]
  */
@@ -406,6 +428,7 @@ export function processDescription(
 	let processed = html;
 
 	// Apply transformations in order
+	processed = parseEmbedReferences(processed); // Parse @Embed first before @UUID
 	processed = parseUUIDReferences(processed);
 	processed = parseFoundryDamage(processed, context); // Parse @Damage[...] syntax first
 	processed = parseInlineRolls(processed);
@@ -416,13 +439,36 @@ export function processDescription(
 }
 
 /**
- * Strip all HTML tags from content (for plain text display)
+ * Strip all HTML tags and Foundry special syntax from content (for plain text display)
  */
 export function stripHTML(html: string): string {
 	if (!html) return '';
 
+	let text = html;
+
+	// Remove @Embed references
+	text = text.replace(/@Embed\[Compendium\.[^\]]+\]/g, '');
+
+	// Remove @UUID references, keeping display text if present
+	// Format 1: @UUID[...]{Display Text} -> Display Text
+	text = text.replace(/@UUID\[[^\]]+\]\{([^}]+)\}/g, '$1');
+	// Format 2: @UUID[Compendium.pf2e.collection.Item.Name] -> Name
+	text = text.replace(/@UUID\[Compendium\.pf2e\.[^.]+\.Item\.([^\]]+)\]/g, (match, itemName) => {
+		// Convert item name to readable format
+		return itemName.split('.').pop()?.replace(/-/g, ' ') || itemName;
+	});
+
+	// Remove @Damage references
+	text = text.replace(/@Damage\[[^\]]+\]/g, '');
+
+	// Remove @Check references
+	text = text.replace(/@Check\[[^\]]+\]/g, '');
+
+	// Remove @Template references
+	text = text.replace(/@Template\[[^\]]+\]/g, '');
+
 	// Remove HTML tags
-	const withoutTags = html.replace(/<[^>]*>/g, '');
+	const withoutTags = text.replace(/<[^>]*>/g, '');
 
 	// Decode HTML entities
 	const textarea = document.createElement('textarea');
