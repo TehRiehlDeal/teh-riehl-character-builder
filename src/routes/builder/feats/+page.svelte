@@ -3,6 +3,7 @@
 	import { getBuilderDataContext } from '$lib/contexts/builderDataContext.svelte';
 	import type { Feat } from '$lib/data/types/app';
 	import FeatPicker from '$lib/components/features/FeatPicker.svelte';
+	import FeatDetailModal from '$lib/components/common/FeatDetailModal.svelte';
 	import Button from '$lib/components/common/Button.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 
@@ -13,6 +14,18 @@
 	let showFeatPicker = $state(false);
 	let currentCategory = $state<'ancestry' | 'class' | 'skill' | 'general'>('ancestry');
 	let currentLevel = $state(1);
+
+	// Modal state for viewing feat details
+	let featDetailModalOpen = $state(false);
+	let selectedFeatForDetails: Feat | null = $state(null);
+
+	function viewFeatDetails(featId: string) {
+		const feat = builderData.feats.find(f => f.id === featId);
+		if (feat) {
+			selectedFeatForDetails = feat;
+			featDetailModalOpen = true;
+		}
+	}
 
 	// Get feat slots from class
 	const featSlots = $derived.by(() => {
@@ -155,7 +168,21 @@
 
 								{#if selectedFeat}
 									<div class="selected-feat">
-										<span class="feat-name">{selectedFeat.name}</span>
+										<div class="feat-name-container">
+											<span class="feat-name">{selectedFeat.name}</span>
+											<button
+												class="view-details-button"
+												onclick={() => viewFeatDetails(selectedFeat.featId)}
+												aria-label="View {selectedFeat.name} details"
+												title="View details"
+											>
+												<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+													<circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+													<path d="M8 7V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+													<circle cx="8" cy="5" r="0.75" fill="currentColor"/>
+												</svg>
+											</button>
+										</div>
 										<div class="feat-actions">
 											<Button
 												variant="secondary"
@@ -201,11 +228,16 @@
 					<div class="feat-slots">
 						{#each availableSlots.class as level}
 							{@const selectedFeat = getFeatForSlot('class', level)}
-							<div class="feat-slot" class:filled={isSlotFilled('class', level)}>
+							{@const isAutoGranted = selectedFeat?.autoGranted ?? false}
+							<div class="feat-slot" class:filled={isSlotFilled('class', level)} class:auto-granted={isAutoGranted}>
 								<div class="slot-header">
 									<span class="slot-level">Level {level}</span>
 									{#if selectedFeat}
-										<span class="slot-status filled">Selected</span>
+										{#if isAutoGranted}
+											<span class="slot-status auto-granted">Auto-Granted</span>
+										{:else}
+											<span class="slot-status filled">Selected</span>
+										{/if}
 									{:else}
 										<span class="slot-status empty">Empty</span>
 									{/if}
@@ -213,23 +245,41 @@
 
 								{#if selectedFeat}
 									<div class="selected-feat">
-										<span class="feat-name">{selectedFeat.name}</span>
-										<div class="feat-actions">
-											<Button
-												variant="secondary"
-												size="sm"
-												onclick={() => handleSelectFeat('class', level)}
+										<div class="feat-name-container">
+											<span class="feat-name">{selectedFeat.name}</span>
+											<button
+												class="view-details-button"
+												onclick={() => viewFeatDetails(selectedFeat.featId)}
+												aria-label="View {selectedFeat.name} details"
+												title="View details"
 											>
-												Change
-											</Button>
-											<Button
-												variant="danger"
-												size="sm"
-												onclick={() => handleRemoveFeat('class', selectedFeat.featId)}
-											>
-												Remove
-											</Button>
+												<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+													<circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+													<path d="M8 7V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+													<circle cx="8" cy="5" r="0.75" fill="currentColor"/>
+												</svg>
+											</button>
 										</div>
+										{#if isAutoGranted}
+											<p class="auto-granted-note">Granted by class archetype</p>
+										{:else}
+											<div class="feat-actions">
+												<Button
+													variant="secondary"
+													size="sm"
+													onclick={() => handleSelectFeat('class', level)}
+												>
+													Change
+												</Button>
+												<Button
+													variant="danger"
+													size="sm"
+													onclick={() => handleRemoveFeat('class', selectedFeat.featId)}
+												>
+													Remove
+												</Button>
+											</div>
+										{/if}
 									</div>
 								{:else}
 									<Button
@@ -271,7 +321,21 @@
 
 								{#if selectedFeat}
 									<div class="selected-feat">
-										<span class="feat-name">{selectedFeat.name}</span>
+										<div class="feat-name-container">
+											<span class="feat-name">{selectedFeat.name}</span>
+											<button
+												class="view-details-button"
+												onclick={() => viewFeatDetails(selectedFeat.featId)}
+												aria-label="View {selectedFeat.name} details"
+												title="View details"
+											>
+												<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+													<circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+													<path d="M8 7V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+													<circle cx="8" cy="5" r="0.75" fill="currentColor"/>
+												</svg>
+											</button>
+										</div>
 										<div class="feat-actions">
 											<Button
 												variant="secondary"
@@ -329,7 +393,21 @@
 
 								{#if selectedFeat}
 									<div class="selected-feat">
-										<span class="feat-name">{selectedFeat.name}</span>
+										<div class="feat-name-container">
+											<span class="feat-name">{selectedFeat.name}</span>
+											<button
+												class="view-details-button"
+												onclick={() => viewFeatDetails(selectedFeat.featId)}
+												aria-label="View {selectedFeat.name} details"
+												title="View details"
+											>
+												<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+													<circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+													<path d="M8 7V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+													<circle cx="8" cy="5" r="0.75" fill="currentColor"/>
+												</svg>
+											</button>
+										</div>
 										<div class="feat-actions">
 											<Button
 												variant="secondary"
@@ -375,6 +453,9 @@
 		onSelect={handleFeatSelected}
 	/>
 </Modal>
+
+<!-- Feat Detail Modal -->
+<FeatDetailModal bind:open={featDetailModalOpen} feat={selectedFeatForDetails} />
 
 <style>
 	.page-content {
@@ -481,6 +562,11 @@
 		background-color: rgba(92, 124, 250, 0.05);
 	}
 
+	.feat-slot.auto-granted {
+		border-color: var(--success-color, #37b24d);
+		background-color: rgba(55, 178, 77, 0.05);
+	}
+
 	.feat-slot:hover {
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
@@ -518,10 +604,21 @@
 		color: #868e96;
 	}
 
+	.slot-status.auto-granted {
+		background-color: rgba(55, 178, 77, 0.1);
+		color: #37b24d;
+	}
+
 	.selected-feat {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+	}
+
+	.feat-name-container {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 	}
 
 	.feat-name {
@@ -530,9 +627,44 @@
 		color: var(--text-primary, #1a1a1a);
 	}
 
+	.view-details-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.25rem;
+		background: none;
+		border: none;
+		color: var(--link-color, #5c7cfa);
+		cursor: pointer;
+		border-radius: 4px;
+		transition: all var(--transition-fast);
+		flex-shrink: 0;
+	}
+
+	.view-details-button:hover {
+		color: var(--link-hover-color, #4c6ef5);
+		background-color: rgba(92, 124, 250, 0.1);
+	}
+
+	.view-details-button:focus {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	.view-details-button svg {
+		display: block;
+	}
+
 	.feat-actions {
 		display: flex;
 		gap: 0.5rem;
+	}
+
+	.auto-granted-note {
+		font-size: 0.875rem;
+		font-style: italic;
+		color: var(--success-color, #37b24d);
+		margin: 0.5rem 0 0 0;
 	}
 
 	/* Mobile Responsive */

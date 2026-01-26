@@ -25,10 +25,13 @@
 	import { onMount } from 'svelte';
 	import Accordion from '$lib/components/common/Accordion.svelte';
 	import PlanningFeatSelector from '$lib/components/planning/PlanningFeatSelector.svelte';
+	import FeatDetailModal from '$lib/components/common/FeatDetailModal.svelte';
 	import RichDescription from '$lib/components/common/RichDescription.svelte';
 	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
 	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo, resolveSpecializedClassFeature } from '$lib/utils/classFeatureChoices';
-	import type { ClassFeature } from '$lib/data/types/app';
+	import type { ClassFeature, ClassArchetype } from '$lib/data/types/app';
+	import { getClassArchetypeById } from '$lib/data/repositories/classArchetypeRepository';
+	import { extractItemNameFromUUID, getImmediateClassFeatures, extractGrantedItems } from '$lib/utils/classArchetypeUtils';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -60,21 +63,166 @@
 	const levelProgression = $derived.by(() => {
 		const progression: LevelProgression[] = [];
 		const classFeatures = selectedClass?.classFeatures || [];
+
+		// Get archetype-granted class features
+		const archetypeGrantedFeatures: { level: number; name: string; uuid: string }[] = [];
+		if (selectedClassArchetype) {
+			const grantedItems = extractGrantedItems(selectedClassArchetype);
+			for (const granted of grantedItems) {
+				// Only include class features (not feats)
+				if (granted.uuid.includes('classfeatures') && !granted.isDynamic) {
+					const featureName = extractItemNameFromUUID(granted.uuid);
+					if (featureName) {
+						archetypeGrantedFeatures.push({
+							level: granted.level,
+							name: featureName,
+							uuid: granted.uuid
+						});
+					}
+				}
+			}
+		}
+
 		for (let level = 1; level <= 20; level++) {
-			progression.push(getLevelProgression(level, currentSettings.variantRules, classFeatures));
+			const baseLevelProgression = getLevelProgression(level, currentSettings.variantRules, classFeatures);
+
+			// Add archetype-granted features at this level
+			const grantedAtLevel = archetypeGrantedFeatures.filter(f => f.level === level);
+			if (grantedAtLevel.length > 0) {
+				baseLevelProgression.classFeatures = baseLevelProgression.classFeatures || [];
+				for (const granted of grantedAtLevel) {
+					// Check if not already in the list
+					if (!baseLevelProgression.classFeatures.some(cf => cf.name === granted.name)) {
+						baseLevelProgression.classFeatures.push({
+							name: granted.name,
+							uuid: granted.uuid
+						});
+					}
+				}
+			}
+
+			progression.push(baseLevelProgression);
 		}
 		return progression;
 	});
 
 	// Planning selections - stored per level
 	let featSelections = $state<Record<number, { classFeat?: string; freeArchetypeFeat?: string; ancestryFeat?: string; skillFeat?: string; generalFeat?: string }>>({});
+	let autoGrantedFeats = $state<Record<number, { classFeat?: boolean; ancestryFeat?: boolean; skillFeat?: boolean; generalFeat?: boolean }>>({});
 	let abilityBoostSelections = $state<Record<number, string[]>>({});
+
+	// Modal state for viewing feat details
+	let featDetailModalOpen = $state(false);
+	let selectedFeatForDetails: Feat | null = $state(null);
+
+	function viewFeatDetails(featId: string) {
+		const feat = builderData.feats.find(f => f.id === featId);
+		if (feat) {
+			selectedFeatForDetails = feat;
+			featDetailModalOpen = true;
+		}
+	}
 	let skillIncreaseSelections = $state<Record<number, string>>({});
 	let classFeatureChoiceSelections = $state<Record<string, string>>({});  // Maps choiceFlag to selected value
 
 	// All class features (for resolving tag-based choices)
 	let allClassFeatures = $state<ClassFeature[]>([]);
 	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
+	let selectedClassArchetype = $state<ClassArchetype | null>(null);
+
+	// Filter class feature choices based on archetype suppressions
+	const filteredClassFeatureChoiceInfo = $derived.by(() => {
+		if (!selectedClassArchetype) {
+			return classFeatureChoiceInfo;
+		}
+
+		const filtered: Record<string, ClassFeatureChoiceInfo> = {};
+
+		// Get the flags of suppressed features by looking them up in allClassFeatures
+		const suppressedFlags = new Set<string>();
+		for (const suppressedUUID of selectedClassArchetype.suppressedFeatures) {
+			const suppressedName = extractItemNameFromUUID(suppressedUUID);
+			if (!suppressedName) continue;
+
+			// Find the class feature with this name
+			const suppressedFeature = allClassFeatures.find((cf) => cf.name === suppressedName);
+			if (suppressedFeature) {
+				// Extract the choice flag from this feature
+				const choiceInfo = extractChoiceInfo(suppressedFeature);
+				if (choiceInfo.choiceFlag) {
+					suppressedFlags.add(choiceInfo.choiceFlag);
+				}
+			}
+		}
+
+		// Filter out suppressed choices and add granted features to their parent choices
+		for (const [flag, info] of Object.entries(classFeatureChoiceInfo)) {
+			if (!suppressedFlags.has(flag)) {
+				// Clone the choice info to avoid mutating the original
+				const modifiedInfo = { ...info, choices: [...info.choices] };
+
+				// Add granted features that belong to this choice set
+				const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+				for (const granted of grantedFeatures) {
+					const featureName = extractItemNameFromUUID(granted.uuid);
+					if (!featureName) continue;
+
+					const grantedFeature = allClassFeatures.find((cf) => cf.name === featureName);
+					if (!grantedFeature) continue;
+
+					// Check if this granted feature should be in this choice set
+					const alreadyExists = modifiedInfo.choices.some((c) => c.value === grantedFeature.id);
+					if (!alreadyExists) {
+						// For tag-based choices, check if the ARCHETYPE has the filter tag
+						// (indicating it grants features for this choice type)
+						// or if the granted feature itself has the filter tag
+						let shouldAdd = false;
+
+						if (info.choiceType === 'tag-based' && info.filterTag) {
+							// Check if the archetype itself has the filter tag
+							// (e.g., Runelord has "wizard-arcane-school" tag)
+							if (selectedClassArchetype.traits.includes(info.filterTag)) {
+								shouldAdd = true;
+							}
+							// Or check if granted feature has the filter tag
+							else if (grantedFeature.traits.includes(info.filterTag)) {
+								shouldAdd = true;
+							}
+						}
+
+						if (shouldAdd) {
+							modifiedInfo.choices.push({
+								value: grantedFeature.id,
+								label: grantedFeature.name
+							});
+						}
+					}
+				}
+
+				filtered[flag] = modifiedInfo;
+			}
+		}
+
+		// Also check if any granted features have their OWN choices (e.g., School of Thassilonian Rune Magic has a sin choice)
+		const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+		for (const granted of grantedFeatures) {
+			const featureName = extractItemNameFromUUID(granted.uuid);
+			if (!featureName) continue;
+
+			const grantedFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!grantedFeature) continue;
+
+			const grantedChoiceInfo = extractChoiceInfo(grantedFeature);
+			if (grantedChoiceInfo.hasChoice && grantedChoiceInfo.choiceFlag) {
+				// Only add if not already present and not suppressed
+				if (!filtered[grantedChoiceInfo.choiceFlag] && !suppressedFlags.has(grantedChoiceInfo.choiceFlag)) {
+					filtered[grantedChoiceInfo.choiceFlag] = grantedChoiceInfo;
+				}
+			}
+		}
+
+		return filtered;
+	});
 
 	// Skills list - matches character store structure
 	const SKILLS = [
@@ -141,6 +289,12 @@
 					featSelections[feat.level] = {};
 				}
 				featSelections[feat.level].ancestryFeat = feat.featId;
+				if (feat.autoGranted) {
+					if (!autoGrantedFeats[feat.level]) {
+						autoGrantedFeats[feat.level] = {};
+					}
+					autoGrantedFeats[feat.level].ancestryFeat = true;
+				}
 			});
 
 			// Load class feats
@@ -149,6 +303,12 @@
 					featSelections[feat.level] = {};
 				}
 				featSelections[feat.level].classFeat = feat.featId;
+				if (feat.autoGranted) {
+					if (!autoGrantedFeats[feat.level]) {
+						autoGrantedFeats[feat.level] = {};
+					}
+					autoGrantedFeats[feat.level].classFeat = true;
+				}
 			});
 
 			// Load skill feats
@@ -157,6 +317,12 @@
 					featSelections[feat.level] = {};
 				}
 				featSelections[feat.level].skillFeat = feat.featId;
+				if (feat.autoGranted) {
+					if (!autoGrantedFeats[feat.level]) {
+						autoGrantedFeats[feat.level] = {};
+					}
+					autoGrantedFeats[feat.level].skillFeat = true;
+				}
 			});
 
 			// Load general feats
@@ -237,6 +403,32 @@
 					}
 				}
 			}
+		}
+
+		// Load selected class archetype if present
+		if (char.class.classArchetype) {
+			selectedClassArchetype = await getClassArchetypeById(char.class.classArchetype);
+
+			// Process archetype-granted features for choice info
+			if (selectedClassArchetype) {
+				const grantedItems = extractGrantedItems(selectedClassArchetype);
+				for (const granted of grantedItems) {
+					if (granted.uuid.includes('classfeatures') && !granted.isDynamic) {
+						const featureName = extractItemNameFromUUID(granted.uuid);
+						if (featureName) {
+							const grantedFeature = allClassFeatures.find(cf => cf.name === featureName);
+							if (grantedFeature) {
+								const choiceInfo = await getCompleteChoiceInfo(grantedFeature, allClassFeatures);
+								if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+									classFeatureChoiceInfo[choiceInfo.choiceFlag] = choiceInfo;
+								}
+							}
+						}
+					}
+				}
+			}
+		} else {
+			selectedClassArchetype = null;
 		}
 	});
 
@@ -401,8 +593,8 @@
 											</span>
 
 											<!-- Class Feature Choice Selector -->
-											{#if choiceInfo && choiceInfo.hasChoice && choiceInfo.choiceFlag}
-												{@const choices = classFeatureChoiceInfo[choiceInfo.choiceFlag]?.choices || choiceInfo.choices}
+											{#if choiceInfo && choiceInfo.hasChoice && choiceInfo.choiceFlag && filteredClassFeatureChoiceInfo[choiceInfo.choiceFlag]}
+												{@const choices = filteredClassFeatureChoiceInfo[choiceInfo.choiceFlag]?.choices || choiceInfo.choices}
 												{@const selectedChoice = classFeatureChoiceSelections[choiceInfo.choiceFlag]}
 												<div class="class-feature-choice">
 													<select
@@ -448,13 +640,38 @@
 						<div class="level-selections">
 					<!-- Class Feat -->
 					{#if levelPlan.featSlots.classFeat}
-						<PlanningFeatSelector
-							label="Class Feat"
-							availableFeats={featsByLevel[levelPlan.level].class}
-							selectedFeatId={selections.classFeat}
-							onSelect={(featId) => handleFeatSelection(levelPlan.level, 'classFeat', featId)}
-							loading={builderData.featsLoading}
-						/>
+						{@const isAutoGranted = autoGrantedFeats[levelPlan.level]?.classFeat}
+						{#if isAutoGranted}
+							{@const feat = classFeats.find(f => f.id === selections.classFeat)}
+							<div class="auto-granted-feat-notice">
+								<span class="auto-granted-label">Class Feat (Auto-granted by archetype):</span>
+								{#if feat}
+									<div class="auto-granted-feat-container">
+										<span class="auto-granted-feat-name">{feat.name}</span>
+										<button
+											class="view-details-button"
+											onclick={() => viewFeatDetails(feat.id)}
+											aria-label="View {feat.name} details"
+											title="View details"
+										>
+											<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+												<path d="M8 7V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+												<circle cx="8" cy="5" r="0.75" fill="currentColor"/>
+											</svg>
+										</button>
+									</div>
+								{/if}
+							</div>
+						{:else}
+							<PlanningFeatSelector
+								label="Class Feat"
+								availableFeats={featsByLevel[levelPlan.level].class}
+								selectedFeatId={selections.classFeat}
+								onSelect={(featId) => handleFeatSelection(levelPlan.level, 'classFeat', featId)}
+								loading={builderData.featsLoading}
+							/>
+						{/if}
 					{/if}
 
 					<!-- Free Archetype Feat (Variant Rule) -->
@@ -560,6 +777,9 @@
 		</ul>
 	</div>
 </div>
+
+<!-- Feat Detail Modal -->
+<FeatDetailModal bind:open={featDetailModalOpen} feat={selectedFeatForDetails} />
 
 <style>
 	.page-content {
@@ -947,6 +1167,65 @@
 		.ability-boost-grid {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	/* Auto-granted feat notice */
+	.auto-granted-feat-notice {
+		padding: 0.75rem;
+		background-color: rgba(55, 178, 77, 0.05);
+		border: 2px solid var(--success-color, #37b24d);
+		border-radius: 8px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.auto-granted-label {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--success-color, #37b24d);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.auto-granted-feat-container {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.auto-granted-feat-name {
+		font-size: 1rem;
+		font-weight: 500;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.view-details-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.25rem;
+		background: none;
+		border: none;
+		color: var(--link-color, #5c7cfa);
+		cursor: pointer;
+		border-radius: 4px;
+		transition: all var(--transition-fast);
+		flex-shrink: 0;
+	}
+
+	.view-details-button:hover {
+		color: var(--link-hover-color, #4c6ef5);
+		background-color: rgba(92, 124, 250, 0.1);
+	}
+
+	.view-details-button:focus {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	.view-details-button svg {
+		display: block;
 	}
 
 	/* Reduced motion */

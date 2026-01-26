@@ -45,6 +45,21 @@ export type ClassFeature = Feat & {
 };
 
 /**
+ * Class Archetype data in our app schema
+ * Class archetypes are variants of base classes that modify features at level 1
+ */
+export interface ClassArchetype extends ClassFeature {
+	/** The base class this archetype modifies (e.g., "wizard", "barbarian"). Null for universal archetypes. */
+	baseClass: string | null;
+
+	/** Features from the base class that this archetype suppresses/replaces */
+	suppressedFeatures: string[];
+
+	/** Whether this archetype is universal (can be applied to any spellcaster) */
+	isUniversal: boolean;
+}
+
+/**
  * Ancestry data in our app schema
  */
 export interface Ancestry extends GameItem {

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { untrack, onMount } from 'svelte';
 	import { character } from '$lib/stores/character';
 	import { getBuilderDataContext } from '$lib/contexts/builderDataContext.svelte';
-	import type { Ancestry, Heritage, Background, Class, Feat } from '$lib/data/types/app';
+	import type { Ancestry, Heritage, Background, Class, Feat, ClassFeature } from '$lib/data/types/app';
 	import AncestrySelector from '$lib/components/wizard/AncestrySelector.svelte';
 	import HeritageSelector from '$lib/components/wizard/HeritageSelector.svelte';
 	import BackgroundSelector from '$lib/components/wizard/BackgroundSelector.svelte';
@@ -13,6 +13,13 @@
 	import FeatPicker from '$lib/components/features/FeatPicker.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Button from '$lib/components/common/Button.svelte';
+	import RichDescription from '$lib/components/common/RichDescription.svelte';
+	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
+	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo } from '$lib/utils/classFeatureChoices';
+	import { getExcerpt } from '$lib/utils/descriptionParser';
+	import { getClassArchetypesForClass } from '$lib/data/repositories/classArchetypeRepository';
+	import type { ClassArchetype } from '$lib/data/types/app';
+	import { extractGrantedItems, extractItemNameFromUUID, getImmediateClassFeatures, getDedicationFeat } from '$lib/utils/classArchetypeUtils';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -27,6 +34,14 @@
 	let freeAbilityBoosts: (string | null)[] = $state([null, null, null, null]);
 	let trainedSkills: string[] = $state([]);
 	let heritageChoices: Record<string, string> = $state({}); // Key: flag name, Value: selected value
+	let archetypeDescriptionExpanded = $state(false); // Track if archetype description is expanded
+	let classFeatureChoiceSelections = $state<Record<string, string>>({}); // Maps choiceFlag to selected value
+	let allClassFeatures = $state<ClassFeature[]>([]);
+	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
+	let availableClassArchetypes = $state<ClassArchetype[]>([]);
+	let selectedClassArchetype = $state<ClassArchetype | null>(null);
+	let archetypeDetailModalOpen = $state(false);
+	let archetypeForDetails = $state<ClassArchetype | null>(null);
 	let hasRestoredData = $state(false);
 
 	// State for class change confirmation modal
@@ -255,6 +270,243 @@
 		}
 	});
 
+	// Load class features and extract choice information on mount
+	onMount(async () => {
+		// Load all class features for resolving tag-based choices
+		allClassFeatures = await loadAllClassFeatures();
+
+		// Load class feature choice selections from character store
+		const char = $character;
+		if (char.ruleSelections) {
+			// Extract all class feature choice selections
+			Object.entries(char.ruleSelections).forEach(([key, value]) => {
+				// Skip planning selections and other known prefixes
+				if (!key.startsWith('plan-level-') &&
+					!key.startsWith('heritage-') &&
+					!key.startsWith('ancestry-boost-') &&
+					!key.startsWith('background-boost-') &&
+					!key.startsWith('free-boost-') &&
+					key !== 'trained-skills' &&
+					typeof value === 'string') {
+					classFeatureChoiceSelections[key] = value;
+				}
+			});
+		}
+
+		// Process class features to build choice info map when class is selected
+		if (selectedClass) {
+			await loadClassFeatureChoices(selectedClass);
+		}
+	});
+
+	// Function to load class feature choices for a given class
+	async function loadClassFeatureChoices(cls: Class) {
+		const newChoiceInfo: Record<string, ClassFeatureChoiceInfo> = {};
+
+		// Get level 1 class features
+		const level1Features = cls.classFeatures.filter(cf => cf.level === 1);
+
+		for (const cf of level1Features) {
+			// Find the full class feature data
+			const fullClassFeature = allClassFeatures.find(acf => acf.name === cf.name);
+			if (fullClassFeature) {
+				const choiceInfo = await getCompleteChoiceInfo(fullClassFeature, allClassFeatures);
+				if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+					newChoiceInfo[choiceInfo.choiceFlag] = choiceInfo;
+				}
+			}
+		}
+
+		classFeatureChoiceInfo = newChoiceInfo;
+	}
+
+	// Filter class feature choices based on archetype suppressions and add granted features
+	const filteredClassFeatureChoiceInfo = $derived.by(() => {
+		if (!selectedClassArchetype) {
+			return classFeatureChoiceInfo;
+		}
+
+		const filtered: Record<string, ClassFeatureChoiceInfo> = {};
+
+		// Get the flags of suppressed features by looking them up in allClassFeatures
+		const suppressedFlags = new Set<string>();
+		for (const suppressedUUID of selectedClassArchetype.suppressedFeatures) {
+			const suppressedName = extractItemNameFromUUID(suppressedUUID);
+			if (!suppressedName) continue;
+
+			// Find the class feature with this name
+			const suppressedFeature = allClassFeatures.find((cf) => cf.name === suppressedName);
+			if (suppressedFeature) {
+				// Extract the choice flag from this feature
+				const choiceInfo = extractChoiceInfo(suppressedFeature);
+				if (choiceInfo.choiceFlag) {
+					suppressedFlags.add(choiceInfo.choiceFlag);
+				}
+			}
+		}
+
+		// Filter out suppressed choices and add granted features to their parent choices
+		for (const [flag, info] of Object.entries(classFeatureChoiceInfo)) {
+			if (!suppressedFlags.has(flag)) {
+				// Clone the choice info to avoid mutating the original
+				const modifiedInfo = { ...info, choices: [...info.choices] };
+
+				// Add granted features that belong to this choice set
+				const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+				for (const granted of grantedFeatures) {
+					const featureName = extractItemNameFromUUID(granted.uuid);
+					if (!featureName) continue;
+
+					const grantedFeature = allClassFeatures.find((cf) => cf.name === featureName);
+					if (!grantedFeature) continue;
+
+					// Check if this granted feature should be in this choice set
+					const alreadyExists = modifiedInfo.choices.some((c) => c.value === grantedFeature.id);
+					if (!alreadyExists) {
+						// For tag-based choices, check if the ARCHETYPE has the filter tag
+						// (indicating it grants features for this choice type)
+						// or if the granted feature itself has the filter tag
+						let shouldAdd = false;
+
+						if (info.choiceType === 'tag-based' && info.filterTag) {
+							// Check if the archetype itself has the filter tag
+							// (e.g., Runelord has "wizard-arcane-school" tag)
+							if (selectedClassArchetype.traits.includes(info.filterTag)) {
+								shouldAdd = true;
+							}
+							// Or check if granted feature has the filter tag
+							else if (grantedFeature.traits.includes(info.filterTag)) {
+								shouldAdd = true;
+							}
+						}
+
+						if (shouldAdd) {
+							modifiedInfo.choices.push({
+								value: grantedFeature.id,
+								label: grantedFeature.name
+							});
+						}
+					}
+				}
+
+				filtered[flag] = modifiedInfo;
+			}
+		}
+
+		// Also check if any granted features have their OWN choices (e.g., School of Thassilonian Rune Magic has a sin choice)
+		const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+		for (const granted of grantedFeatures) {
+			const featureName = extractItemNameFromUUID(granted.uuid);
+			if (!featureName) continue;
+
+			const grantedFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!grantedFeature) continue;
+
+			const grantedChoiceInfo = extractChoiceInfo(grantedFeature);
+			if (grantedChoiceInfo.hasChoice && grantedChoiceInfo.choiceFlag) {
+				// Only add if not already present and not suppressed
+				if (!filtered[grantedChoiceInfo.choiceFlag] && !suppressedFlags.has(grantedChoiceInfo.choiceFlag)) {
+					filtered[grantedChoiceInfo.choiceFlag] = grantedChoiceInfo;
+				}
+			}
+		}
+
+		return filtered;
+	});
+
+	// Check if a class feature choice is auto-granted by archetype (should be readonly)
+	function isAutoGrantedFeature(choiceFlag: string): boolean {
+		if (!selectedClassArchetype) return false;
+
+		const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+		return grantedFeatures.some((granted) => {
+			const featureName = extractItemNameFromUUID(granted.uuid);
+			if (!featureName) return false;
+
+			// Find the granted feature in allClassFeatures
+			const grantedClassFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!grantedClassFeature) return false;
+
+			// Check if this feature's parent has the choiceFlag
+			// The granted feature is a specific option within a choice set
+			// We need to find the parent feature that has the ChoiceSet rule
+			// For example, "School of Thassilonian Rune Magic" is a choice within "Arcane School"
+			// We can check if this feature has the tag that matches the choice filter
+			const parentChoice = Object.entries(classFeatureChoiceInfo).find(([flag, info]) => {
+				return info.choices.some((choice) => choice.value === grantedClassFeature.id);
+			});
+
+			return parentChoice?.[0] === choiceFlag;
+		});
+	}
+
+	// Update class feature choices when selectedClass changes
+	$effect(() => {
+		if (selectedClass && allClassFeatures.length > 0) {
+			loadClassFeatureChoices(selectedClass);
+		}
+	});
+
+	// Load available class archetypes when class is selected
+	$effect(() => {
+		if (selectedClass) {
+			loadAvailableClassArchetypes(selectedClass.name);
+		} else {
+			availableClassArchetypes = [];
+		}
+	});
+
+	// Auto-select granted features when archetype is selected and filtered choices are ready
+	$effect(() => {
+		if (selectedClassArchetype && Object.keys(filteredClassFeatureChoiceInfo).length > 0) {
+			const immediateFeatures = getImmediateClassFeatures(selectedClassArchetype);
+
+			for (const grantedItem of immediateFeatures) {
+				const featureName = extractItemNameFromUUID(grantedItem.uuid);
+				if (!featureName) continue;
+
+				const classFeature = allClassFeatures.find((cf) => cf.name === featureName);
+				if (!classFeature) continue;
+
+				// Find which choice set this feature belongs to in the filtered choices
+				for (const [choiceFlag, choiceInfo] of Object.entries(filteredClassFeatureChoiceInfo)) {
+					// Check if this granted feature is in this choice set
+					const isInChoices = choiceInfo.choices.some((c) => c.value === classFeature.id);
+
+					if (isInChoices && !classFeatureChoiceSelections[choiceFlag]) {
+						// Auto-select this feature
+						classFeatureChoiceSelections[choiceFlag] = classFeature.id;
+
+						// Save to character store
+						character.update((char) => ({
+							...char,
+							ruleSelections: {
+								...char.ruleSelections,
+								[choiceFlag]: classFeature.id
+							}
+						}));
+					}
+				}
+			}
+		}
+	});
+
+	// Restore selected class archetype from character store
+	$effect(() => {
+		const char = $character;
+		if (char.class.classArchetype && !selectedClassArchetype && availableClassArchetypes.length > 0) {
+			const archetype = availableClassArchetypes.find(a => a.id === char.class.classArchetype);
+			if (archetype) {
+				selectedClassArchetype = archetype;
+			}
+		}
+	});
+
+	async function loadAvailableClassArchetypes(className: string) {
+		const archetypes = await getClassArchetypesForClass(className);
+		availableClassArchetypes = archetypes;
+	}
+
 	// Filter heritages based on selected ancestry
 	const availableHeritages = $derived.by(() => {
 		if (!selectedAncestry) return [];
@@ -360,6 +612,148 @@
 		}));
 	}
 
+	function handleClassFeatureChoiceSelection(choiceFlag: string, value: string) {
+		classFeatureChoiceSelections[choiceFlag] = value;
+
+		// Save to character store
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				[choiceFlag]: value
+			}
+		}));
+	}
+
+	function handleClassArchetypeSelect(archetype: ClassArchetype) {
+		selectedClassArchetype = archetype;
+		archetypeDescriptionExpanded = false; // Reset expansion state
+		character.setClassArchetype(archetype.id);
+
+		// Auto-apply granted class features
+		applyArchetypeGrantedFeatures(archetype);
+	}
+
+	/**
+	 * Apply auto-granted feats from archetype
+	 * For example, Runelord grants Runelord Dedication at level 2
+	 * Note: Auto-selection of class features is handled by an effect watching filteredClassFeatureChoiceInfo
+	 */
+	function applyArchetypeGrantedFeatures(archetype: ClassArchetype) {
+
+		// Auto-grant dedication feat at level 2
+		const dedicationFeat = getDedicationFeat(archetype);
+		if (dedicationFeat) {
+			const featName = extractItemNameFromUUID(dedicationFeat.uuid);
+			if (featName) {
+				// Find the feat in our data
+				const feat = builderData.feats.find((f) => f.name === featName);
+				if (feat) {
+					// Remove any existing feat at level 2 class slot (in case user already selected one)
+					character.update((char) => ({
+						...char,
+						feats: {
+							...char.feats,
+							class: char.feats.class.filter((f) => f.level !== 2)
+						}
+					}));
+
+					// Add the dedication feat as auto-granted
+					character.addFeat('class', 2, feat.id, feat.name, true);
+				}
+			}
+		}
+	}
+
+	function handleClassArchetypeClear() {
+		// Clear auto-granted features before removing archetype
+		if (selectedClassArchetype) {
+			clearArchetypeGrantedFeatures(selectedClassArchetype);
+		}
+
+		selectedClassArchetype = null;
+		character.clearClassArchetype();
+	}
+
+	/**
+	 * Clear auto-granted class features and feats from archetype
+	 */
+	function clearArchetypeGrantedFeatures(archetype: ClassArchetype) {
+		const immediateFeatures = getImmediateClassFeatures(archetype);
+
+		// Clear immediate class features
+		for (const grantedItem of immediateFeatures) {
+			const featureName = extractItemNameFromUUID(grantedItem.uuid);
+			if (!featureName) continue;
+
+			const classFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!classFeature) continue;
+
+			const choiceInfo = extractChoiceInfo(classFeature);
+			if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+				const choiceFlag = choiceInfo.choiceFlag;
+
+				// Clear the selection
+				delete classFeatureChoiceSelections[choiceFlag];
+
+				// Clear from character store
+				character.update((char) => {
+					const newSelections = { ...char.ruleSelections };
+					delete newSelections[choiceFlag];
+					return {
+						...char,
+						ruleSelections: newSelections
+					};
+				});
+			}
+		}
+
+		// Remove auto-granted dedication feat at level 2
+		const dedicationFeat = getDedicationFeat(archetype);
+		if (dedicationFeat) {
+			const featName = extractItemNameFromUUID(dedicationFeat.uuid);
+			if (featName) {
+				const feat = builderData.feats.find((f) => f.name === featName);
+				if (feat) {
+					// Remove the auto-granted dedication feat
+					character.update((char) => ({
+						...char,
+						feats: {
+							...char.feats,
+							class: char.feats.class.filter((f) => !(f.level === 2 && f.autoGranted))
+						}
+					}));
+				}
+			}
+		}
+	}
+
+	function viewArchetypeDetails(archetype: ClassArchetype) {
+		archetypeForDetails = archetype;
+		archetypeDetailModalOpen = true;
+	}
+
+	function closeArchetypeDetails() {
+		archetypeDetailModalOpen = false;
+	}
+
+	/**
+	 * Convert camelCase or kebab-case to Title Case
+	 * Examples: "hybridStudy" -> "Hybrid Study", "arcane-school" -> "Arcane School"
+	 */
+	function formatChoiceLabel(choiceFlag: string): string {
+		// First convert from camelCase to space-separated
+		let formatted = choiceFlag.replace(/([A-Z])/g, ' $1');
+		// Also handle kebab-case
+		formatted = formatted.replace(/-/g, ' ');
+		// Trim and capitalize first letter of each word
+		return formatted
+			.trim()
+			.split(' ')
+			.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(' ');
+	}
+
 	function handleAncestryFeatSelect(feat: Feat) {
 		// Remove existing level 1 ancestry feat if any
 		const existingFeat = $character.feats.ancestry.find((f) => f.level === 1);
@@ -463,7 +857,8 @@
 				id: cls.id,
 				name: cls.name,
 				subclass: null,
-				keyAbility: null
+				keyAbility: null,
+				classArchetype: null
 			},
 			// Apply class features for the character's current level
 			classFeatures: relevantClassFeatures,
@@ -494,6 +889,11 @@
 		if (pendingClassChange) {
 			// Reset all class-related data first
 			character.resetClassData();
+
+			// Clear local state variables
+			selectedClassArchetype = null;
+			classFeatureChoiceSelections = {};
+			availableClassArchetypes = [];
 
 			// Then apply the new class
 			applyClassSelection(pendingClassChange);
@@ -618,7 +1018,8 @@
 				id: '',
 				name: '',
 				subclass: null,
-				keyAbility: null
+				keyAbility: null,
+				classArchetype: null
 			},
 			ruleSelections: {},
 			feats: {
@@ -1137,6 +1538,105 @@
 					<ClassSelector classes={builderData.classes} {selectedClass} onSelect={handleClassSelect} />
 
 					{#if selectedClass}
+						<!-- Class Archetype Selector -->
+						{#if availableClassArchetypes.length > 0}
+							<div class="subsection class-archetype-section">
+								<h3 class="subsection-title">Class Archetype (Optional)</h3>
+								<p class="subsection-description">
+									Class archetypes are special variants of your class that modify your features at level 1.
+									They replace some base class features and grant unique abilities.
+								</p>
+
+								{#if selectedClassArchetype}
+									<div class="selected-archetype">
+										<div class="archetype-info">
+											<h4 class="archetype-name">{selectedClassArchetype.name}</h4>
+											<div class="archetype-description-card" class:expanded={archetypeDescriptionExpanded}>
+												<div class="archetype-description-content">
+													<RichDescription content={selectedClassArchetype.description} />
+												</div>
+												{#if !archetypeDescriptionExpanded}
+													<button class="read-more-button" onclick={() => archetypeDescriptionExpanded = true}>
+														Read more
+													</button>
+												{:else}
+													<button class="read-more-button" onclick={() => archetypeDescriptionExpanded = false}>
+														Show less
+													</button>
+												{/if}
+											</div>
+											{#if selectedClassArchetype.suppressedFeatures.length > 0}
+												<div class="suppressed-features">
+													<strong>Replaces:</strong>
+													{selectedClassArchetype.suppressedFeatures.join(', ')}
+												</div>
+											{/if}
+										</div>
+										<Button variant="secondary" size="sm" onclick={handleClassArchetypeClear}>
+											Remove Archetype
+										</Button>
+									</div>
+								{:else}
+									<div class="archetype-grid">
+										{#each availableClassArchetypes as archetype}
+											<div class="archetype-card">
+												<h4 class="archetype-card-name">{archetype.name}</h4>
+												{#if archetype.rarity && archetype.rarity !== 'common'}
+													<span class="archetype-rarity rarity-{archetype.rarity}">{archetype.rarity}</span>
+												{/if}
+												<div class="archetype-card-description">
+													{getExcerpt(archetype.description, 200)}
+												</div>
+												<div class="archetype-card-actions">
+													<Button variant="secondary" size="sm" onclick={() => viewArchetypeDetails(archetype)}>
+														Details
+													</Button>
+													<Button variant="primary" size="sm" onclick={() => handleClassArchetypeSelect(archetype)}>
+														Select
+													</Button>
+												</div>
+											</div>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/if}
+
+						<!-- Class Feature Choices (e.g., Barbarian Instinct, Alchemist Research Field) -->
+						{#if Object.keys(filteredClassFeatureChoiceInfo).length > 0}
+							<div class="subsection">
+								<h3 class="subsection-title">Class Features</h3>
+								<p class="subsection-description">
+									Your class grants you special features that require choices.
+								</p>
+								{#each Object.entries(filteredClassFeatureChoiceInfo) as [choiceFlag, choiceInfo]}
+									{@const isAutoGranted = isAutoGrantedFeature(choiceFlag)}
+									<div class="class-feature-choice">
+										<label for="class-choice-{choiceFlag}" class="choice-label">
+											{choiceInfo.choices.length > 0 ? `Choose your ${formatChoiceLabel(choiceFlag)}` : 'Class Feature'}:
+											{#if isAutoGranted}
+												<span class="auto-granted-badge">Auto-selected by archetype</span>
+											{/if}
+										</label>
+										<select
+											id="class-choice-{choiceFlag}"
+											class="choice-select"
+											value={classFeatureChoiceSelections[choiceFlag] || ''}
+											onchange={(e) => handleClassFeatureChoiceSelection(choiceFlag, e.currentTarget.value)}
+											disabled={isAutoGranted}
+										>
+											<option value="">-- Select an option --</option>
+											{#each choiceInfo.choices as choice}
+												<option value={choice.value}>
+													{choice.label}
+												</option>
+											{/each}
+										</select>
+									</div>
+								{/each}
+							</div>
+						{/if}
+
 						{#if needsKeyAbilitySelection}
 							<div class="subsection">
 								<h3 class="subsection-title">Key Ability</h3>
@@ -1240,18 +1740,24 @@
 </div>
 
 <!-- Class Change Confirmation Modal -->
-<Modal open={showClassChangeModal} onClose={handleCancelClassChange} title="Change Class?">
+<Modal open={showClassChangeModal} onClose={handleCancelClassChange} title="⚠️ Change Class?">
 	<div class="class-change-modal-content">
 		<p class="warning-text">
-			Changing your class from <strong>{selectedClass?.name}</strong> to <strong>{pendingClassChange?.name}</strong> will reset the following:
+			Changing your class from <strong>{selectedClass?.name}</strong> to <strong>{pendingClassChange?.name}</strong> will <strong>permanently reset</strong> the following to baseline:
 		</p>
 		<ul class="reset-list">
-			<li>All class feats</li>
-			<li>All spellcasting choices (known spells, prepared spells, spell slots)</li>
-			<li>Trained skill selections</li>
+			<li><strong>Class archetype</strong> (if selected)</li>
+			<li><strong>Subclass</strong> and <strong>key ability</strong></li>
+			<li><strong>All class feats</strong> (level 1+)</li>
+			<li><strong>All class features</strong> (e.g., Hybrid Study, Arcane School, Barbarian Instinct, etc.)</li>
+			<li><strong>All spellcasting data</strong> (known spells, prepared spells, cantrips, spell slots, focus points)</li>
+			<li><strong>All trained skill selections</strong></li>
 		</ul>
+		<p class="preserve-text">
+			<strong>Will NOT be reset:</strong> Ancestry, Background, Heritage, Ancestry/Skill/General Feats, Equipment, Wealth
+		</p>
 		<p class="confirm-text">
-			Are you sure you want to continue?
+			<strong>This cannot be undone.</strong> Are you sure you want to continue?
 		</p>
 	</div>
 
@@ -1262,6 +1768,83 @@
 		</div>
 	{/snippet}
 </Modal>
+
+<!-- Class Archetype Details Modal -->
+{#if archetypeForDetails}
+	<Modal bind:open={archetypeDetailModalOpen} onClose={closeArchetypeDetails} title={archetypeForDetails.name} size="lg">
+		<div class="archetype-detail">
+			<!-- Rarity Badge -->
+			{#if archetypeForDetails.rarity && archetypeForDetails.rarity !== 'common'}
+				<div class="archetype-detail-header">
+					<span class="archetype-rarity rarity-{archetypeForDetails.rarity}">{archetypeForDetails.rarity}</span>
+					{#if archetypeForDetails.isUniversal}
+						<span class="universal-badge">Universal (Any Spellcaster)</span>
+					{:else if archetypeForDetails.baseClass}
+						<span class="base-class-badge">{archetypeForDetails.baseClass} Archetype</span>
+					{/if}
+				</div>
+			{/if}
+
+			<!-- Description -->
+			<div class="detail-section">
+				<h4>Description</h4>
+				<RichDescription content={archetypeForDetails.description} />
+			</div>
+
+			<!-- Suppressed Features -->
+			{#if archetypeForDetails.suppressedFeatures.length > 0}
+				<div class="detail-section">
+					<h4>Replaces Base Class Features</h4>
+					<div class="suppressed-features-detail">
+						<p class="warning-note">This archetype replaces the following base class features:</p>
+						<ul class="suppressed-list">
+							{#each archetypeForDetails.suppressedFeatures as feature}
+								<li>{feature}</li>
+							{/each}
+						</ul>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Traits -->
+			{#if archetypeForDetails.traits && archetypeForDetails.traits.length > 0}
+				<div class="detail-section">
+					<h4>Traits</h4>
+					<div class="trait-list">
+						{#each archetypeForDetails.traits as trait}
+							<span class="trait-badge">{trait}</span>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Source -->
+			<div class="detail-section">
+				<h4>Source</h4>
+				<p>
+					{archetypeForDetails.source.title}
+					{#if archetypeForDetails.source.remaster}
+						<span class="remaster-badge">Remaster</span>
+					{/if}
+				</p>
+			</div>
+		</div>
+
+		{#snippet footer()}
+			<Button variant="secondary" onclick={closeArchetypeDetails}>Close</Button>
+			{#if !selectedClassArchetype && archetypeForDetails}
+				<Button variant="primary" onclick={() => {
+					if (archetypeForDetails) {
+						handleClassArchetypeSelect(archetypeForDetails);
+						closeArchetypeDetails();
+					}
+				}}>
+					Select {archetypeForDetails.name}
+				</Button>
+			{/if}
+		{/snippet}
+	</Modal>
+{/if}
 
 <style>
 	.page-content {
@@ -1425,11 +2008,30 @@
 		gap: 1.5rem;
 	}
 
-	.heritage-choice {
+	.heritage-choice,
+	.class-feature-choice {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
 		margin-bottom: 1rem;
+	}
+
+	.auto-granted-badge {
+		display: inline-block;
+		margin-left: 0.5rem;
+		padding: 0.25rem 0.5rem;
+		background-color: rgba(92, 124, 250, 0.1);
+		color: var(--link-color, #5c7cfa);
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.choice-select:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		background-color: var(--surface-2, #f5f5f5);
 	}
 
 	.choice-label {
@@ -1580,34 +2182,329 @@
 	.class-change-modal-content {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 1.25rem;
 	}
 
 	.warning-text {
 		margin: 0;
+		padding: 1rem;
+		background-color: rgba(250, 82, 82, 0.1);
+		border-left: 4px solid var(--danger-color, #fa5252);
+		border-radius: 4px;
 		color: var(--text-primary, #1a1a1a);
 		line-height: 1.6;
+		font-size: 1rem;
 	}
 
 	.reset-list {
 		margin: 0;
 		padding-left: 1.5rem;
-		color: var(--text-secondary, #666666);
+		color: var(--text-primary, #1a1a1a);
+		background-color: var(--surface-2, #f8f9fa);
+		padding: 1rem 1.5rem;
+		border-radius: 4px;
 	}
 
 	.reset-list li {
 		margin-bottom: 0.5rem;
+		line-height: 1.5;
+	}
+
+	.preserve-text {
+		margin: 0;
+		padding: 0.75rem;
+		background-color: rgba(55, 178, 77, 0.1);
+		border-left: 4px solid var(--success-color, #37b24d);
+		border-radius: 4px;
+		color: var(--text-primary, #1a1a1a);
+		line-height: 1.6;
+		font-size: 0.9375rem;
 	}
 
 	.confirm-text {
 		margin: 0;
+		padding: 0.75rem;
 		font-weight: 600;
-		color: var(--text-primary, #1a1a1a);
+		color: var(--danger-color, #fa5252);
+		background-color: rgba(250, 82, 82, 0.05);
+		border-radius: 4px;
+		text-align: center;
+		font-size: 1rem;
 	}
 
 	.modal-actions {
 		display: flex;
 		gap: 0.75rem;
 		justify-content: flex-end;
+	}
+
+	/* Class Archetype Styles */
+	.class-archetype-section {
+		padding: 1.5rem;
+		background-color: rgba(92, 124, 250, 0.05);
+		border-left: 4px solid var(--link-color, #5c7cfa);
+		border-radius: 8px;
+	}
+
+	.selected-archetype {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 1rem;
+		background-color: var(--surface-1, #ffffff);
+		border: 2px solid var(--link-color, #5c7cfa);
+		border-radius: 8px;
+	}
+
+	.archetype-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.archetype-name {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--link-color, #5c7cfa);
+	}
+
+	.archetype-description-card {
+		position: relative;
+		margin: 0.75rem 0;
+		padding: 1rem;
+		background-color: var(--surface-1, #ffffff);
+		border: 1px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+	}
+
+	.archetype-description-content {
+		max-height: 4.8em; /* ~3 lines at 1.6 line-height */
+		overflow: hidden;
+		line-height: 1.6;
+		color: var(--text-primary, #1a1a1a);
+		position: relative;
+		transition: max-height var(--transition-normal);
+	}
+
+	.archetype-description-card:not(.expanded) .archetype-description-content::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 2em;
+		background: linear-gradient(to bottom, transparent, var(--surface-1, #ffffff));
+	}
+
+	.archetype-description-card.expanded .archetype-description-content {
+		max-height: none;
+	}
+
+	.read-more-button {
+		display: block;
+		width: 100%;
+		margin-top: 0.75rem;
+		padding: 0.5rem;
+		background: none;
+		border: none;
+		color: var(--link-color, #5c7cfa);
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		text-align: center;
+		transition: all var(--transition-fast);
+	}
+
+	.read-more-button:hover {
+		color: var(--link-hover-color, #4c6ef5);
+		text-decoration: underline;
+	}
+
+	.read-more-button:focus {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+
+	.suppressed-features {
+		padding: 0.75rem;
+		background-color: rgba(255, 193, 7, 0.1);
+		border-left: 3px solid var(--warning-color, #ffc107);
+		border-radius: 4px;
+		font-size: 0.9375rem;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.archetype-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+	.archetype-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem;
+		background-color: var(--surface-1, #ffffff);
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 8px;
+		transition: all var(--transition-fast);
+	}
+
+	.archetype-card:hover {
+		border-color: var(--link-color, #5c7cfa);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.archetype-card-name {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.archetype-rarity {
+		display: inline-block;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.rarity-uncommon {
+		background-color: rgba(40, 167, 69, 0.2);
+		color: var(--success-color, #28a745);
+	}
+
+	.rarity-rare {
+		background-color: rgba(0, 123, 255, 0.2);
+		color: #007bff;
+	}
+
+	.archetype-card-description {
+		flex-grow: 1;
+		font-size: 0.875rem;
+		line-height: 1.6;
+		color: var(--text-secondary, #666666);
+	}
+
+	.archetype-card-actions {
+		display: flex;
+		gap: 0.5rem;
+		margin-top: auto;
+	}
+
+	/* Archetype Detail Modal */
+	.archetype-detail {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.archetype-detail-header {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.universal-badge {
+		padding: 0.375rem 0.75rem;
+		background-color: rgba(92, 124, 250, 0.1);
+		color: var(--link-color, #5c7cfa);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.base-class-badge {
+		padding: 0.375rem 0.75rem;
+		background-color: var(--surface-2, #f5f5f5);
+		color: var(--text-secondary, #666666);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-transform: capitalize;
+	}
+
+	.detail-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.detail-section h4 {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		padding-bottom: 0.5rem;
+		border-bottom: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.suppressed-features-detail {
+		padding: 1rem;
+		background-color: rgba(255, 193, 7, 0.1);
+		border-left: 4px solid var(--warning-color, #ffc107);
+		border-radius: 4px;
+	}
+
+	.warning-note {
+		margin: 0 0 0.75rem 0;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.suppressed-list {
+		margin: 0;
+		padding-left: 1.5rem;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.suppressed-list li {
+		margin-bottom: 0.25rem;
+	}
+
+	.trait-list {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.trait-badge {
+		padding: 0.375rem 0.75rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border: 1px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: var(--text-secondary, #666666);
+	}
+
+	.remaster-badge {
+		display: inline-block;
+		padding: 0.25rem 0.5rem;
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		margin-left: 0.5rem;
+	}
+
+	/* Mobile Adjustments */
+	@media (max-width: 768px) {
+		.archetype-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.archetype-card-actions {
+			flex-direction: column;
+		}
 	}
 </style>

@@ -40,6 +40,8 @@ export interface Character {
 		name: string | null;
 		subclass: string | null;
 		keyAbility: string | null;
+		/** Class archetype ID (e.g., "runelord", "bloodrager") */
+		classArchetype: string | null;
 	};
 
 	/** Ability scores (base 10, modified by boosts/flaws) */
@@ -82,10 +84,10 @@ export interface Character {
 
 	/** Selected feats by category and level */
 	feats: {
-		ancestry: Array<{ level: number; featId: string; name: string }>;
-		class: Array<{ level: number; featId: string; name: string }>;
-		skill: Array<{ level: number; featId: string; name: string }>;
-		general: Array<{ level: number; featId: string; name: string }>;
+		ancestry: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
+		class: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
+		skill: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
+		general: Array<{ level: number; featId: string; name: string; autoGranted?: boolean }>;
 	};
 
 	/** Active class features (automatic based on class and level) */
@@ -232,7 +234,8 @@ export function createNewCharacter(): Character {
 			id: null,
 			name: null,
 			subclass: null,
-			keyAbility: null
+			keyAbility: null,
+			classArchetype: null
 		},
 		abilities: {
 			strength: 10,
@@ -559,7 +562,7 @@ function createCharacterStore() {
 		setClass: (id: string, name: string, keyAbility: string | null = null) => {
 			update((char) => ({
 				...char,
-				class: { id, name, subclass: null, keyAbility }
+				class: { id, name, subclass: null, keyAbility, classArchetype: null }
 			}));
 		},
 
@@ -599,13 +602,17 @@ function createCharacterStore() {
 			category: keyof Character['feats'],
 			level: number,
 			featId: string,
-			name: string
+			name: string,
+			autoGranted?: boolean
 		) => {
 			update((char) => ({
 				...char,
 				feats: {
 					...char.feats,
-					[category]: [...char.feats[category], { level, featId, name }]
+					[category]: [
+						...char.feats[category],
+						{ level, featId, name, ...(autoGranted && { autoGranted: true }) }
+					]
 				}
 			}));
 		},
@@ -1271,15 +1278,28 @@ function createCharacterStore() {
 
 		/**
 		 * Reset all class-related data (when changing classes)
-		 * Clears class feats, spellcasting, and class-specific rule selections
+		 * Clears class feats, spellcasting, class features, skills, and class-specific rule selections
+		 * Does NOT clear: ancestry, background, general/skill/ancestry feats, equipment, wealth
 		 */
 		resetClassData: () => {
 			update((char) => ({
 				...char,
+				// Clear class information
+				class: {
+					id: null,
+					name: null,
+					subclass: null,
+					keyAbility: null,
+					classArchetype: null
+				},
+				// Clear class feats only (keep ancestry, skill, general feats)
 				feats: {
 					...char.feats,
-					class: [] // Clear class feats
+					class: []
 				},
+				// Clear class features
+				classFeatures: [],
+				// Clear all spellcasting data
 				spellcasting: {
 					knownSpells: [],
 					learnedSpells: [],
@@ -1312,12 +1332,44 @@ function createCharacterStore() {
 					survival: 0,
 					thievery: 0
 				},
-				// Clear class-related rule selections
+				// Clear ALL class-related rule selections (keep only ancestry, background, heritage, and planning selections)
 				ruleSelections: Object.fromEntries(
 					Object.entries(char.ruleSelections).filter(
-						([key]) => !key.startsWith('trained-skills')
+						([key]) =>
+							key.startsWith('ancestry-boost-') ||
+							key.startsWith('background-boost-') ||
+							key.startsWith('heritage-') ||
+							key.startsWith('plan-level-') ||
+							key.startsWith('free-boost-')
 					)
 				)
+			}));
+		},
+
+		/**
+		 * Set the character's class archetype
+		 * @param archetypeId - The class archetype ID (e.g., "runelord", "bloodrager")
+		 */
+		setClassArchetype: (archetypeId: string) => {
+			update((char) => ({
+				...char,
+				class: {
+					...char.class,
+					classArchetype: archetypeId
+				}
+			}));
+		},
+
+		/**
+		 * Clear the character's class archetype
+		 */
+		clearClassArchetype: () => {
+			update((char) => ({
+				...char,
+				class: {
+					...char.class,
+					classArchetype: null
+				}
 			}));
 		},
 
