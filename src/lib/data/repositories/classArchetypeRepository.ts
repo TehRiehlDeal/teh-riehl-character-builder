@@ -63,6 +63,30 @@ export async function loadAllClassArchetypes(): Promise<ClassArchetype[]> {
 }
 
 /**
+ * List of spellcasting classes that can use universal spellcaster archetypes
+ */
+const SPELLCASTING_CLASSES = [
+	'animist',
+	'bard',
+	'cleric',
+	'druid',
+	'magus',
+	'oracle',
+	'psychic',
+	'sorcerer',
+	'summoner',
+	'witch',
+	'wizard'
+];
+
+/**
+ * Check if a class is a spellcaster
+ */
+function isSpellcastingClass(className: string): boolean {
+	return SPELLCASTING_CLASSES.includes(className.toLowerCase());
+}
+
+/**
  * Get class archetypes for a specific base class
  * @param baseClassName - The name of the base class (e.g., "Wizard", "Barbarian")
  * @returns Array of class archetypes compatible with the base class
@@ -74,9 +98,9 @@ export async function getClassArchetypesForClass(
 	const normalizedClassName = baseClassName.toLowerCase();
 
 	return allArchetypes.filter((archetype) => {
-		// Include universal archetypes
+		// Include universal archetypes only for spellcasting classes
 		if (archetype.isUniversal) {
-			return true;
+			return isSpellcastingClass(normalizedClassName);
 		}
 
 		// Include archetypes specific to this class
