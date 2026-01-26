@@ -359,14 +359,27 @@
 					if (!grantedFeature) continue;
 
 					// Check if this granted feature should be in this choice set
-					// by checking if it already exists or if it has matching tags
 					const alreadyExists = modifiedInfo.choices.some((c) => c.value === grantedFeature.id);
 					if (!alreadyExists) {
-						// Check if the granted feature belongs to this choice set
-						// For example, School of Thassilonian Rune Magic should be added to arcaneSchool
-						// We can check this by seeing if it would match the filter
-						// For now, we'll add it if it has the base class trait
-						if (flag === 'arcaneSchool' && grantedFeature.traits.includes('wizard')) {
+						// For tag-based choices, check if the granted feature has the filter tag
+						// or has the same base class trait as the existing choices
+						let shouldAdd = false;
+
+						if (info.choiceType === 'tag-based' && info.filterTag) {
+							// Check if granted feature has the filter tag
+							if (grantedFeature.traits.includes(info.filterTag)) {
+								shouldAdd = true;
+							} else {
+								// Even if it doesn't have the exact tag, add it if it has the base class trait
+								// and there are already choices in this set (meaning it's a valid choice type)
+								const baseClassTrait = $character.class.name?.toLowerCase();
+								if (baseClassTrait && grantedFeature.traits.includes(baseClassTrait) && modifiedInfo.choices.length > 0) {
+									shouldAdd = true;
+								}
+							}
+						}
+
+						if (shouldAdd) {
 							modifiedInfo.choices.push({
 								value: grantedFeature.id,
 								label: grantedFeature.name
@@ -582,26 +595,38 @@
 			const classFeature = allClassFeatures.find((cf) => cf.name === featureName);
 			if (!classFeature) continue;
 
-			// The granted feature is an option within a parent choice set
-			// Find which choice set this feature belongs to
-			const parentChoice = Object.entries(classFeatureChoiceInfo).find(([flag, info]) => {
-				return info.choices.some((choice) => choice.value === classFeature.id);
-			});
+			// Find the parent class feature that has a ChoiceSet containing this granted feature
+			// For example, find "Arcane School" which has a ChoiceSet that should include
+			// "School of Thassilonian Rune Magic"
+			for (const parentFeature of allClassFeatures) {
+				const choiceInfo = extractChoiceInfo(parentFeature);
+				if (choiceInfo.hasChoice && choiceInfo.choiceFlag) {
+					// Check if this granted feature belongs to this choice set based on traits
+					if (choiceInfo.choiceType === 'tag-based' && choiceInfo.filterTag) {
+						// Check if the granted feature has the filter tag or base class trait
+						const hasFilterTag = classFeature.traits.includes(choiceInfo.filterTag);
+						const baseClassTrait = $character.class.name?.toLowerCase();
+						const hasBaseClassTrait = baseClassTrait && classFeature.traits.includes(baseClassTrait);
 
-			if (parentChoice) {
-				const [choiceFlag, choiceInfo] = parentChoice;
-				const choiceValue = classFeature.id;
+						if (hasFilterTag || hasBaseClassTrait) {
+							// This granted feature belongs to this choice set
+							const choiceFlag = choiceInfo.choiceFlag;
+							const choiceValue = classFeature.id;
 
-				classFeatureChoiceSelections[choiceFlag] = choiceValue;
+							classFeatureChoiceSelections[choiceFlag] = choiceValue;
 
-				// Save to character store
-				character.update((char) => ({
-					...char,
-					ruleSelections: {
-						...char.ruleSelections,
-						[choiceFlag]: choiceValue
+							// Save to character store
+							character.update((char) => ({
+								...char,
+								ruleSelections: {
+									...char.ruleSelections,
+									[choiceFlag]: choiceValue
+								}
+							}));
+							break; // Move to next granted feature
+						}
 					}
-				}));
+				}
 			}
 		}
 
