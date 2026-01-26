@@ -5,19 +5,44 @@
 	interface Props {
 		/** All available equipment */
 		equipment: Equipment[];
-		/** Callback when equipment is added to inventory */
+		/** Callback when equipment is added to inventory (free/loot) */
 		// eslint-disable-next-line no-unused-vars
 		onAddToInventory?: (equipment: Equipment, quantity: number) => void;
+		/** Callback when equipment is purchased (costs money) */
+		// eslint-disable-next-line no-unused-vars
+		onPurchase?: (equipment: Equipment, quantity: number) => void;
+		/** Initial type filter (pre-filter based on active tab) */
+		initialTypeFilter?: string;
 	}
 
-	let { equipment, onAddToInventory }: Props = $props();
+	let { equipment, onAddToInventory, onPurchase, initialTypeFilter = 'all' }: Props = $props();
 
 	let searchQuery = $state('');
-	let selectedType = $state<string>('all');
+	let selectedType = $state<string>(initialTypeFilter);
 	let selectedLevel = $state<string>('all');
 	let selectedRarity = $state<string>('all');
 	let selectedEquipment = $state<Equipment | null>(null);
 	let showDetail = $state(false);
+
+	// Pagination state
+	let currentPage = $state(1);
+	let itemsPerPage = $state(20);
+
+	// Update selected type when initialTypeFilter changes
+	$effect(() => {
+		selectedType = initialTypeFilter;
+	});
+
+	// Reset to page 1 when filters change
+	$effect(() => {
+		// Dependencies: search, filters
+		void searchQuery;
+		void selectedType;
+		void selectedLevel;
+		void selectedRarity;
+		void itemsPerPage;
+		currentPage = 1;
+	});
 
 	// Filter equipment based on search and filters
 	const filteredEquipment = $derived.by(() => {
@@ -49,6 +74,59 @@
 		return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
 	});
 
+	// Calculate pagination
+	const totalPages = $derived(Math.ceil(filteredEquipment.length / itemsPerPage));
+	const startIndex = $derived((currentPage - 1) * itemsPerPage);
+	const endIndex = $derived(startIndex + itemsPerPage);
+	const paginatedEquipment = $derived(filteredEquipment.slice(startIndex, endIndex));
+
+	// Generate page numbers for pagination UI
+	const pageNumbers = $derived.by(() => {
+		const pages: (number | string)[] = [];
+		const maxVisible = 7; // Max page numbers to show
+
+		if (totalPages <= maxVisible) {
+			// Show all pages
+			for (let i = 1; i <= totalPages; i++) {
+				pages.push(i);
+			}
+		} else {
+			// Show first, last, current, and nearby pages with ellipsis
+			if (currentPage <= 3) {
+				// Near start
+				for (let i = 1; i <= 5; i++) {
+					pages.push(i);
+				}
+				pages.push('...');
+				pages.push(totalPages);
+			} else if (currentPage >= totalPages - 2) {
+				// Near end
+				pages.push(1);
+				pages.push('...');
+				for (let i = totalPages - 4; i <= totalPages; i++) {
+					pages.push(i);
+				}
+			} else {
+				// Middle
+				pages.push(1);
+				pages.push('...');
+				for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+					pages.push(i);
+				}
+				pages.push('...');
+				pages.push(totalPages);
+			}
+		}
+
+		return pages;
+	});
+
+	function goToPage(page: number) {
+		if (page >= 1 && page <= totalPages) {
+			currentPage = page;
+		}
+	}
+
 	function handleViewDetails(item: Equipment) {
 		selectedEquipment = item;
 		showDetail = true;
@@ -61,6 +139,10 @@
 
 	function handleAddToInventory(item: Equipment, quantity: number) {
 		onAddToInventory?.(item, quantity);
+	}
+
+	function handlePurchase(item: Equipment, quantity: number) {
+		onPurchase?.(item, quantity);
 	}
 
 	function getEquipmentIcon(item: Equipment): string {
@@ -152,7 +234,24 @@
 	<!-- Results -->
 	<div class="results-section">
 		<div class="results-header">
-			<span class="results-count">{filteredEquipment.length} items found</span>
+			<div class="results-info">
+				<span class="results-count">
+					{filteredEquipment.length} items found
+					{#if totalPages > 1}
+						(page {currentPage} of {totalPages})
+					{/if}
+				</span>
+			</div>
+
+			<div class="items-per-page">
+				<label for="items-per-page">Items per page:</label>
+				<select id="items-per-page" bind:value={itemsPerPage}>
+					<option value={10}>10</option>
+					<option value={20}>20</option>
+					<option value={50}>50</option>
+					<option value={100}>100</option>
+				</select>
+			</div>
 		</div>
 
 		{#if filteredEquipment.length === 0}
@@ -162,7 +261,7 @@
 			</div>
 		{:else}
 			<div class="equipment-grid">
-				{#each filteredEquipment as item}
+				{#each paginatedEquipment as item}
 					<div class="equipment-card">
 						<div class="card-header">
 							<span class="card-icon" aria-hidden="true">{getEquipmentIcon(item)}</span>
@@ -220,15 +319,102 @@
 							</button>
 							<button
 								type="button"
-								class="btn-add"
+								class="btn-add-free"
 								onclick={() => handleAddToInventory(item, 1)}
+								title="Add to inventory (free - loot)"
 							>
-								Add to Inventory
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path
+										d="M12 5v14m-7-7h14"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+								Add
+							</button>
+							<button
+								type="button"
+								class="btn-buy"
+								onclick={() => handlePurchase(item, 1)}
+								title="Purchase with gold"
+							>
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path
+										d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+								Buy
 							</button>
 						</div>
 					</div>
 				{/each}
 			</div>
+
+			<!-- Pagination Controls -->
+			{#if totalPages > 1}
+				<div class="pagination">
+					<button
+						class="pagination-btn"
+						disabled={currentPage === 1}
+						onclick={() => goToPage(currentPage - 1)}
+						aria-label="Previous page"
+					>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path
+								d="M15 18l-6-6 6-6"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
+						Previous
+					</button>
+
+					<div class="pagination-numbers">
+						{#each pageNumbers as pageNum}
+							{#if pageNum === '...'}
+								<span class="pagination-ellipsis">...</span>
+							{:else}
+								{@const page = pageNum as number}
+								<button
+									class="pagination-number"
+									class:active={currentPage === page}
+									onclick={() => goToPage(page)}
+									aria-label="Go to page {page}"
+									aria-current={currentPage === page ? 'page' : undefined}
+								>
+									{page}
+								</button>
+							{/if}
+						{/each}
+					</div>
+
+					<button
+						class="pagination-btn"
+						disabled={currentPage === totalPages}
+						onclick={() => goToPage(currentPage + 1)}
+						aria-label="Next page"
+					>
+						Next
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path
+								d="M9 18l6-6-6-6"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
+					</button>
+				</div>
+			{/if}
 		{/if}
 	</div>
 </div>
@@ -241,6 +427,10 @@
 	showAddButton={true}
 	onAddToInventory={(equipment, quantity) => {
 		handleAddToInventory(equipment, quantity);
+		handleCloseDetail();
+	}}
+	onPurchase={(equipment, quantity) => {
+		handlePurchase(equipment, quantity);
 		handleCloseDetail();
 	}}
 />
@@ -341,13 +531,50 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 1rem;
 		padding: 0.5rem 0;
+		margin-bottom: 1rem;
+	}
+
+	.results-info {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
 	}
 
 	.results-count {
 		font-size: 0.875rem;
 		font-weight: 600;
 		color: var(--text-secondary, #666666);
+	}
+
+	.items-per-page {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #666666);
+	}
+
+	.items-per-page label {
+		font-weight: 500;
+	}
+
+	.items-per-page select {
+		padding: 0.375rem 0.5rem;
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-family: inherit;
+		background-color: var(--surface-1, #ffffff);
+		color: var(--text-primary, #1a1a1a);
+		cursor: pointer;
+	}
+
+	.items-per-page select:focus {
+		outline: none;
+		border-color: var(--link-color, #5c7cfa);
 	}
 
 	.empty-results {
@@ -463,15 +690,22 @@
 
 	.card-actions {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.5rem;
 		padding-top: 0.75rem;
 		border-top: 1px solid var(--border-color, #e0e0e0);
+		flex-wrap: wrap;
 	}
 
 	.btn-view,
-	.btn-add {
+	.btn-add-free,
+	.btn-buy {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.375rem;
 		flex: 1;
-		padding: 0.625rem 1rem;
+		min-width: 80px;
+		padding: 0.625rem 0.75rem;
 		border: 2px solid var(--border-color, #e0e0e0);
 		border-radius: 6px;
 		font-family: inherit;
@@ -484,6 +718,7 @@
 	.btn-view {
 		background-color: var(--surface-2, #f5f5f5);
 		color: var(--text-primary, #1a1a1a);
+		flex: 1 1 100%;
 	}
 
 	.btn-view:hover {
@@ -491,21 +726,133 @@
 		border-color: var(--text-secondary, #666666);
 	}
 
-	.btn-add {
+	.btn-add-free {
+		background-color: var(--success-color, #28a745);
+		color: white;
+		border-color: var(--success-color, #28a745);
+	}
+
+	.btn-add-free:hover {
+		background-color: #218838;
+		border-color: #218838;
+	}
+
+	.btn-buy {
 		background-color: var(--link-color, #5c7cfa);
 		color: white;
 		border-color: var(--link-color, #5c7cfa);
 	}
 
-	.btn-add:hover {
+	.btn-buy:hover {
 		background-color: #4c6ef5;
 		border-color: #4c6ef5;
 	}
 
 	.btn-view:focus-visible,
-	.btn-add:focus-visible {
+	.btn-add-free:focus-visible,
+	.btn-buy:focus-visible {
 		outline: 2px solid var(--focus-color, #5c7cfa);
 		outline-offset: 2px;
+	}
+
+	.btn-add-free svg,
+	.btn-buy svg {
+		flex-shrink: 0;
+	}
+
+	/* Pagination */
+	.pagination {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-top: 2rem;
+		padding-top: 1.5rem;
+		border-top: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.pagination-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.625rem 1rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-family: inherit;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-primary, #1a1a1a);
+		cursor: pointer;
+		transition: all var(--transition-fast, 0.2s);
+	}
+
+	.pagination-btn:hover:not(:disabled) {
+		background-color: var(--surface-3, #e0e0e0);
+		border-color: var(--link-color, #5c7cfa);
+	}
+
+	.pagination-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.pagination-btn:focus-visible {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	.pagination-numbers {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.pagination-number {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 40px;
+		height: 40px;
+		padding: 0.5rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-family: inherit;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-primary, #1a1a1a);
+		cursor: pointer;
+		transition: all var(--transition-fast, 0.2s);
+	}
+
+	.pagination-number:hover {
+		background-color: var(--surface-3, #e0e0e0);
+		border-color: var(--link-color, #5c7cfa);
+	}
+
+	.pagination-number.active {
+		background-color: var(--link-color, #5c7cfa);
+		border-color: var(--link-color, #5c7cfa);
+		color: white;
+		font-weight: 600;
+	}
+
+	.pagination-number:focus-visible {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	.pagination-ellipsis {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 40px;
+		height: 40px;
+		padding: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #666666);
+		user-select: none;
 	}
 
 	/* Mobile */
@@ -517,11 +864,37 @@
 		.filter-grid {
 			grid-template-columns: 1fr;
 		}
+
+		.results-header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.items-per-page {
+			width: 100%;
+			justify-content: space-between;
+		}
+
+		.pagination {
+			flex-wrap: wrap;
+		}
+
+		.pagination-btn {
+			font-size: 0.8125rem;
+			padding: 0.5rem 0.75rem;
+		}
+
+		.pagination-number {
+			min-width: 36px;
+			height: 36px;
+		}
 	}
 
 	/* Reduced motion */
 	@media (prefers-reduced-motion: reduce) {
-		.equipment-card {
+		.equipment-card,
+		.pagination-btn,
+		.pagination-number {
 			transition: none;
 		}
 	}
