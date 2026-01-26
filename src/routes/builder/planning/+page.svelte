@@ -68,6 +68,7 @@
 
 	// Planning selections - stored per level
 	let featSelections = $state<Record<number, { classFeat?: string; freeArchetypeFeat?: string; ancestryFeat?: string; skillFeat?: string; generalFeat?: string }>>({});
+	let autoGrantedFeats = $state<Record<number, { classFeat?: boolean; ancestryFeat?: boolean; skillFeat?: boolean; generalFeat?: boolean }>>({});
 	let abilityBoostSelections = $state<Record<number, string[]>>({});
 	let skillIncreaseSelections = $state<Record<number, string>>({});
 	let classFeatureChoiceSelections = $state<Record<string, string>>({});  // Maps choiceFlag to selected value
@@ -141,6 +142,12 @@
 					featSelections[feat.level] = {};
 				}
 				featSelections[feat.level].ancestryFeat = feat.featId;
+				if (feat.autoGranted) {
+					if (!autoGrantedFeats[feat.level]) {
+						autoGrantedFeats[feat.level] = {};
+					}
+					autoGrantedFeats[feat.level].ancestryFeat = true;
+				}
 			});
 
 			// Load class feats
@@ -149,6 +156,12 @@
 					featSelections[feat.level] = {};
 				}
 				featSelections[feat.level].classFeat = feat.featId;
+				if (feat.autoGranted) {
+					if (!autoGrantedFeats[feat.level]) {
+						autoGrantedFeats[feat.level] = {};
+					}
+					autoGrantedFeats[feat.level].classFeat = true;
+				}
 			});
 
 			// Load skill feats
@@ -157,6 +170,12 @@
 					featSelections[feat.level] = {};
 				}
 				featSelections[feat.level].skillFeat = feat.featId;
+				if (feat.autoGranted) {
+					if (!autoGrantedFeats[feat.level]) {
+						autoGrantedFeats[feat.level] = {};
+					}
+					autoGrantedFeats[feat.level].skillFeat = true;
+				}
 			});
 
 			// Load general feats
@@ -448,13 +467,24 @@
 						<div class="level-selections">
 					<!-- Class Feat -->
 					{#if levelPlan.featSlots.classFeat}
-						<PlanningFeatSelector
-							label="Class Feat"
-							availableFeats={featsByLevel[levelPlan.level].class}
-							selectedFeatId={selections.classFeat}
-							onSelect={(featId) => handleFeatSelection(levelPlan.level, 'classFeat', featId)}
-							loading={builderData.featsLoading}
-						/>
+						{@const isAutoGranted = autoGrantedFeats[levelPlan.level]?.classFeat}
+						{#if isAutoGranted}
+							<div class="auto-granted-feat-notice">
+								<span class="auto-granted-label">Class Feat (Auto-granted by archetype):</span>
+								{@const feat = builderData.feats.find(f => f.id === selections.classFeat)}
+								{#if feat}
+									<span class="auto-granted-feat-name">{feat.name}</span>
+								{/if}
+							</div>
+						{:else}
+							<PlanningFeatSelector
+								label="Class Feat"
+								availableFeats={featsByLevel[levelPlan.level].class}
+								selectedFeatId={selections.classFeat}
+								onSelect={(featId) => handleFeatSelection(levelPlan.level, 'classFeat', featId)}
+								loading={builderData.featsLoading}
+							/>
+						{/if}
 					{/if}
 
 					<!-- Free Archetype Feat (Variant Rule) -->
@@ -947,6 +977,31 @@
 		.ability-boost-grid {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	/* Auto-granted feat notice */
+	.auto-granted-feat-notice {
+		padding: 0.75rem;
+		background-color: rgba(55, 178, 77, 0.05);
+		border: 2px solid var(--success-color, #37b24d);
+		border-radius: 8px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.auto-granted-label {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--success-color, #37b24d);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.auto-granted-feat-name {
+		font-size: 1rem;
+		font-weight: 500;
+		color: var(--text-primary, #1a1a1a);
 	}
 
 	/* Reduced motion */

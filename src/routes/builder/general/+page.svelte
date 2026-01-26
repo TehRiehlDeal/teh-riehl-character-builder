@@ -318,26 +318,64 @@
 		classFeatureChoiceInfo = newChoiceInfo;
 	}
 
-	// Filter class feature choices based on archetype suppressions
+	// Filter class feature choices based on archetype suppressions and add granted features
 	const filteredClassFeatureChoiceInfo = $derived.by(() => {
 		if (!selectedClassArchetype) {
 			return classFeatureChoiceInfo;
 		}
 
 		const filtered: Record<string, ClassFeatureChoiceInfo> = {};
-		const suppressedNames = selectedClassArchetype.suppressedFeatures.map((uuid) =>
-			extractItemNameFromUUID(uuid)
-		);
 
+		// Get the flags of suppressed features by looking them up in allClassFeatures
+		const suppressedFlags = new Set<string>();
+		for (const suppressedUUID of selectedClassArchetype.suppressedFeatures) {
+			const suppressedName = extractItemNameFromUUID(suppressedUUID);
+			if (!suppressedName) continue;
+
+			// Find the class feature with this name
+			const suppressedFeature = allClassFeatures.find((cf) => cf.name === suppressedName);
+			if (suppressedFeature) {
+				// Extract the choice flag from this feature
+				const choiceInfo = extractChoiceInfo(suppressedFeature);
+				if (choiceInfo.choiceFlag) {
+					suppressedFlags.add(choiceInfo.choiceFlag);
+				}
+			}
+		}
+
+		// Filter out suppressed choices and add granted features to their parent choices
 		for (const [flag, info] of Object.entries(classFeatureChoiceInfo)) {
-			// Check if this choice relates to a suppressed feature
-			// For example, if "Arcane Thesis" is suppressed, don't show the thesis choice
-			const isSuppressed = suppressedNames.some(
-				(suppressedName) => suppressedName && flag.toLowerCase().includes(suppressedName.toLowerCase().replace(/ /g, '-'))
-			);
+			if (!suppressedFlags.has(flag)) {
+				// Clone the choice info to avoid mutating the original
+				const modifiedInfo = { ...info, choices: [...info.choices] };
 
-			if (!isSuppressed) {
-				filtered[flag] = info;
+				// Add granted features that belong to this choice set
+				const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+				for (const granted of grantedFeatures) {
+					const featureName = extractItemNameFromUUID(granted.uuid);
+					if (!featureName) continue;
+
+					const grantedFeature = allClassFeatures.find((cf) => cf.name === featureName);
+					if (!grantedFeature) continue;
+
+					// Check if this granted feature should be in this choice set
+					// by checking if it already exists or if it has matching tags
+					const alreadyExists = modifiedInfo.choices.some((c) => c.value === grantedFeature.id);
+					if (!alreadyExists) {
+						// Check if the granted feature belongs to this choice set
+						// For example, School of Thassilonian Rune Magic should be added to arcaneSchool
+						// We can check this by seeing if it would match the filter
+						// For now, we'll add it if it has the base class trait
+						if (flag === 'arcaneSchool' && grantedFeature.traits.includes('wizard')) {
+							modifiedInfo.choices.push({
+								value: grantedFeature.id,
+								label: grantedFeature.name
+							});
+						}
+					}
+				}
+
+				filtered[flag] = modifiedInfo;
 			}
 		}
 
@@ -353,8 +391,20 @@
 			const featureName = extractItemNameFromUUID(granted.uuid);
 			if (!featureName) return false;
 
-			// Check if the flag matches this feature
-			return choiceFlag.toLowerCase().includes(featureName.toLowerCase().replace(/ /g, '-'));
+			// Find the granted feature in allClassFeatures
+			const grantedClassFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!grantedClassFeature) return false;
+
+			// Check if this feature's parent has the choiceFlag
+			// The granted feature is a specific option within a choice set
+			// We need to find the parent feature that has the ChoiceSet rule
+			// For example, "School of Thassilonian Rune Magic" is a choice within "Arcane School"
+			// We can check if this feature has the tag that matches the choice filter
+			const parentChoice = Object.entries(classFeatureChoiceInfo).find(([flag, info]) => {
+				return info.choices.some((choice) => choice.id === grantedClassFeature.id);
+			});
+
+			return parentChoice?.[0] === choiceFlag;
 		});
 	}
 
