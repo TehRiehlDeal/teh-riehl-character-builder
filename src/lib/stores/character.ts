@@ -40,6 +40,8 @@ export interface Character {
 		name: string | null;
 		subclass: string | null;
 		keyAbility: string | null;
+		/** Class archetype ID (e.g., "runelord", "bloodrager") */
+		classArchetype: string | null;
 	};
 
 	/** Ability scores (base 10, modified by boosts/flaws) */
@@ -232,7 +234,8 @@ export function createNewCharacter(): Character {
 			id: null,
 			name: null,
 			subclass: null,
-			keyAbility: null
+			keyAbility: null,
+			classArchetype: null
 		},
 		abilities: {
 			strength: 10,
@@ -559,7 +562,7 @@ function createCharacterStore() {
 		setClass: (id: string, name: string, keyAbility: string | null = null) => {
 			update((char) => ({
 				...char,
-				class: { id, name, subclass: null, keyAbility }
+				class: { id, name, subclass: null, keyAbility, classArchetype: null }
 			}));
 		},
 
@@ -1318,6 +1321,33 @@ function createCharacterStore() {
 						([key]) => !key.startsWith('trained-skills')
 					)
 				)
+			}));
+		},
+
+		/**
+		 * Set the character's class archetype
+		 * @param archetypeId - The class archetype ID (e.g., "runelord", "bloodrager")
+		 */
+		setClassArchetype: (archetypeId: string) => {
+			update((char) => ({
+				...char,
+				class: {
+					...char.class,
+					classArchetype: archetypeId
+				}
+			}));
+		},
+
+		/**
+		 * Clear the character's class archetype
+		 */
+		clearClassArchetype: () => {
+			update((char) => ({
+				...char,
+				class: {
+					...char.class,
+					classArchetype: null
+				}
 			}));
 		},
 
