@@ -63,21 +63,63 @@ export async function loadAllClassArchetypes(): Promise<ClassArchetype[]> {
 }
 
 /**
- * List of spellcasting classes that can use universal spellcaster archetypes
+ * Classes with prepared spellcasting (for Flexible Spell Preparation)
+ * Requires: "prepares spells in spell slots using the same number of prepared spells per day"
+ */
+const PREPARED_SPELLCASTING_CLASSES = ['cleric', 'druid', 'witch', 'wizard', 'animist'];
+
+/**
+ * Classes with spontaneous spellcasting / spell repertoire (for Wellspring Magic)
+ * Requires: "casts spells with a spell repertoire"
+ */
+const SPONTANEOUS_SPELLCASTING_CLASSES = ['bard', 'oracle', 'sorcerer', 'psychic', 'summoner'];
+
+/**
+ * Classes with arcane or primal tradition (for Elemental Magic)
+ * Requires: "spellcasting class feature that chooses spells from the arcane or primal spell list"
+ */
+const ARCANE_OR_PRIMAL_CLASSES = [
+	'wizard', // arcane
+	'magus', // arcane
+	'druid', // primal
+	'sorcerer', // can be arcane or primal
+	'summoner', // can be arcane or primal
+	'witch' // can choose, often primal
+];
+
+/**
+ * All spellcasting classes (union of all above)
  */
 const SPELLCASTING_CLASSES = [
-	'animist',
-	'bard',
-	'cleric',
-	'druid',
-	'magus',
-	'oracle',
-	'psychic',
-	'sorcerer',
-	'summoner',
-	'witch',
-	'wizard'
+	...new Set([
+		...PREPARED_SPELLCASTING_CLASSES,
+		...SPONTANEOUS_SPELLCASTING_CLASSES,
+		...ARCANE_OR_PRIMAL_CLASSES
+	])
 ];
+
+/**
+ * Check if a class meets the prerequisites for a specific archetype
+ */
+function meetsArchetypePrerequisites(className: string, archetype: ClassArchetype): boolean {
+	const normalizedClassName = className.toLowerCase();
+
+	// Check prerequisites based on archetype name
+	switch (archetype.name) {
+		case 'Flexible Spell Preparation':
+			return PREPARED_SPELLCASTING_CLASSES.includes(normalizedClassName);
+
+		case 'Wellspring Magic':
+			return SPONTANEOUS_SPELLCASTING_CLASSES.includes(normalizedClassName);
+
+		case 'Elemental Magic':
+			return ARCANE_OR_PRIMAL_CLASSES.includes(normalizedClassName);
+
+		default:
+			// For non-universal archetypes, always return true (handled by base class check)
+			return true;
+	}
+}
 
 /**
  * Check if a class is a spellcaster
@@ -98,9 +140,12 @@ export async function getClassArchetypesForClass(
 	const normalizedClassName = baseClassName.toLowerCase();
 
 	return allArchetypes.filter((archetype) => {
-		// Include universal archetypes only for spellcasting classes
+		// Include universal archetypes only if the class meets prerequisites
 		if (archetype.isUniversal) {
-			return isSpellcastingClass(normalizedClassName);
+			return (
+				isSpellcastingClass(normalizedClassName) &&
+				meetsArchetypePrerequisites(normalizedClassName, archetype)
+			);
 		}
 
 		// Include archetypes specific to this class
