@@ -448,6 +448,80 @@
 		}
 	}
 
+	// Process embed placeholders and replace with actual content
+	$effect(() => {
+		if (!descriptionRef) return;
+
+		// Find all embed placeholders
+		const embeds = descriptionRef.querySelectorAll('.embed-placeholder');
+		if (embeds.length === 0) return;
+
+		// Process each embed
+		embeds.forEach(async (embed) => {
+			const compendium = embed.getAttribute('data-compendium');
+			const itemId = embed.getAttribute('data-item-id');
+
+			if (!compendium || !itemId) return;
+
+			try {
+				let embedContent = '';
+
+				// Load content based on compendium type
+				if (compendium === 'classfeatures') {
+					const { loadAllClassFeatures } = await import('$lib/data/repositories/classFeatureRepository');
+					const allClassFeatures = await loadAllClassFeatures();
+					const feature = allClassFeatures.find(cf => cf.id === itemId);
+					if (feature) {
+						embedContent = `<div class="embedded-content">
+							<h4 class="embed-title">${feature.name}</h4>
+							<div class="embed-description">${processDescription(feature.description)}</div>
+						</div>`;
+					}
+				} else if (compendium === 'actionspf2e' || compendium === 'actions') {
+					const allActions = await actionLoader.loadAll();
+					const action = allActions.find(a => a.id === itemId);
+					if (action) {
+						// Format action type if present
+						let actionInfo = '';
+						if (action.actionType) {
+							const actionCount = action.actionType === 'action' ? action.actions || 1 : null;
+							const actionDisplay = actionCount ? `<span class="action-glyph">${actionCount}</span>` : '';
+							actionInfo = actionDisplay;
+						}
+
+						embedContent = `<div class="embedded-content">
+							<h4 class="embed-title">${action.name} ${actionInfo}</h4>
+							<div class="embed-description">${processDescription(action.description)}</div>
+						</div>`;
+					}
+				} else if (compendium === 'familiar-abilities') {
+					// Familiar abilities are similar to feats
+					const allFeats = await featLoader.loadAll();
+					const ability = allFeats.find(f => f.id === itemId);
+					if (ability) {
+						embedContent = `<div class="embedded-content">
+							<h4 class="embed-title">${ability.name}</h4>
+							<div class="embed-description">${processDescription(ability.description)}</div>
+						</div>`;
+					}
+				}
+
+				// Replace placeholder with content
+				if (embedContent) {
+					const tempDiv = document.createElement('div');
+					tempDiv.innerHTML = embedContent;
+					embed.replaceWith(tempDiv.firstElementChild!);
+				} else {
+					console.warn(`Embedded content not found: ${compendium}.${itemId}`);
+					embed.remove();
+				}
+			} catch (error) {
+				console.error(`Failed to load embedded content: ${compendium}.${itemId}`, error);
+				embed.remove();
+			}
+		});
+	});
+
 	// Attach click handler when component mounts
 	$effect(() => {
 		if (descriptionRef) {
@@ -606,6 +680,41 @@
 		font-size: 0.875em;
 		font-weight: 600;
 		color: #2f9e44;
+	}
+
+	/* Style for embedded content */
+	.rich-description :global(.embedded-content) {
+		margin: 1rem 0;
+		padding: 0.75rem 1rem;
+		background-color: var(--surface-2, #f8f9fa);
+		border-left: 3px solid var(--link-color, #5c7cfa);
+		border-radius: 4px;
+	}
+
+	.rich-description :global(.embed-title) {
+		margin: 0 0 0.5rem 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.rich-description :global(.embed-title .action-glyph) {
+		margin-left: 0.25rem;
+		font-size: 0.875em;
+	}
+
+	.rich-description :global(.embed-description) {
+		margin: 0;
+		font-size: 0.9375rem;
+		color: var(--text-secondary, #4a4a4a);
+	}
+
+	.rich-description :global(.embed-description p:first-child) {
+		margin-top: 0;
+	}
+
+	.rich-description :global(.embed-description p:last-child) {
+		margin-bottom: 0;
 	}
 
 	/* Preserve existing HTML formatting */
