@@ -16,6 +16,7 @@
 	import RichDescription from '$lib/components/common/RichDescription.svelte';
 	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
 	import { extractChoiceInfo, getCompleteChoiceInfo, type ClassFeatureChoiceInfo } from '$lib/utils/classFeatureChoices';
+	import { getExcerpt } from '$lib/utils/descriptionParser';
 	import { getClassArchetypesForClass } from '$lib/data/repositories/classArchetypeRepository';
 	import type { ClassArchetype } from '$lib/data/types/app';
 	import { extractGrantedItems, extractItemNameFromUUID, getImmediateClassFeatures, getDedicationFeat } from '$lib/utils/classArchetypeUtils';
@@ -33,6 +34,7 @@
 	let freeAbilityBoosts: (string | null)[] = $state([null, null, null, null]);
 	let trainedSkills: string[] = $state([]);
 	let heritageChoices: Record<string, string> = $state({}); // Key: flag name, Value: selected value
+	let archetypeDescriptionExpanded = $state(false); // Track if archetype description is expanded
 	let classFeatureChoiceSelections = $state<Record<string, string>>({}); // Maps choiceFlag to selected value
 	let allClassFeatures = $state<ClassFeature[]>([]);
 	let classFeatureChoiceInfo = $state<Record<string, ClassFeatureChoiceInfo>>({});
@@ -391,6 +393,24 @@
 			}
 		}
 
+		// Also check if any granted features have their OWN choices (e.g., School of Thassilonian Rune Magic has a sin choice)
+		const grantedFeatures = getImmediateClassFeatures(selectedClassArchetype);
+		for (const granted of grantedFeatures) {
+			const featureName = extractItemNameFromUUID(granted.uuid);
+			if (!featureName) continue;
+
+			const grantedFeature = allClassFeatures.find((cf) => cf.name === featureName);
+			if (!grantedFeature) continue;
+
+			const grantedChoiceInfo = extractChoiceInfo(grantedFeature);
+			if (grantedChoiceInfo.hasChoice && grantedChoiceInfo.choiceFlag) {
+				// Only add if not already present and not suppressed
+				if (!filtered[grantedChoiceInfo.choiceFlag] && !suppressedFlags.has(grantedChoiceInfo.choiceFlag)) {
+					filtered[grantedChoiceInfo.choiceFlag] = grantedChoiceInfo;
+				}
+			}
+		}
+
 		return filtered;
 	});
 
@@ -607,6 +627,7 @@
 
 	function handleClassArchetypeSelect(archetype: ClassArchetype) {
 		selectedClassArchetype = archetype;
+		archetypeDescriptionExpanded = false; // Reset expansion state
 		character.setClassArchetype(archetype.id);
 
 		// Auto-apply granted class features
@@ -1530,8 +1551,19 @@
 									<div class="selected-archetype">
 										<div class="archetype-info">
 											<h4 class="archetype-name">{selectedClassArchetype.name}</h4>
-											<div class="archetype-description">
-												<RichDescription content={selectedClassArchetype.description} />
+											<div class="archetype-description-card" class:expanded={archetypeDescriptionExpanded}>
+												<div class="archetype-description-content">
+													<RichDescription content={selectedClassArchetype.description} />
+												</div>
+												{#if !archetypeDescriptionExpanded}
+													<button class="read-more-button" onclick={() => archetypeDescriptionExpanded = true}>
+														Read more
+													</button>
+												{:else}
+													<button class="read-more-button" onclick={() => archetypeDescriptionExpanded = false}>
+														Show less
+													</button>
+												{/if}
 											</div>
 											{#if selectedClassArchetype.suppressedFeatures.length > 0}
 												<div class="suppressed-features">
@@ -1553,7 +1585,7 @@
 													<span class="archetype-rarity rarity-{archetype.rarity}">{archetype.rarity}</span>
 												{/if}
 												<div class="archetype-card-description">
-													<RichDescription content={archetype.description.substring(0, 200) + '...'} />
+													{getExcerpt(archetype.description, 200)}
 												</div>
 												<div class="archetype-card-actions">
 													<Button variant="secondary" size="sm" onclick={() => viewArchetypeDetails(archetype)}>
@@ -2237,9 +2269,62 @@
 		color: var(--link-color, #5c7cfa);
 	}
 
-	.archetype-description {
+	.archetype-description-card {
+		position: relative;
+		margin: 0.75rem 0;
+		padding: 1rem;
+		background-color: var(--surface-1, #ffffff);
+		border: 1px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+	}
+
+	.archetype-description-content {
+		max-height: 4.8em; /* ~3 lines at 1.6 line-height */
+		overflow: hidden;
 		line-height: 1.6;
 		color: var(--text-primary, #1a1a1a);
+		position: relative;
+		transition: max-height var(--transition-normal);
+	}
+
+	.archetype-description-card:not(.expanded) .archetype-description-content::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 2em;
+		background: linear-gradient(to bottom, transparent, var(--surface-1, #ffffff));
+	}
+
+	.archetype-description-card.expanded .archetype-description-content {
+		max-height: none;
+	}
+
+	.read-more-button {
+		display: block;
+		width: 100%;
+		margin-top: 0.75rem;
+		padding: 0.5rem;
+		background: none;
+		border: none;
+		color: var(--link-color, #5c7cfa);
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		text-align: center;
+		transition: all var(--transition-fast);
+	}
+
+	.read-more-button:hover {
+		color: var(--link-hover-color, #4c6ef5);
+		text-decoration: underline;
+	}
+
+	.read-more-button:focus {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+		border-radius: 4px;
 	}
 
 	.suppressed-features {
