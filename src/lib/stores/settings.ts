@@ -14,6 +14,8 @@ import { browser } from '$app/environment';
 export interface VariantRules {
 	/** Free Archetype variant rule */
 	freeArchetype: boolean;
+	/** Free Archetype: Allow multiple dedications without the 2-feat restriction (GM override) */
+	freeArchetypeNoRestriction: boolean;
 	/** Automatic Bonus Progression (removes magic item dependency) */
 	automaticBonusProgression: boolean;
 	/** Gradual Ability Boosts (gain boosts more frequently) */
@@ -85,6 +87,7 @@ export interface Settings {
 export const defaultSettings: Settings = {
 	variantRules: {
 		freeArchetype: false,
+		freeArchetypeNoRestriction: false,
 		automaticBonusProgression: false,
 		gradualAbilityBoosts: false,
 		proficiencyWithoutLevel: false,
