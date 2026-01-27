@@ -24,7 +24,7 @@
 	import { getLevelProgression, type LevelProgression } from '$lib/utils/featSlots';
 	import { onMount } from 'svelte';
 	import Accordion from '$lib/components/common/Accordion.svelte';
-	import PlanningFeatSelector from '$lib/components/planning/PlanningFeatSelector.svelte';
+	import ItemSelectionModal, { type TabConfig } from '$lib/components/wizard/ItemSelectionModal.svelte';
 	import FeatDetailModal from '$lib/components/common/FeatDetailModal.svelte';
 	import RichDescription from '$lib/components/common/RichDescription.svelte';
 	import { loadAllClassFeatures } from '$lib/data/repositories/classFeatureRepository';
@@ -58,6 +58,213 @@
 		}
 		return null;
 	});
+
+	// Ability scores for prerequisite checking (convert from lowercase to capitalized)
+	const abilityScores = $derived.by(() => ({
+		Strength: currentChar.abilities.strength,
+		Dexterity: currentChar.abilities.dexterity,
+		Constitution: currentChar.abilities.constitution,
+		Intelligence: currentChar.abilities.intelligence,
+		Wisdom: currentChar.abilities.wisdom,
+		Charisma: currentChar.abilities.charisma
+	}));
+
+	// Trained skills for prerequisite checking (skills with proficiency >= 1)
+	const trainedSkills = $derived.by(() => {
+		return Object.keys(currentChar.skills)
+			.filter(skill => currentChar.skills[skill] >= 1);
+	});
+
+	// Get dedication feat names the character has taken
+	// Archetype class feats reference these by name in their prerequisites (e.g., "Oracle Dedication")
+	const characterDedications = $derived.by(() => {
+		const dedicationNames: string[] = [];
+
+		// Helper function to check if a feat is a dedication and return its name
+		const getDedicationName = (feat: Feat): string | null => {
+			if (feat.traits.includes('dedication')) {
+				return feat.name;
+			}
+			return null;
+		};
+
+		// 1. Check feats from character.feats arrays (normal feat selections)
+		const allFeats = [
+			...currentChar.feats.ancestry,
+			...currentChar.feats.class,
+			...currentChar.feats.skill,
+			...currentChar.feats.general
+		];
+
+		for (const selectedFeat of allFeats) {
+			const feat = builderData.feats.find(f => f.id === selectedFeat.featId);
+			if (!feat) continue;
+
+			const dedicationName = getDedicationName(feat);
+			if (dedicationName && !dedicationNames.includes(dedicationName)) {
+				dedicationNames.push(dedicationName);
+			}
+		}
+
+		// 2. Check heritage selections (e.g., Ancient Elf dedication)
+		if (currentChar.ruleSelections) {
+			for (const [key, value] of Object.entries(currentChar.ruleSelections)) {
+				// Heritage choices are stored with keys like "heritage-dedication"
+				if (key.startsWith('heritage-') && typeof value === 'string' && value.includes('Compendium')) {
+					// Extract feat ID from UUID (e.g., "Compendium.pf2e.feats-srd.Item.ABC123" -> "ABC123")
+					const parts = value.split('.');
+					const featId = parts[parts.length - 1];
+
+					const feat = builderData.feats.find(f => f.id === featId);
+					if (!feat) continue;
+
+					const dedicationName = getDedicationName(feat);
+					if (dedicationName && !dedicationNames.includes(dedicationName)) {
+						dedicationNames.push(dedicationName);
+					}
+				}
+
+				// 3. Check planning selections for dedication feats (free archetype and class feats)
+				if (key.startsWith('plan-level-') && (key.includes('free-archetype-feat') || key.includes('class-feat'))) {
+					const featId = value as string;
+					const feat = builderData.feats.find(f => f.id === featId);
+					if (!feat) continue;
+
+					const dedicationName = getDedicationName(feat);
+					if (dedicationName && !dedicationNames.includes(dedicationName)) {
+						dedicationNames.push(dedicationName);
+					}
+				}
+			}
+		}
+
+		return dedicationNames;
+	});
+
+	// Filter archetype class feats based on character's dedications
+	function getArchetypeClassFeatsForLevel(level: number): Feat[] {
+		if (characterDedications.length === 0) {
+			return [];
+		}
+
+		// Filter feats that:
+		// 1. Have 'archetype' trait
+		// 2. Are NOT dedication feats themselves
+		// 3. Are level-appropriate
+		// 4. Have a prerequisite that mentions one of the character's dedication feat names
+		return builderData.feats.filter(f => {
+			// Must be an archetype feat but not a dedication
+			if (!f.traits.includes('archetype') || f.traits.includes('dedication')) {
+				return false;
+			}
+
+			// Must be level-appropriate
+			if (f.level > level) {
+				return false;
+			}
+
+			// Must have a prerequisite that matches one of the character's dedications
+			// E.g., "Basic Mysteries" has prerequisite "Oracle Dedication"
+			if (!f.prerequisites || f.prerequisites.length === 0) {
+				return false;
+			}
+
+			// Check if any prerequisite matches any of the character's dedications
+			return f.prerequisites.some(prereq =>
+				characterDedications.some(dedication => prereq.includes(dedication))
+			);
+		});
+	}
+
+	// Check if Free Archetype selection should be blocked due to the 2-feat restriction
+	function isFreeArchetypeBlocked(level: number): { blocked: boolean; reason?: string } {
+		// If GM override is enabled, never block
+		if (currentSettings.variantRules.freeArchetypeNoRestriction) {
+			return { blocked: false };
+		}
+
+		// If no dedications yet, not blocked
+		if (characterDedications.length === 0) {
+			return { blocked: false };
+		}
+
+		// Get the most recent dedication feat level
+		let mostRecentDedicationLevel = 0;
+
+		// Check all feat selections up to the current level
+		for (let checkLevel = 1; checkLevel < level; checkLevel++) {
+			const selections = featSelections[checkLevel] || {};
+
+			// Check Free Archetype feat at this level
+			if (selections.freeArchetypeFeat) {
+				const feat = builderData.feats.find(f => f.id === selections.freeArchetypeFeat);
+				if (feat && feat.traits.includes('dedication')) {
+					mostRecentDedicationLevel = checkLevel;
+				}
+			}
+
+			// Also check class feats (can take dedications via class feat slots)
+			if (selections.classFeat) {
+				const feat = builderData.feats.find(f => f.id === selections.classFeat);
+				if (feat && feat.traits.includes('dedication')) {
+					mostRecentDedicationLevel = checkLevel;
+				}
+			}
+		}
+
+		// Also check heritage-granted dedications (e.g., Ancient Elf at level 1)
+		if (currentChar.ruleSelections) {
+			for (const [key, value] of Object.entries(currentChar.ruleSelections)) {
+				if (key.startsWith('heritage-') && typeof value === 'string' && value.includes('Compendium')) {
+					const parts = value.split('.');
+					const featId = parts[parts.length - 1];
+					const feat = builderData.feats.find(f => f.id === featId);
+					if (feat && feat.traits.includes('dedication')) {
+						// Heritage dedications are treated as level 1
+						if (mostRecentDedicationLevel === 0) {
+							mostRecentDedicationLevel = 1;
+						}
+					}
+				}
+			}
+		}
+
+		// If we found a recent dedication, count archetype feats taken since then
+		if (mostRecentDedicationLevel > 0) {
+			let archetypeFeatsSinceDedication = 0;
+
+			for (let checkLevel = mostRecentDedicationLevel + 1; checkLevel < level; checkLevel++) {
+				const selections = featSelections[checkLevel] || {};
+
+				// Check Free Archetype feat (only count non-dedication archetype feats)
+				if (selections.freeArchetypeFeat) {
+					const feat = builderData.feats.find(f => f.id === selections.freeArchetypeFeat);
+					if (feat && feat.traits.includes('archetype') && !feat.traits.includes('dedication')) {
+						archetypeFeatsSinceDedication++;
+					}
+				}
+
+				// Also check class feats for archetype feats
+				if (selections.classFeat) {
+					const feat = builderData.feats.find(f => f.id === selections.classFeat);
+					if (feat && feat.traits.includes('archetype') && !feat.traits.includes('dedication')) {
+						archetypeFeatsSinceDedication++;
+					}
+				}
+			}
+
+			// Need 2 archetype feats before taking another dedication
+			if (archetypeFeatsSinceDedication < 2) {
+				const remaining = 2 - archetypeFeatsSinceDedication;
+				return {
+					blocked: true,
+					reason: `You must take ${remaining} more archetype feat${remaining > 1 ? 's' : ''} before selecting another dedication (Free Archetype rule).`
+				};
+			}
+		}
+
+		return { blocked: false };
+	}
 
 	// Generate level progression dynamically based on variant rules
 	const levelProgression = $derived.by(() => {
@@ -551,7 +758,54 @@
 			<span class="info-label">Class:</span>
 			<span class="info-value">{selectedClass.name}</span>
 		{/if}
+		{#if currentChar.ancestry?.heritage}
+			<span class="info-separator">|</span>
+			<span class="info-label">Heritage:</span>
+			<span class="info-value">{currentChar.ancestry.heritage}</span>
+		{/if}
 	</div>
+
+	<!-- Heritage Choices Section -->
+	{#if currentChar.ruleSelections && Object.keys(currentChar.ruleSelections).some(k => k.startsWith('heritage-') || k.startsWith('dedication-'))}
+		<div class="heritage-choices-section">
+			<h3 class="section-title">Heritage Selections</h3>
+			<div class="heritage-choices-grid">
+				{#each Object.entries(currentChar.ruleSelections) as [key, value]}
+					{#if key.startsWith('heritage-')}
+						{@const flag = key.replace('heritage-', '')}
+						{@const featId = typeof value === 'string' && value.includes('Compendium') ? value.split('.').pop() : null}
+						{#if featId}
+							{@const feat = builderData.feats.find(f => f.id === featId)}
+							<div class="heritage-choice-item">
+								<span class="choice-label">{flag.replace(/([A-Z])/g, ' $1').trim()}:</span>
+								<span class="choice-value">{feat?.name || value}</span>
+							</div>
+						{:else}
+							<div class="heritage-choice-item">
+								<span class="choice-label">{flag.replace(/([A-Z])/g, ' $1').trim()}:</span>
+								<span class="choice-value">{value}</span>
+							</div>
+						{/if}
+					{:else if key.startsWith('dedication-')}
+						{@const flag = key.replace('dedication-', '').replace(/([A-Z])/g, ' $1').trim()}
+						{@const valueId = typeof value === 'string' && value.includes('Compendium') ? value.split('.').pop() : null}
+						{#if valueId}
+							{@const classFeature = builderData.feats.find(f => f.id === valueId)}
+							<div class="heritage-choice-item">
+								<span class="choice-label">{flag || 'Dedication Feature'}:</span>
+								<span class="choice-value">{classFeature?.name || value}</span>
+							</div>
+						{:else}
+							<div class="heritage-choice-item">
+								<span class="choice-label">{flag || 'Dedication Feature'}:</span>
+								<span class="choice-value">{value}</span>
+							</div>
+						{/if}
+					{/if}
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<div class="level-timeline">
 		{#each levelProgression as levelPlan}
@@ -664,58 +918,109 @@
 								{/if}
 							</div>
 						{:else}
-							<PlanningFeatSelector
+							<ItemSelectionModal
 								label="Class Feat"
-								availableFeats={featsByLevel[levelPlan.level].class}
-								selectedFeatId={selections.classFeat}
+								title="Select Class Feat"
+								buttonLabel="Select feat..."
+								availableItems={featsByLevel[levelPlan.level].class}
+								selectedValue={selections.classFeat}
 								onSelect={(featId) => handleFeatSelection(levelPlan.level, 'classFeat', featId)}
 								loading={builderData.featsLoading}
+								abilityScores={abilityScores}
+								trainedSkills={trainedSkills}
+								showPrerequisites={true}
+								bypassLevelPrereqs={false}
 							/>
 						{/if}
 					{/if}
 
 					<!-- Free Archetype Feat (Variant Rule) -->
 					{#if levelPlan.featSlots.freeArchetypeFeat}
-						<PlanningFeatSelector
-							label="Free Archetype Feat"
-							availableFeats={featsByLevel[levelPlan.level].archetype}
-							selectedFeatId={selections.freeArchetypeFeat}
-							onSelect={(featId) => handleFeatSelection(levelPlan.level, 'freeArchetypeFeat', featId)}
-							loading={builderData.featsLoading}
-							variant="variant-rule"
-						/>
+						{@const blockInfo = isFreeArchetypeBlocked(levelPlan.level)}
+						{@const archetypeClassFeats = getArchetypeClassFeatsForLevel(levelPlan.level)}
+						{@const dedicationFeats = featsByLevel[levelPlan.level].archetype}
+						{@const tabs = archetypeClassFeats.length > 0 ? [
+							{ id: 'dedications', label: 'Dedication Feats', items: dedicationFeats },
+							{ id: 'archetype-class', label: 'Archetype Class Feats', items: archetypeClassFeats }
+						] : undefined}
+
+						{#if blockInfo.blocked}
+							<div class="blocked-selection">
+								<div class="blocked-label">Free Archetype Feat</div>
+								<div class="blocked-reason">
+									<svg class="blocked-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM11 15H9V13H11V15ZM11 11H9V5H11V11Z" fill="currentColor"/>
+									</svg>
+									<span>{blockInfo.reason}</span>
+								</div>
+							</div>
+						{:else}
+							<ItemSelectionModal
+								label="Free Archetype Feat"
+								title="Select Free Archetype Feat"
+								buttonLabel="Select feat..."
+								availableItems={dedicationFeats}
+								selectedValue={selections.freeArchetypeFeat}
+								onSelect={(featId) => handleFeatSelection(levelPlan.level, 'freeArchetypeFeat', featId)}
+								loading={builderData.featsLoading}
+								variant="variant-rule"
+								abilityScores={abilityScores}
+								trainedSkills={trainedSkills}
+								showPrerequisites={true}
+								bypassLevelPrereqs={false}
+								tabs={tabs}
+							/>
+						{/if}
 					{/if}
 
 					<!-- Ancestry Feat -->
 					{#if levelPlan.featSlots.ancestryFeat}
-						<PlanningFeatSelector
+						<ItemSelectionModal
 							label="Ancestry Feat"
-							availableFeats={featsByLevel[levelPlan.level].ancestry}
-							selectedFeatId={selections.ancestryFeat}
+							title="Select Ancestry Feat"
+							buttonLabel="Select feat..."
+							availableItems={featsByLevel[levelPlan.level].ancestry}
+							selectedValue={selections.ancestryFeat}
 							onSelect={(featId) => handleFeatSelection(levelPlan.level, 'ancestryFeat', featId)}
 							loading={builderData.featsLoading}
+							abilityScores={abilityScores}
+							trainedSkills={trainedSkills}
+							showPrerequisites={true}
+							bypassLevelPrereqs={false}
 						/>
 					{/if}
 
 					<!-- Skill Feat -->
 					{#if levelPlan.featSlots.skillFeat}
-						<PlanningFeatSelector
+						<ItemSelectionModal
 							label="Skill Feat"
-							availableFeats={featsByLevel[levelPlan.level].skill}
-							selectedFeatId={selections.skillFeat}
+							title="Select Skill Feat"
+							buttonLabel="Select feat..."
+							availableItems={featsByLevel[levelPlan.level].skill}
+							selectedValue={selections.skillFeat}
 							onSelect={(featId) => handleFeatSelection(levelPlan.level, 'skillFeat', featId)}
 							loading={builderData.featsLoading}
+							abilityScores={abilityScores}
+							trainedSkills={trainedSkills}
+							showPrerequisites={true}
+							bypassLevelPrereqs={false}
 						/>
 					{/if}
 
 					<!-- General Feat -->
 					{#if levelPlan.featSlots.generalFeat}
-						<PlanningFeatSelector
+						<ItemSelectionModal
 							label="General Feat"
-							availableFeats={featsByLevel[levelPlan.level].general}
-							selectedFeatId={selections.generalFeat}
+							title="Select General Feat"
+							buttonLabel="Select feat..."
+							availableItems={featsByLevel[levelPlan.level].general}
+							selectedValue={selections.generalFeat}
 							onSelect={(featId) => handleFeatSelection(levelPlan.level, 'generalFeat', featId)}
 							loading={builderData.featsLoading}
+							abilityScores={abilityScores}
+							trainedSkills={trainedSkills}
+							showPrerequisites={true}
+							bypassLevelPrereqs={false}
 						/>
 					{/if}
 
@@ -1234,5 +1539,85 @@
 		.selection-input {
 			transition: none;
 		}
+	}
+
+	/* Heritage choices section */
+	.heritage-choices-section {
+		margin-bottom: 1.5rem;
+		padding: 1rem 1.5rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border-radius: 8px;
+		border: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.heritage-choices-section .section-title {
+		margin: 0 0 1rem 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.heritage-choices-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.heritage-choice-item {
+		display: flex;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		background-color: var(--surface-1, #ffffff);
+		border: 1px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+	}
+
+	.heritage-choice-item .choice-label {
+		font-weight: 600;
+		color: var(--text-secondary, #666666);
+		text-transform: capitalize;
+	}
+
+	.heritage-choice-item .choice-value {
+		color: var(--text-primary, #1a1a1a);
+		flex: 1;
+	}
+
+	/* Blocked selection styles */
+	.blocked-selection {
+		padding: 1rem 1.25rem;
+		background-color: rgba(250, 176, 5, 0.1);
+		border: 2px solid #fab005;
+		border-radius: 8px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.blocked-label {
+		font-weight: 600;
+		font-size: 0.9375rem;
+		color: var(--text-primary, #1a1a1a);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.blocked-reason {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		color: #c77700;
+		font-size: 0.875rem;
+		line-height: 1.5;
+	}
+
+	.blocked-icon {
+		flex-shrink: 0;
+		margin-top: 0.125rem;
+	}
+
+	.blocked-reason span {
+		flex: 1;
 	}
 </style>
