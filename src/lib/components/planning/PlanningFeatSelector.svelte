@@ -2,6 +2,14 @@
 	/**
 	 * Planning Feat Selector
 	 *
+	 * @deprecated This component is deprecated and no longer used in the codebase.
+	 * Use ItemSelectionModal from $lib/components/wizard/ItemSelectionModal.svelte instead.
+	 *
+	 * ItemSelectionModal provides the same functionality with additional features:
+	 * - Prerequisite checking
+	 * - Support for different item types (feats, class features, etc.)
+	 * - Consistent styling across the entire application
+	 *
 	 * A button that opens a modal for selecting feats in the Planning tab.
 	 * Uses a split-panel layout with feat list on left and details on right.
 	 */
