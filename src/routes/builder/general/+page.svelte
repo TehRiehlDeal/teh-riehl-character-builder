@@ -10,7 +10,7 @@
 	import AbilityBoostSelector from '$lib/components/wizard/AbilityBoostSelector.svelte';
 	import AbilityScoreManager from '$lib/components/wizard/AbilityScoreManager.svelte';
 	import SkillSelector from '$lib/components/wizard/SkillSelector.svelte';
-	import FeatPicker from '$lib/components/features/FeatPicker.svelte';
+	import ItemSelectionModal from '$lib/components/wizard/ItemSelectionModal.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Button from '$lib/components/common/Button.svelte';
 	import RichDescription from '$lib/components/common/RichDescription.svelte';
@@ -20,6 +20,8 @@
 	import { getClassArchetypesForClass } from '$lib/data/repositories/classArchetypeRepository';
 	import type { ClassArchetype } from '$lib/data/types/app';
 	import { extractGrantedItems, extractItemNameFromUUID, getImmediateClassFeatures, getDedicationFeat } from '$lib/utils/classArchetypeUtils';
+	import { extractGrantedFeatures, extractDedicationChoices, parseCompendiumUUID, type DedicationChoice } from '$lib/utils/dedicationUtils';
+	import { getFeatById } from '$lib/data/repositories/featRepository';
 
 	// Get shared data from context (loaded once in layout)
 	const builderData = getBuilderDataContext();
@@ -34,6 +36,8 @@
 	let freeAbilityBoosts: (string | null)[] = $state([null, null, null, null]);
 	let trainedSkills: string[] = $state([]);
 	let heritageChoices: Record<string, string> = $state({}); // Key: flag name, Value: selected value
+	let dedicationFeatureChoices: Record<string, string> = $state({}); // Key: flag, Value: selected value
+	let dedicationChoiceInfo = $state<DedicationChoice[]>([]); // Loaded choice info from selected dedication
 	let archetypeDescriptionExpanded = $state(false); // Track if archetype description is expanded
 	let classFeatureChoiceSelections = $state<Record<string, string>>({}); // Maps choiceFlag to selected value
 	let allClassFeatures = $state<ClassFeature[]>([]);
@@ -67,8 +71,15 @@
 		if (currentChar.class.name && !selectedClass) {
 			selectedClass = builderData.classes.find((c) => c.name === currentChar.class.name) || null;
 		}
-		if (currentChar.class.keyAbility && !selectedKeyAbility) {
-			selectedKeyAbility = currentChar.class.keyAbility;
+		// Restore or auto-set key ability
+		if (!selectedKeyAbility) {
+			if (currentChar.class.keyAbility) {
+				// Restore from saved data
+				selectedKeyAbility = currentChar.class.keyAbility;
+			} else if (selectedClass && selectedClass.keyAbility.length === 1) {
+				// Auto-set for single key ability classes (migration for older saves)
+				selectedKeyAbility = selectedClass.keyAbility[0];
+			}
 		}
 
 		// Restore ancestry ability boosts
@@ -266,6 +277,24 @@
 			}
 			if (Object.keys(choices).length > 0) {
 				heritageChoices = choices;
+			}
+		}
+
+		// Restore dedication choices
+		if (currentChar.ruleSelections && Object.keys(dedicationFeatureChoices).length === 0) {
+			const choices: Record<string, string> = {};
+			for (const key in currentChar.ruleSelections) {
+				if (key.startsWith('dedication-')) {
+					// Format: dedication-{flag}
+					const flag = key.replace('dedication-', '');
+					const value = currentChar.ruleSelections[key];
+					if (typeof value === 'string') {
+						choices[flag] = value;
+					}
+				}
+			}
+			if (Object.keys(choices).length > 0) {
+				dedicationFeatureChoices = choices;
 			}
 		}
 	});
@@ -507,11 +536,14 @@
 		availableClassArchetypes = archetypes;
 	}
 
-	// Filter heritages based on selected ancestry
+	// Filter heritages based on selected ancestry (includes versatile heritages)
 	const availableHeritages = $derived.by(() => {
 		if (!selectedAncestry) return [];
 		const ancestry = selectedAncestry;
-		return builderData.heritages.filter((h) => h.ancestry === ancestry.name);
+		// Include both ancestry-specific heritages and versatile heritages
+		return builderData.heritages.filter(
+			(h) => h.ancestry === ancestry.name || h.ancestrySlug === 'versatile'
+		);
 	});
 
 	// Filter ancestry feats based on selected ancestry
@@ -584,6 +616,8 @@
 
 		// Reset heritage choices when changing heritage
 		heritageChoices = {};
+		dedicationFeatureChoices = {};
+		dedicationChoiceInfo = [];
 
 		// Update character store
 		character.update((char) => ({
@@ -608,6 +642,53 @@
 			ruleSelections: {
 				...char.ruleSelections,
 				[`heritage-${flag}`]: value
+			}
+		}));
+	}
+
+	// Load dedication choices when a dedication is selected
+	$effect(() => {
+		// Check if a heritage choice includes a dedication feat
+		async function loadDedicationChoices() {
+			const choiceEntries = Object.entries(heritageChoices);
+
+			for (const [flag, value] of choiceEntries) {
+				// Skip if no value selected
+				if (!value) continue;
+
+				// Extract feat ID from the value (typically a Compendium UUID)
+				const featId = parseCompendiumUUID(value);
+				if (!featId) continue;
+
+				// Load the feat to check if it has choices
+				const feat = await getFeatById(featId);
+				if (!feat) continue;
+
+				// Extract all dedication choices (both direct and from granted features)
+				const choices = await extractDedicationChoices(feat);
+
+				if (choices.length > 0) {
+					dedicationChoiceInfo = choices;
+				}
+			}
+		}
+
+		loadDedicationChoices();
+	});
+
+	function handleDedicationChoice(flag: string, value: string) {
+		// Update local state
+		dedicationFeatureChoices = {
+			...dedicationFeatureChoices,
+			[flag]: value
+		};
+
+		// Update character store
+		character.update((char) => ({
+			...char,
+			ruleSelections: {
+				...char.ruleSelections,
+				[`dedication-${flag}`]: value
 			}
 		}));
 	}
@@ -838,7 +919,12 @@
 
 	function applyClassSelection(cls: Class) {
 		selectedClass = cls;
-		selectedKeyAbility = null; // Reset key ability when class changes
+		// Auto-set key ability if the class has only one option
+		if (cls.keyAbility.length === 1) {
+			selectedKeyAbility = cls.keyAbility[0];
+		} else {
+			selectedKeyAbility = null; // Reset key ability when class changes (multiple options)
+		}
 		trainedSkills = []; // Reset trained skills for new class
 
 		// Filter class features for the character's current level
@@ -857,7 +943,7 @@
 				id: cls.id,
 				name: cls.name,
 				subclass: null,
-				keyAbility: null,
+				keyAbility: cls.keyAbility.length === 1 ? cls.keyAbility[0] : null,
 				classArchetype: null
 			},
 			// Apply class features for the character's current level
@@ -999,6 +1085,8 @@
 		freeAbilityBoosts = [null, null, null, null];
 		trainedSkills = [];
 		heritageChoices = {};
+		dedicationFeatureChoices = {};
+		dedicationChoiceInfo = [];
 
 		// Reset character store to default state
 		character.update((char) => ({
@@ -1173,6 +1261,90 @@
 			if (itemType === 'feat') {
 				return 'Choose a Feat';
 			}
+
+			// Handle dedication-specific prompts
+			const promptLower = prompt.toLowerCase();
+
+			// Deity selection (Cleric, Champion, etc.)
+			if (promptLower.includes('deity')) {
+				return 'Choose a Deity';
+			}
+
+			// Oracle mystery selection
+			if (promptLower.includes('mystery')) {
+				return 'Choose a Mystery';
+			}
+
+			// Muse selection (Bard)
+			if (promptLower.includes('muse')) {
+				return 'Choose a Muse';
+			}
+
+			// Doctrine selection (Cleric)
+			if (promptLower.includes('doctrine')) {
+				return 'Choose a Doctrine';
+			}
+
+			// Hunter's Edge (Ranger)
+			if (promptLower.includes('edge')) {
+				return 'Choose a Hunter\'s Edge';
+			}
+
+			// Research Field (Alchemist)
+			if (promptLower.includes('research') || promptLower.includes('field')) {
+				return 'Choose a Research Field';
+			}
+
+			// Cause (Champion)
+			if (promptLower.includes('cause')) {
+				return 'Choose a Cause';
+			}
+
+			// Racket (Rogue)
+			if (promptLower.includes('racket')) {
+				return 'Choose a Racket';
+			}
+
+			// Instinct (Barbarian)
+			if (promptLower.includes('instinct')) {
+				return 'Choose an Instinct';
+			}
+
+			// Way (Monk/Gunslinger)
+			if (promptLower.includes('way')) {
+				return 'Choose a Way';
+			}
+
+			// Hybrid Study (Magus)
+			if (promptLower.includes('hybrid') || promptLower.includes('study')) {
+				return 'Choose a Hybrid Study';
+			}
+
+			// Patron (Witch)
+			if (promptLower.includes('patron')) {
+				return 'Choose a Patron';
+			}
+
+			// Methodology (Investigator)
+			if (promptLower.includes('methodology')) {
+				return 'Choose a Methodology';
+			}
+
+			// Innovation (Inventor)
+			if (promptLower.includes('innovation')) {
+				return 'Choose an Innovation';
+			}
+
+			// Thesis (Wizard)
+			if (promptLower.includes('thesis')) {
+				return 'Choose a Thesis';
+			}
+
+			// Order (Druid)
+			if (promptLower.includes('order')) {
+				return 'Choose an Order';
+			}
+
 			// Add more config-specific fallbacks as needed
 			return 'Make a Choice';
 		}
@@ -1181,15 +1353,18 @@
 
 	// Filter feats based on heritage choice criteria
 	// Optimized to use pre-filtered feat arrays from context
-	function filterFeatsForChoice(filter: string[]): Feat[] {
+	function filterFeatsForChoice(filter: any[]): Feat[] {
 		if (!filter || filter.length === 0) return builderData.feats;
+
+		// Normalize filter to only string conditions (skip complex objects for now)
+		const stringFilters = filter.filter((f) => typeof f === 'string');
 
 		// Determine which pre-filtered array to start with based on category filter
 		let baseFeats = builderData.feats;
 		let categoryFilter: string | null = null;
 
 		// Extract category filter first to use cached arrays
-		for (const condition of filter) {
+		for (const condition of stringFilters) {
 			if (condition.startsWith('item:category:')) {
 				categoryFilter = condition.replace('item:category:', '');
 				break;
@@ -1209,7 +1384,7 @@
 
 		// Apply remaining filters
 		return baseFeats.filter((feat) => {
-			for (const condition of filter) {
+			for (const condition of stringFilters) {
 				// Skip category filter as we already applied it
 				if (condition.startsWith('item:category:')) continue;
 
@@ -1217,6 +1392,10 @@
 				if (condition.startsWith('item:trait:')) {
 					const traitValue = condition.replace('item:trait:', '');
 					if (!feat.traits.includes(traitValue)) return false;
+				} else if (condition.startsWith('item:tag:')) {
+					// Tags are similar to traits for filtering purposes
+					const tagValue = condition.replace('item:tag:', '');
+					if (!feat.traits.includes(tagValue)) return false;
 				} else if (condition.startsWith('item:level:')) {
 					const levelValue = parseInt(condition.replace('item:level:', ''), 10);
 					if (feat.level > levelValue) return false;
@@ -1380,31 +1559,24 @@
 											</select>
 										</div>
 									{:else if choice.itemType === 'feat' && choice.flag}
+										{@const availableFeats = filterFeatsForChoice(choice.filter || [])}
+										{@const choiceTitle = getChoicePromptLabel(choice.prompt, choice.config, choice.itemType)}
 										<div class="heritage-choice">
-											<label for="heritage-feat-{choice.flag}" class="choice-label">
-												{getChoicePromptLabel(choice.prompt, choice.config, choice.itemType)}:
+											<label class="choice-label">
+												{choiceTitle}:
 											</label>
-											{#if builderData.featsLoading}
-												<select id="heritage-feat-{choice.flag}" class="choice-select" disabled>
-													<option value="">Loading feats...</option>
-												</select>
-											{:else}
-												{@const availableFeats = filterFeatsForChoice(choice.filter || [])}
-												<select
-													id="heritage-feat-{choice.flag}"
-													class="choice-select"
-													value={heritageChoices[choice.flag] || ''}
-													onchange={(e) => handleHeritageChoiceSelect(choice.flag!, e.currentTarget.value)}
-												>
-													<option value="">-- Select a feat --</option>
-													{#each availableFeats as feat}
-														<option value="Compendium.pf2e.feats-srd.Item.{feat.id}">
-															{feat.name}
-															{#if feat.level > 0}(Level {feat.level}){/if}
-														</option>
-													{/each}
-												</select>
-											{/if}
+											<ItemSelectionModal
+												title={choiceTitle}
+												buttonLabel="Select..."
+												availableItems={availableFeats}
+												selectedValue={heritageChoices[choice.flag]}
+												onSelect={(value) => handleHeritageChoiceSelect(choice.flag!, value)}
+												loading={builderData.featsLoading}
+												abilityScores={calculatedAbilityScores}
+												trainedSkills={trainedSkills}
+												showPrerequisites={true}
+												bypassLevelPrereqs={true}
+											/>
 										</div>
 									{:else}
 										<!-- Other choice types can be added here in the future -->
@@ -1431,6 +1603,52 @@
 							</div>
 						{/if}
 
+						<!-- Dedication Choices -->
+						{#if dedicationChoiceInfo.length > 0}
+							<div class="subsection">
+								<h3 class="subsection-title">Dedication Features</h3>
+								<p class="subsection-description">
+									Your selected dedication requires you to make additional choices.
+								</p>
+
+								{#each dedicationChoiceInfo as choice}
+									<div class="heritage-choice">
+										<label class="choice-label">
+											{getChoicePromptLabel(choice.prompt, undefined, choice.itemType)}:
+										</label>
+
+										{#if choice.filter}
+											<!-- Filter-based choice (e.g., Oracle mystery, deity selection) -->
+											{@const availableOptions = filterFeatsForChoice(choice.filter)}
+											<ItemSelectionModal
+												title={getChoicePromptLabel(choice.prompt, undefined, choice.itemType)}
+												buttonLabel="Select {getChoicePromptLabel(choice.prompt, undefined, choice.itemType).replace('Choose a ', '').replace('Choose an ', '')}"
+												availableItems={availableOptions}
+												selectedValue={dedicationFeatureChoices[choice.flag] || ''}
+												onSelect={(value) => handleDedicationChoice(choice.flag, value)}
+												showPrerequisites={false}
+											/>
+										{:else if choice.choices}
+											<!-- Array-based choice (e.g., sanctification) - use simplified dropdown for now -->
+											<select
+												id="dedication-{choice.flag}"
+												class="choice-select"
+												value={dedicationFeatureChoices[choice.flag] || ''}
+												onchange={(e) => handleDedicationChoice(choice.flag, e.currentTarget.value)}
+											>
+												<option value="">-- Select an option --</option>
+												{#each choice.choices as opt}
+													<option value={opt.value}>
+														{opt.label}
+													</option>
+												{/each}
+											</select>
+										{/if}
+									</div>
+								{/each}
+							</div>
+						{/if}
+
 						{#if selectedHeritage}
 							<div class="subsection">
 								<h3 class="subsection-title">Ancestry Feat</h3>
@@ -1444,34 +1662,20 @@
 										<p class="loading-subtext">Ancestry and class feats are loading in the background</p>
 									</div>
 								{:else}
-									<div class="feat-picker-container">
-										<FeatPicker
-											feats={ancestryFeats}
-											selectedFeatId={$character.feats.ancestry[0]?.featId}
-											characterLevel={$character.level}
-											characterData={{
-												abilityScores: $character.abilities,
-												skills: {
-													trained: Object.keys($character.skills).filter(k => $character.skills[k] >= 1),
-													expert: Object.keys($character.skills).filter(k => $character.skills[k] >= 2),
-													master: Object.keys($character.skills).filter(k => $character.skills[k] >= 3),
-													legendary: Object.keys($character.skills).filter(k => $character.skills[k] >= 4)
-												},
-												feats: [
-													...$character.feats.ancestry.map(f => f.name),
-													...$character.feats.class.map(f => f.name),
-													...$character.feats.skill.map(f => f.name),
-													...$character.feats.general.map(f => f.name)
-												],
-												class: $character.class.name ? { name: $character.class.name } : undefined,
-												ancestry: $character.ancestry.name ? { name: $character.ancestry.name } : undefined,
-												classFeatures: $character.classFeatures
-											}}
-											filterCategory="ancestry"
-											filterLevel={1}
-											onSelect={handleAncestryFeatSelect}
-										/>
-									</div>
+									<ItemSelectionModal
+										title="Select Ancestry Feat"
+										buttonLabel="Select Ancestry Feat"
+										availableItems={ancestryFeats}
+										selectedValue={$character.feats.ancestry[0]?.featId}
+										onSelect={(featId) => {
+											const feat = builderData.feats.find(f => f.id === featId);
+											if (feat) handleAncestryFeatSelect(feat);
+										}}
+										abilityScores={calculatedAbilityScores}
+										trainedSkills={trainedSkills}
+										showPrerequisites={true}
+										bypassLevelPrereqs={false}
+									/>
 								{/if}
 							</div>
 						{/if}
@@ -1611,27 +1815,26 @@
 								</p>
 								{#each Object.entries(filteredClassFeatureChoiceInfo) as [choiceFlag, choiceInfo]}
 									{@const isAutoGranted = isAutoGrantedFeature(choiceFlag)}
+									{@const choiceLabel = choiceInfo.choices.length > 0 ? `Choose your ${formatChoiceLabel(choiceFlag)}` : 'Class Feature'}
+									{@const availableItems = choiceInfo.choices
+										.map(c => builderData.feats.find(f => c.value.includes(f.id)))
+										.filter((f): f is Feat => f !== undefined)}
 									<div class="class-feature-choice">
-										<label for="class-choice-{choiceFlag}" class="choice-label">
-											{choiceInfo.choices.length > 0 ? `Choose your ${formatChoiceLabel(choiceFlag)}` : 'Class Feature'}:
+										<label class="choice-label">
+											{choiceLabel}:
 											{#if isAutoGranted}
 												<span class="auto-granted-badge">Auto-selected by archetype</span>
 											{/if}
 										</label>
-										<select
-											id="class-choice-{choiceFlag}"
-											class="choice-select"
-											value={classFeatureChoiceSelections[choiceFlag] || ''}
-											onchange={(e) => handleClassFeatureChoiceSelection(choiceFlag, e.currentTarget.value)}
+										<ItemSelectionModal
+											title={choiceLabel}
+											buttonLabel="Select {formatChoiceLabel(choiceFlag)}"
+											availableItems={availableItems}
+											selectedValue={classFeatureChoiceSelections[choiceFlag] || ''}
+											onSelect={(value) => handleClassFeatureChoiceSelection(choiceFlag, value)}
 											disabled={isAutoGranted}
-										>
-											<option value="">-- Select an option --</option>
-											{#each choiceInfo.choices as choice}
-												<option value={choice.value}>
-													{choice.label}
-												</option>
-											{/each}
-										</select>
+											showPrerequisites={false}
+										/>
 									</div>
 								{/each}
 							</div>
@@ -1668,34 +1871,20 @@
 										<p class="loading-subtext">Ancestry and class feats are loading in the background</p>
 									</div>
 								{:else}
-									<div class="feat-picker-container">
-										<FeatPicker
-											feats={classFeats}
-											selectedFeatId={$character.feats.class[0]?.featId}
-											characterLevel={$character.level}
-											characterData={{
-												abilityScores: $character.abilities,
-												skills: {
-													trained: Object.keys($character.skills).filter(k => $character.skills[k] >= 1),
-													expert: Object.keys($character.skills).filter(k => $character.skills[k] >= 2),
-													master: Object.keys($character.skills).filter(k => $character.skills[k] >= 3),
-													legendary: Object.keys($character.skills).filter(k => $character.skills[k] >= 4)
-												},
-												feats: [
-													...$character.feats.ancestry.map(f => f.name),
-													...$character.feats.class.map(f => f.name),
-													...$character.feats.skill.map(f => f.name),
-													...$character.feats.general.map(f => f.name)
-												],
-												class: $character.class.name ? { name: $character.class.name } : undefined,
-												ancestry: $character.ancestry.name ? { name: $character.ancestry.name } : undefined,
-												classFeatures: $character.classFeatures
-											}}
-											filterCategory="class"
-											filterLevel={1}
-											onSelect={handleClassFeatSelect}
-										/>
-									</div>
+									<ItemSelectionModal
+										title="Select Class Feat"
+										buttonLabel="Select Class Feat"
+										availableItems={classFeats}
+										selectedValue={$character.feats.class[0]?.featId}
+										onSelect={(featId) => {
+											const feat = builderData.feats.find(f => f.id === featId);
+											if (feat) handleClassFeatSelect(feat);
+										}}
+										abilityScores={calculatedAbilityScores}
+										trainedSkills={trainedSkills}
+										showPrerequisites={true}
+										bypassLevelPrereqs={false}
+									/>
 								{/if}
 							</div>
 						{/if}

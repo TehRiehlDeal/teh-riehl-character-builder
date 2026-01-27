@@ -2,8 +2,8 @@
 	import { settings, type VariantRules } from '$lib/stores/settings';
 	import Button from '../common/Button.svelte';
 
-	// Variant rule descriptions
-	const variantRuleInfo: Record<keyof VariantRules, { name: string; description: string; impact: string }> = {
+	// Variant rule descriptions (exclude sub-options like freeArchetypeNoRestriction)
+	const variantRuleInfo: Record<Exclude<keyof VariantRules, 'freeArchetypeNoRestriction'>, { name: string; description: string; impact: string }> = {
 		freeArchetype: {
 			name: 'Free Archetype',
 			description: 'Gain an additional class feat at every even level that must be used for archetype feats.',
@@ -58,6 +58,7 @@
 				...s,
 				variantRules: {
 					freeArchetype: false,
+					freeArchetypeNoRestriction: false,
 					automaticBonusProgression: false,
 					gradualAbilityBoosts: false,
 					proficiencyWithoutLevel: false,
@@ -119,6 +120,32 @@
 				<div class="rule-impact">
 					<strong>Impact:</strong> {info.impact}
 				</div>
+
+				<!-- Free Archetype sub-options -->
+				{#if rule === 'freeArchetype' && isActive}
+					<div class="sub-option">
+						<label class="sub-option-label">
+							<input
+								type="checkbox"
+								checked={currentSettings.variantRules.freeArchetypeNoRestriction}
+								onchange={() => settings.update(s => ({
+									...s,
+									variantRules: {
+										...s.variantRules,
+										freeArchetypeNoRestriction: !s.variantRules.freeArchetypeNoRestriction
+									}
+								}))}
+								class="sub-option-checkbox"
+							/>
+							<span class="sub-option-text">
+								<strong>GM Override:</strong> Allow multiple dedications without the 2-feat restriction
+							</span>
+						</label>
+						<p class="sub-option-description">
+							By default, you must take 2 archetype feats before selecting a second dedication. This override removes that restriction.
+						</p>
+					</div>
+				{/if}
 
 				{#if isActive}
 					<div class="active-indicator">
@@ -303,6 +330,49 @@
 
 	.rule-impact strong {
 		color: var(--text-primary, #1a1a1a);
+	}
+
+	.sub-option {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.75rem;
+		background-color: var(--surface-1, #ffffff);
+		border-radius: 6px;
+		border-left: 3px solid var(--link-color, #5c7cfa);
+	}
+
+	.sub-option-label {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		cursor: pointer;
+	}
+
+	.sub-option-checkbox {
+		margin-top: 0.25rem;
+		width: 18px;
+		height: 18px;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+
+	.sub-option-text {
+		font-size: 0.9375rem;
+		color: var(--text-primary, #1a1a1a);
+		line-height: 1.5;
+	}
+
+	.sub-option-text strong {
+		color: var(--link-color, #5c7cfa);
+	}
+
+	.sub-option-description {
+		margin: 0;
+		margin-left: 2rem;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #666666);
+		line-height: 1.5;
 	}
 
 	.active-indicator {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Heritage } from '$lib/data/types/app';
 	import Button from '../common/Button.svelte';
+	import Modal from '../common/Modal.svelte';
 	import RichDescription from '../common/RichDescription.svelte';
 	import {
 		formatSenseType,
@@ -22,8 +23,16 @@
 
 	let { heritages, selectedHeritage = null, onSelect }: Props = $props();
 
+	let detailModalOpen = $state(false);
+	let selectedForDetails: Heritage | null = $state(null);
+
 	function handleSelect(heritage: Heritage) {
 		onSelect?.(heritage);
+	}
+
+	function viewDetails(heritage: Heritage) {
+		selectedForDetails = heritage;
+		detailModalOpen = true;
 	}
 
 	// Check if heritage has any meaningful benefits to display
@@ -58,9 +67,14 @@
 				<div class="heritage-card" class:selected={isSelected}>
 					<div class="card-header">
 						<h4 class="heritage-name">{heritage.name}</h4>
-						{#if heritage.rarity && heritage.rarity !== 'common'}
-							<span class="rarity-badge">{heritage.rarity}</span>
-						{/if}
+						<div class="card-badges">
+							{#if heritage.ancestrySlug === 'versatile'}
+								<span class="versatile-badge">Versatile</span>
+							{/if}
+							{#if heritage.rarity && heritage.rarity !== 'common'}
+								<span class="rarity-badge rarity-{heritage.rarity}">{heritage.rarity}</span>
+							{/if}
+						</div>
 					</div>
 
 					{#if heritage.description}
@@ -189,6 +203,16 @@
 
 					<div class="card-actions">
 						<Button
+							variant="secondary"
+							size="sm"
+							onclick={(e) => {
+								e.stopPropagation();
+								viewDetails(heritage);
+							}}
+						>
+							Details
+						</Button>
+						<Button
 							variant={isSelected ? 'secondary' : 'primary'}
 							size="sm"
 							disabled={isSelected}
@@ -208,6 +232,164 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Detail Modal -->
+{#if selectedForDetails}
+	<Modal bind:open={detailModalOpen} title={selectedForDetails.name} size="lg">
+		<div class="heritage-detail">
+			<!-- Badges -->
+			<div class="detail-badges">
+				{#if selectedForDetails.ancestrySlug === 'versatile'}
+					<span class="versatile-badge">Versatile Heritage</span>
+				{/if}
+				{#if selectedForDetails.rarity && selectedForDetails.rarity !== 'common'}
+					<span class="rarity-badge rarity-{selectedForDetails.rarity}">
+						{selectedForDetails.rarity}
+					</span>
+				{/if}
+			</div>
+
+			<!-- Description -->
+			<div class="detail-section">
+				<h4>Description</h4>
+				<RichDescription content={selectedForDetails.description} />
+			</div>
+
+			<!-- Benefits -->
+			{#if hasBenefits(selectedForDetails)}
+				<div class="detail-section">
+					<h4>Benefits</h4>
+					<div class="benefit-details">
+						<!-- Senses -->
+						{#if selectedForDetails.benefits.senses.length > 0}
+							<div class="benefit-item">
+								<strong>Senses:</strong>
+								{selectedForDetails.benefits.senses
+									.map((s) =>
+										s.range ? `${formatSenseType(s.type)} ${s.range} ft.` : formatSenseType(s.type)
+									)
+									.join(', ')}
+							</div>
+						{/if}
+
+						<!-- Granted Items -->
+						{#if selectedForDetails.benefits.grantedItems.length > 0}
+							<div class="benefit-item">
+								<strong>Grants:</strong>
+								{selectedForDetails.benefits.grantedItems
+									.map((item) => item.label || extractItemNameFromUUID(item.uuid))
+									.join(', ')}
+							</div>
+						{/if}
+
+						<!-- Skill Proficiencies -->
+						{#if selectedForDetails.benefits.skillProficiencies.length > 0}
+							<div class="benefit-item">
+								<strong>Skills:</strong>
+								{selectedForDetails.benefits.skillProficiencies
+									.map(
+										(skill) =>
+											`${formatSkillName(skill.skill)} (${formatProficiencyRank(skill.rank)})`
+									)
+									.join(', ')}
+							</div>
+						{/if}
+
+						<!-- Speeds -->
+						{#if selectedForDetails.benefits.speeds.length > 0}
+							<div class="benefit-item">
+								<strong>Speed:</strong>
+								{selectedForDetails.benefits.speeds
+									.map((speed) => `${formatSpeedType(speed.type)} ${speed.value} ft.`)
+									.join(', ')}
+							</div>
+						{/if}
+
+						<!-- Strikes -->
+						{#if selectedForDetails.benefits.strikes.length > 0}
+							<div class="benefit-item">
+								<strong>Attacks:</strong>
+								{selectedForDetails.benefits.strikes
+									.map(
+										(strike) =>
+											`${strike.label} (${strike.damage.dice}${strike.damage.die} ${strike.damage.type})`
+									)
+									.join(', ')}
+							</div>
+						{/if}
+
+						<!-- Modifiers -->
+						{#if selectedForDetails.benefits.modifiers.length > 0}
+							{@const unconditionalMods = selectedForDetails.benefits.modifiers.filter(
+								(m) => !m.predicate || m.predicate.length === 0
+							)}
+							{#if unconditionalMods.length > 0}
+								<div class="benefit-item">
+									<strong>Bonuses:</strong>
+									{unconditionalMods
+										.map((mod) => {
+											const value = typeof mod.value === 'number' ? mod.value : mod.value;
+											const sign = typeof value === 'number' && value > 0 ? '+' : '';
+											return `${sign}${value} to ${mod.selector}`;
+										})
+										.join(', ')}
+								</div>
+							{/if}
+						{/if}
+
+						<!-- Choices -->
+						{#if selectedForDetails.benefits.choices.length > 0}
+							<div class="benefit-item">
+								<strong>Choices:</strong>
+								You will make {selectedForDetails.benefits.choices.length} choice(s) when selecting
+								this heritage
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Traits -->
+			{#if selectedForDetails.traits && selectedForDetails.traits.length > 0}
+				<div class="detail-section">
+					<h4>Traits</h4>
+					<div class="trait-list">
+						{#each selectedForDetails.traits as trait}
+							<span class="trait-badge">{trait}</span>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Source -->
+			<div class="detail-section">
+				<h4>Source</h4>
+				<p>
+					{selectedForDetails.source.title}
+					{#if selectedForDetails.source.remaster}
+						<span class="remaster-badge">Remaster</span>
+					{/if}
+				</p>
+			</div>
+		</div>
+
+		{#snippet footer()}
+			<Button variant="secondary" onclick={() => (detailModalOpen = false)}>Close</Button>
+			<Button
+				variant="primary"
+				disabled={selectedHeritage?.name === selectedForDetails?.name}
+				onclick={() => {
+					if (selectedForDetails) {
+						handleSelect(selectedForDetails);
+						detailModalOpen = false;
+					}
+				}}
+			>
+				{selectedHeritage?.name === selectedForDetails?.name ? 'Selected' : 'Select Heritage'}
+			</Button>
+		{/snippet}
+	</Modal>
+{/if}
 
 <style>
 	.heritage-selector {
@@ -284,17 +466,53 @@
 		font-size: 1.125rem;
 		font-weight: 600;
 		color: var(--text-primary, #1a1a1a);
+		flex: 1;
+	}
+
+	.card-badges {
+		display: flex;
+		gap: 0.5rem;
+		flex-shrink: 0;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+	}
+
+	.versatile-badge {
+		padding: 0.25rem 0.5rem;
+		background-color: rgba(92, 124, 250, 0.15);
+		border: 1px solid var(--link-color, #5c7cfa);
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--link-color, #5c7cfa);
+		text-transform: uppercase;
 	}
 
 	.rarity-badge {
 		padding: 0.25rem 0.5rem;
-		background-color: var(--surface-3, #e0e0e0);
 		border-radius: 4px;
 		font-size: 0.75rem;
 		font-weight: 600;
-		color: var(--text-secondary, #666666);
 		text-transform: uppercase;
-		flex-shrink: 0;
+		border: 1px solid transparent;
+	}
+
+	.rarity-badge.rarity-uncommon {
+		background-color: rgba(40, 167, 69, 0.15);
+		border-color: #28a745;
+		color: #28a745;
+	}
+
+	.rarity-badge.rarity-rare {
+		background-color: rgba(0, 123, 255, 0.15);
+		border-color: #007bff;
+		color: #007bff;
+	}
+
+	.rarity-badge.rarity-unique {
+		background-color: rgba(220, 53, 69, 0.15);
+		border-color: #dc3545;
+		color: #dc3545;
 	}
 
 	.heritage-traits {
@@ -383,5 +601,70 @@
 		.heritage-card {
 			transition: none;
 		}
+	}
+
+	/* Detail Modal */
+	.heritage-detail {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.detail-badges {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.detail-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.detail-section h4 {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		padding-bottom: 0.5rem;
+		border-bottom: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.benefit-details {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border-radius: 8px;
+	}
+
+	.benefit-item {
+		line-height: 1.6;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.benefit-item strong {
+		color: var(--text-primary, #1a1a1a);
+		margin-right: 0.5rem;
+	}
+
+	.trait-list {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.remaster-badge {
+		display: inline-block;
+		padding: 0.25rem 0.5rem;
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		margin-left: 0.5rem;
 	}
 </style>
