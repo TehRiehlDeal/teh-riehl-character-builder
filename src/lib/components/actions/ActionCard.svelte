@@ -58,7 +58,8 @@
 	}}
 	aria-label={`View details for ${action.name}`}
 >
-	<div class="action-header">
+	<div class="action-card-content">
+		<div class="action-header">
 		<div class="action-title-row">
 			<div class="title-left">
 				<span class="action-icon" aria-label="{action.actionType}">
@@ -105,14 +106,11 @@
 			{/if}
 		</div>
 	</div>
+	</div>
 </div>
 
 <style>
 	.action-card {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.875rem;
 		margin: 0.75rem 0;
 		min-height: 110px;
 		height: 110px;
@@ -124,6 +122,14 @@
 		text-align: left;
 		width: 100%;
 		overflow: hidden;
+	}
+
+	.action-card-content {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.875rem;
+		height: 100%;
 	}
 
 	.action-card:hover {

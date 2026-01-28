@@ -378,7 +378,7 @@
 
 	/* Override VirtualList item styles to work with ActionCard */
 	.virtual-list-wrapper :global(.virtual-list-item) {
-		padding: 0 1rem;
+		padding: 0;
 		cursor: default;
 		border-bottom: none;
 		background: transparent;
