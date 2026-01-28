@@ -197,6 +197,7 @@ export interface Background extends GameItem {
 	type: 'background';
 	boosts: AbilityBoost[];
 	trainedSkills: string[];
+	trainedLore: string[];
 }
 
 /**
