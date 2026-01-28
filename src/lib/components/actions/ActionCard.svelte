@@ -3,6 +3,7 @@
 	import type { ActionAvailability } from '$lib/validation/actionValidation';
 	import { getActionSkills } from '$lib/data/mappings/actionSkillMappings';
 	import { getStatusLabel, getStatusColorClass } from '$lib/validation/actionValidation';
+	import RichDescription from '$lib/components/common/RichDescription.svelte';
 
 	interface Props {
 		action: Action;
@@ -28,23 +29,21 @@
 	// Get skills for this action
 	const skills = $derived(getActionSkills(action.name));
 
-	// Extract short description (first 150 chars)
+	// Truncate description for preview (first paragraph or 300 chars)
 	const shortDescription = $derived.by(() => {
-		// Strip HTML tags
-		let text = action.description.replace(/<[^>]*>/g, '');
+		// Try to get just the first paragraph
+		const firstParagraph = action.description.match(/<p[^>]*>.*?<\/p>/s);
+		if (firstParagraph) {
+			return firstParagraph[0];
+		}
 
-		// Remove UUID references like @UUID[Compendium.pf2e.actionspf2e.Item.abc123]{Display Name}
-		// Replace with just the display name
-		text = text.replace(/@UUID\[Compendium\.pf2e\.[^\]]+\]\{([^}]+)\}/g, '$1');
+		// Otherwise truncate at 300 characters
+		if (action.description.length <= 300) {
+			return action.description;
+		}
 
-		// Remove any remaining UUID references without display names
-		text = text.replace(/@UUID\[Compendium\.pf2e\.[^\]]+\]/g, '');
-
-		// Clean up any double spaces
-		text = text.replace(/\s+/g, ' ').trim();
-
-		if (text.length <= 150) return text;
-		return text.slice(0, 150) + '...';
+		// Truncate but keep HTML structure intact
+		return action.description.slice(0, 300) + '...</p>';
 	});
 
 	// Capitalize skill names for display
@@ -56,11 +55,27 @@
 	}
 </script>
 
-<button
+<div
 	class="action-card"
-	onclick={onclick}
+	onclick={(e) => {
+		// Only trigger card click if not clicking a link
+		const target = e.target as HTMLElement;
+		if (!target.closest('a')) {
+			onclick?.();
+		}
+	}}
+	onkeydown={(e) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			const target = e.target as HTMLElement;
+			if (!target.closest('a')) {
+				e.preventDefault();
+				onclick?.();
+			}
+		}
+	}}
+	role="button"
+	tabindex="0"
 	aria-label={`View details for ${action.name}`}
-	type="button"
 >
 	<!-- Header with title and skill badges -->
 	<div class="card-header">
@@ -91,8 +106,10 @@
 		</div>
 	{/if}
 
-	<!-- Description -->
-	<p class="action-description">{shortDescription}</p>
+	<!-- Description with UUID link support -->
+	<div class="action-description">
+		<RichDescription content={shortDescription} class="action-description-content" />
+	</div>
 
 	<!-- Footer with availability status -->
 	<div class="card-footer">
@@ -107,7 +124,7 @@
 			{/if}
 		</div>
 	</div>
-</button>
+</div>
 
 <style>
 	.action-card {
@@ -232,6 +249,34 @@
 		line-height: 1.5;
 		color: var(--text-secondary, #666666);
 		flex: 1;
+		overflow: hidden;
+	}
+
+	/* Style RichDescription content within cards */
+	.action-description :global(.action-description-content) {
+		font-size: 0.875rem;
+		line-height: 1.5;
+	}
+
+	.action-description :global(.action-description-content p) {
+		margin: 0;
+		color: var(--text-secondary, #666666);
+	}
+
+	/* Make UUID links work within cards */
+	.action-description :global(.uuid-link) {
+		color: var(--link-color, #5c7cfa);
+		text-decoration: none;
+		font-weight: 500;
+		border-bottom: 1px dotted var(--link-color, #5c7cfa);
+		cursor: pointer;
+		position: relative;
+		z-index: 1;
+	}
+
+	.action-description :global(.uuid-link:hover) {
+		color: var(--link-hover-color, #4c6ef5);
+		border-bottom-style: solid;
 	}
 
 	/* Footer */
