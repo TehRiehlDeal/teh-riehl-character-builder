@@ -126,6 +126,13 @@
 						</div>
 					{/if}
 
+					{#if background.trainedLore && background.trainedLore.length > 0}
+						<div class="info-section">
+							<strong>Lore:</strong>
+							{background.trainedLore.join(', ')}
+						</div>
+					{/if}
+
 					<!--
 					{#if background.feat}
 						<div class="info-section feat-info">
@@ -194,6 +201,17 @@
 					<ul class="skill-list">
 						{#each selectedForDetails.trainedSkills as skill}
 							<li>{skill}</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
+
+			{#if selectedForDetails.trainedLore && selectedForDetails.trainedLore.length > 0}
+				<div class="detail-section">
+					<h4>Lore Skills</h4>
+					<ul class="skill-list">
+						{#each selectedForDetails.trainedLore as lore}
+							<li>{lore}</li>
 						{/each}
 					</ul>
 				</div>
