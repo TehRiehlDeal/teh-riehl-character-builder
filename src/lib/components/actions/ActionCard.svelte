@@ -94,9 +94,16 @@
 
 	<!-- Availability status -->
 	<div class="action-footer">
-		<span class="status-badge {getStatusColorClass(availability.status)}">
-			{getStatusLabel(availability.status)}
-		</span>
+		<div class="status-container">
+			<span class="status-badge {getStatusColorClass(availability.status)}">
+				{getStatusLabel(availability.status)}
+			</span>
+			{#if !availability.available && availability.reasons.length > 0}
+				<span class="status-reason" title={availability.reasons.join(', ')}>
+					{availability.reasons[0]}
+				</span>
+			{/if}
+		</div>
 	</div>
 </div>
 
@@ -241,6 +248,15 @@
 	.action-footer {
 		display: flex;
 		justify-content: flex-end;
+		align-items: flex-end;
+		margin-top: auto;
+	}
+
+	.status-container {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.25rem;
 	}
 
 	.status-badge {
@@ -250,6 +266,17 @@
 		border-radius: 4px;
 		text-transform: uppercase;
 		letter-spacing: 0.025em;
+	}
+
+	.status-reason {
+		font-size: 0.6875rem;
+		color: var(--text-secondary, #666666);
+		font-style: italic;
+		text-align: right;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.status-available {
