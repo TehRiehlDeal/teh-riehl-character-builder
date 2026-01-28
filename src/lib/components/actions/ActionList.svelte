@@ -2,7 +2,6 @@
 	import type { Action } from '$lib/data/types/app';
 	import type { Character } from '$lib/stores/character';
 	import ActionCard from './ActionCard.svelte';
-	import VirtualList from '$lib/components/common/VirtualList.svelte';
 	import { validateActionAvailability } from '$lib/validation/actionValidation';
 	import { isBasicAction, isSkillAction, getAllSkills, getActionSkills } from '$lib/data/mappings/actionSkillMappings';
 
@@ -217,21 +216,14 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="virtual-list-wrapper">
-				<VirtualList
-					items={actionsWithAvailability}
-					itemHeight={134}
-					height={600}
-					getKey={(item) => item.action.id}
-				>
-					{#snippet renderItem(item)}
-						<ActionCard
-							action={item.action}
-							availability={item.availability}
-							onclick={() => onActionClick?.(item.action)}
-						/>
-					{/snippet}
-				</VirtualList>
+			<div class="actions-grid">
+				{#each actionsWithAvailability as item (item.action.id)}
+					<ActionCard
+						action={item.action}
+						availability={item.availability}
+						onclick={() => onActionClick?.(item.action)}
+					/>
+				{/each}
 			</div>
 		{/if}
 	</div>
@@ -340,8 +332,33 @@
 		position: relative;
 	}
 
-	.virtual-list-wrapper {
-		padding: 0.5rem 0;
+	.actions-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		max-height: 800px;
+		overflow-y: auto;
+		padding: 0.5rem;
+		border: 1px solid var(--border-color, #e0e0e0);
+		border-radius: 8px;
+		background-color: var(--surface-1, #ffffff);
+	}
+
+	.actions-grid::-webkit-scrollbar {
+		width: 12px;
+	}
+
+	.actions-grid::-webkit-scrollbar-track {
+		background: var(--surface-2, #f5f5f5);
+	}
+
+	.actions-grid::-webkit-scrollbar-thumb {
+		background: var(--surface-3, #e0e0e0);
+		border-radius: 6px;
+	}
+
+	.actions-grid::-webkit-scrollbar-thumb:hover {
+		background: var(--border-color, #e0e0e0);
 	}
 
 	.empty-state {
@@ -376,24 +393,6 @@
 		color: white;
 	}
 
-	/* Override VirtualList item styles to work with ActionCard */
-	.virtual-list-wrapper :global(.virtual-list-item) {
-		padding: 0;
-		cursor: default;
-		border-bottom: none;
-		background: transparent;
-	}
-
-	.virtual-list-wrapper :global(.virtual-list-item:hover) {
-		background: transparent;
-	}
-
-	.virtual-list-wrapper :global(.virtual-list-item:focus) {
-		background: transparent;
-		box-shadow: none;
-		outline: none;
-	}
-
 	@media (max-width: 768px) {
 		.filter-row {
 			grid-template-columns: 1fr;
@@ -401,6 +400,10 @@
 
 		.search-group {
 			grid-column: auto;
+		}
+
+		.actions-grid {
+			max-height: 600px;
 		}
 	}
 </style>
