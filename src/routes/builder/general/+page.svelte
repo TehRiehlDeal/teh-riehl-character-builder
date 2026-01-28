@@ -858,6 +858,13 @@
 	}
 
 	function handleBackgroundSelect(background: Background) {
+		// Remove lore skills from previous background
+		if (selectedBackground && selectedBackground.trainedLore) {
+			selectedBackground.trainedLore.forEach((loreName) => {
+				character.removeLoreSkill(loreName);
+			});
+		}
+
 		selectedBackground = background;
 		backgroundAbilityBoosts = [null, null]; // Reset ability boosts
 
@@ -869,7 +876,27 @@
 				name: background.name
 			}
 		}));
+
+		// Add lore skills from background (trained at level 1)
+		if (background.trainedLore && background.trainedLore.length > 0) {
+			background.trainedLore.forEach((loreName) => {
+				character.addLoreSkill(loreName, 1); // Trained (rank 1)
+			});
+		}
 	}
+
+	// Ensure background lore skills are always trained when background is selected/loaded
+	$effect(() => {
+		if (selectedBackground && selectedBackground.trainedLore && selectedBackground.trainedLore.length > 0) {
+			selectedBackground.trainedLore.forEach((loreName) => {
+				const currentRank = $character.skills[loreName] || 0;
+				// If the lore skill is untrained, set it to trained
+				if (currentRank === 0) {
+					character.addLoreSkill(loreName, 1);
+				}
+			});
+		}
+	});
 
 	function handleBackgroundAbilityBoost(index: number, ability: string) {
 		backgroundAbilityBoosts[index] = ability;
@@ -1699,6 +1726,22 @@
 					/>
 
 					{#if selectedBackground}
+						{#if (selectedBackground.trainedSkills && selectedBackground.trainedSkills.length > 0) || (selectedBackground.trainedLore && selectedBackground.trainedLore.length > 0)}
+							<div class="subsection">
+								<h3 class="subsection-title">Skills Granted</h3>
+								{#if selectedBackground.trainedSkills && selectedBackground.trainedSkills.length > 0}
+									<p class="granted-skills">
+										<strong>Skills:</strong> {selectedBackground.trainedSkills.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ')}
+									</p>
+								{/if}
+								{#if selectedBackground.trainedLore && selectedBackground.trainedLore.length > 0}
+									<p class="granted-skills">
+										<strong>Lore:</strong> {selectedBackground.trainedLore.join(', ')}
+									</p>
+								{/if}
+							</div>
+						{/if}
+
 						<div class="subsection">
 							<h3 class="subsection-title">Ability Boosts</h3>
 							<p class="subsection-description">
