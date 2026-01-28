@@ -431,12 +431,21 @@
 		return filtered;
 	});
 
-	// Skills list - matches character store structure
-	const SKILLS = [
+	// Base skills list
+	const BASE_SKILLS = [
 		'Acrobatics', 'Arcana', 'Athletics', 'Crafting', 'Deception', 'Diplomacy',
 		'Intimidation', 'Medicine', 'Nature', 'Occultism', 'Performance',
 		'Religion', 'Society', 'Stealth', 'Survival', 'Thievery'
 	];
+
+	// Dynamic skills list that includes lore skills
+	const availableSkills = $derived.by(() => {
+		const loreSkills = Object.keys($character.skills)
+			.filter(skill => skill.endsWith(' Lore'))
+			.sort();
+
+		return [...BASE_SKILLS, ...loreSkills];
+	});
 
 	// Abilities list
 	const ABILITIES = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
@@ -637,6 +646,11 @@
 		} else {
 			selectedClassArchetype = null;
 		}
+
+		// Apply planned skill increases after loading all selections
+		if (char.level >= 3) {
+			applyPlannedSkillIncreases();
+		}
 	});
 
 	function handleFeatSelection(level: number, featType: 'classFeat' | 'freeArchetypeFeat' | 'ancestryFeat' | 'skillFeat' | 'generalFeat', featName: string) {
@@ -671,7 +685,102 @@
 		}));
 	}
 
+	/**
+	 * Get the maximum proficiency rank allowed at a given level.
+	 * Trained (1): Level 1+
+	 * Expert (2): Level 2+
+	 * Master (3): Level 7+
+	 * Legendary (4): Level 15+
+	 */
+	function getMaxRankForLevel(level: number): number {
+		if (level >= 15) return 4; // Legendary
+		if (level >= 7) return 3;  // Master
+		if (level >= 2) return 2;  // Expert
+		return 1; // Trained
+	}
+
+	/**
+	 * Check if a skill can be increased at a given level without exceeding rank limits.
+	 */
+	function canIncreaseSkill(skillName: string, atLevel: number): boolean {
+		const baseRank = getBaseSkillRank(skillName);
+
+		// Count increases up to and including this level
+		let increases = 0;
+		for (let lvl = 3; lvl <= atLevel; lvl += 2) {
+			if (skillIncreaseSelections[lvl] === skillName) {
+				increases++;
+			}
+		}
+
+		const resultingRank = baseRank + increases;
+		const maxRank = getMaxRankForLevel(atLevel);
+
+		return resultingRank <= maxRank;
+	}
+
+	/**
+	 * Get base skill rank (before any planning increases).
+	 * This calculates what the rank should be from background/class/initial training only.
+	 */
+	function getBaseSkillRank(skillName: string): number {
+		const isLoreSkill = skillName.endsWith(' Lore');
+		const skillKey = isLoreSkill ? skillName : skillName.toLowerCase();
+		const currentRank = $character.skills[skillKey] || 0;
+
+		// Count how many planning increases have been applied to this skill up to current level
+		let appliedIncreases = 0;
+		for (let lvl = 3; lvl <= $character.level; lvl += 2) {
+			const selection = skillIncreaseSelections[lvl];
+			if (selection === skillName) {
+				appliedIncreases++;
+			}
+		}
+
+		// Base rank = current rank - applied increases
+		return Math.max(0, currentRank - appliedIncreases);
+	}
+
+	/**
+	 * Apply all planned skill increases up to the current character level.
+	 * This recalculates ALL skill ranks from their base values.
+	 */
+	function applyPlannedSkillIncreases() {
+		// First, collect all skills that have planning increases
+		const skillsWithIncreases = new Set<string>();
+		for (let lvl = 3; lvl <= $character.level; lvl += 2) {
+			const skill = skillIncreaseSelections[lvl];
+			if (skill) {
+				skillsWithIncreases.add(skill);
+			}
+		}
+
+		// For each skill with increases, recalculate from base
+		for (const skillName of skillsWithIncreases) {
+			const baseRank = getBaseSkillRank(skillName);
+
+			// Count increases for this skill
+			let increases = 0;
+			for (let lvl = 3; lvl <= $character.level; lvl += 2) {
+				if (skillIncreaseSelections[lvl] === skillName) {
+					increases++;
+				}
+			}
+
+			// Calculate target rank
+			const targetRank = Math.min(4, baseRank + increases);
+
+			// Apply the target rank
+			const isLoreSkill = skillName.endsWith(' Lore');
+			const skillKey = isLoreSkill ? skillName : skillName.toLowerCase();
+
+			character.setSkill(skillKey, targetRank);
+		}
+	}
+
 	function handleSkillIncreaseSelection(level: number, skill: string) {
+		const previousSkill = skillIncreaseSelections[level];
+
 		skillIncreaseSelections[level] = skill;
 
 		// Save to character store
@@ -682,6 +791,33 @@
 				[`plan-level-${level}-skill-increase`]: skill
 			}
 		}));
+
+		// Only recalculate if this level is at or below current level
+		if (level <= $character.level) {
+			// If we're changing from one skill to another, need to recalc both
+			const skillsToRecalc = new Set<string>();
+			if (previousSkill) skillsToRecalc.add(previousSkill);
+			if (skill) skillsToRecalc.add(skill);
+
+			for (const skillName of skillsToRecalc) {
+				const baseRank = getBaseSkillRank(skillName);
+
+				// Count increases for this skill across all levels
+				let increases = 0;
+				for (let lvl = 3; lvl <= $character.level; lvl += 2) {
+					if (skillIncreaseSelections[lvl] === skillName) {
+						increases++;
+					}
+				}
+
+				// Calculate and apply target rank
+				const targetRank = Math.min(4, baseRank + increases);
+				const isLoreSkill = skillName.endsWith(' Lore');
+				const skillKey = isLoreSkill ? skillName : skillName.toLowerCase();
+
+				character.setSkill(skillKey, targetRank);
+			}
+		}
 	}
 
 	function handleClassFeatureChoiceSelection(choiceFlag: string, value: string) {
@@ -1047,6 +1183,7 @@
 
 					<!-- Skill Increase -->
 					{#if levelPlan.skillIncrease}
+						{@const validSkills = availableSkills.filter(s => canIncreaseSkill(s, levelPlan.level))}
 						<div class="selection-group">
 							<label class="selection-label" for="skill-increase-{levelPlan.level}">
 								Skill Increase:
@@ -1058,10 +1195,16 @@
 								onchange={(e) => handleSkillIncreaseSelection(levelPlan.level, e.currentTarget.value)}
 							>
 								<option value="">Select skill...</option>
-								{#each SKILLS as skill}
+								{#each validSkills as skill}
 									<option value={skill}>{skill}</option>
 								{/each}
 							</select>
+							{#if validSkills.length < availableSkills.length}
+								<p class="helper-text">
+									Some skills are hidden because they would exceed the maximum rank for level {levelPlan.level}.
+									(Max rank: {getMaxRankForLevel(levelPlan.level) === 1 ? 'Trained' : getMaxRankForLevel(levelPlan.level) === 2 ? 'Expert' : getMaxRankForLevel(levelPlan.level) === 3 ? 'Master' : 'Legendary'})
+								</p>
+							{/if}
 						</div>
 					{/if}
 					</div>
@@ -1413,6 +1556,13 @@
 		outline: none;
 		border-color: var(--focus-color, #5c7cfa);
 		box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.1);
+	}
+
+	.helper-text {
+		margin-top: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #666666);
+		font-style: italic;
 	}
 
 	.ability-boost-grid {
