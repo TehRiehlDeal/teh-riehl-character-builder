@@ -2,12 +2,16 @@
 	import { character } from '$lib/stores/character';
 	import { activeModifiersStore } from '$lib/stores/activeModifiers';
 	import { getEquipmentById } from '$lib/data/repositories/equipmentRepository';
-	import type { Armor } from '$lib/data/types/app';
+	import { getBackgroundById } from '$lib/data/repositories/backgroundRepository';
+	import type { Armor, Background } from '$lib/data/types/app';
 	import { onMount } from 'svelte';
 
 	// Armor data state
 	let equippedArmor: Armor | null = $state(null);
 	let armorLoading = $state(true);
+
+	// Background data state (for checking background-granted lore skills)
+	let characterBackground: Background | null = $state(null);
 
 	// Load equipped armor data
 	onMount(async () => {
@@ -43,8 +47,20 @@
 		}
 	});
 
-	// Skill definitions with their governing abilities
-	const SKILLS = [
+	// Load background data to check for background-granted lore skills
+	$effect(() => {
+		const backgroundId = $character.background.id;
+		if (backgroundId) {
+			getBackgroundById(backgroundId).then((bg) => {
+				characterBackground = bg;
+			});
+		} else {
+			characterBackground = null;
+		}
+	});
+
+	// Base skill definitions with their governing abilities
+	const BASE_SKILLS = [
 		{ name: 'Acrobatics', ability: 'dexterity' },
 		{ name: 'Arcana', ability: 'intelligence' },
 		{ name: 'Athletics', ability: 'strength' },
@@ -62,6 +78,26 @@
 		{ name: 'Survival', ability: 'wisdom' },
 		{ name: 'Thievery', ability: 'dexterity' }
 	];
+
+	// Dynamic skill list that includes lore skills
+	const displaySkills = $derived.by(() => {
+		// Add all lore skills (INT-based)
+		const loreSkills = Object.keys($character.skills)
+			.filter(skill => skill.endsWith(' Lore'))
+			.map(skill => ({
+				name: skill,
+				ability: 'intelligence',
+				isLore: true
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name));
+
+		return [...BASE_SKILLS.map(s => ({ ...s, isLore: false })), ...loreSkills];
+	});
+
+	// Add Lore Skill modal state
+	let showAddLoreModal = $state(false);
+	let newLoreName = $state('');
+	let loreNameError = $state('');
 
 	// Calculate ability modifier from ability score
 	function getAbilityModifier(score: number): number {
@@ -89,7 +125,9 @@
 	// Calculate skill modifier
 	function getSkillModifier(skillName: string, abilityKey: keyof typeof $character.abilities): number {
 		const abilityMod = getAbilityModifier($character.abilities[abilityKey]);
-		const proficiencyRank = $character.skills[skillName.toLowerCase()] || 0;
+		// Lore skills maintain their casing, regular skills are lowercase
+		const skillKey = skillName.endsWith(' Lore') ? skillName : skillName.toLowerCase();
+		const proficiencyRank = $character.skills[skillKey] || 0;
 		const proficiencyBonus = getProficiencyBonus(proficiencyRank, $character.level);
 		return abilityMod + proficiencyBonus;
 	}
@@ -173,6 +211,47 @@
 	// Format modifier with sign
 	function formatModifier(value: number): string {
 		return value >= 0 ? `+${value}` : `${value}`;
+	}
+
+	// Check if a lore skill is from the character's background
+	function isBackgroundLore(loreName: string): boolean {
+		if (!characterBackground || !characterBackground.trainedLore) return false;
+		return characterBackground.trainedLore.includes(loreName);
+	}
+
+	// Handle adding a lore skill
+	function handleAddLore() {
+		loreNameError = '';
+
+		if (!newLoreName.trim()) {
+			loreNameError = 'Lore name cannot be empty';
+			return;
+		}
+
+		// Check for duplicate (case-insensitive)
+		const loreName = newLoreName.trim().endsWith(' Lore')
+			? newLoreName.trim()
+			: newLoreName.trim() + ' Lore';
+
+		const existingLore = Object.keys($character.skills).find(
+			skill => skill.toLowerCase() === loreName.toLowerCase()
+		);
+
+		if (existingLore) {
+			loreNameError = 'This Lore skill already exists';
+			return;
+		}
+
+		character.addLoreSkill(newLoreName.trim(), 0); // Start untrained
+		showAddLoreModal = false;
+		newLoreName = '';
+	}
+
+	// Handle deleting a lore skill
+	function handleDeleteLore(loreName: string) {
+		if (confirm(`Remove ${loreName}? This will delete all proficiency data for this skill.`)) {
+			character.removeLoreSkill(loreName);
+		}
 	}
 
 	// Get ability score abbreviation
@@ -301,14 +380,37 @@
 
 		<!-- Skills -->
 		<section class="content-section" aria-labelledby="skills">
-			<h2 id="skills" class="section-title">Skills</h2>
+			<div class="section-header-with-action">
+				<h2 id="skills" class="section-title">Skills</h2>
+				<button
+					class="add-lore-button"
+					onclick={() => showAddLoreModal = true}
+					type="button"
+					aria-label="Add Lore Skill"
+				>
+					+ Add Lore Skill
+				</button>
+			</div>
 			<div class="stat-list">
-				{#each SKILLS as skill}
+				{#each displaySkills as skill}
 					{@const modifier = getSkillModifier(skill.name, skill.ability as keyof typeof $character.abilities)}
-					{@const proficiency = $character.skills[skill.name.toLowerCase()] || 0}
+					{@const skillKey = skill.isLore ? skill.name : skill.name.toLowerCase()}
+					{@const proficiency = $character.skills[skillKey] || 0}
 					<div class="stat-row">
 						<div class="stat-main">
-							<span class="stat-name">{skill.name}</span>
+							<span class="stat-name">
+								{skill.name}
+								{#if skill.isLore && !isBackgroundLore(skill.name)}
+									<button
+										class="delete-lore"
+										onclick={() => handleDeleteLore(skill.name)}
+										aria-label="Remove {skill.name}"
+										type="button"
+									>
+										×
+									</button>
+								{/if}
+							</span>
 							<span class="stat-proficiency proficiency-{proficiency}">
 								{getProficiencyName(proficiency)}
 							</span>
@@ -325,6 +427,43 @@
 		</section>
 	</div>
 </div>
+
+<!-- Add Lore Skill Modal -->
+{#if showAddLoreModal}
+	<div class="modal-overlay" onclick={() => { showAddLoreModal = false; newLoreName = ''; loreNameError = ''; }} role="dialog" aria-modal="true" aria-labelledby="add-lore-title">
+		<div class="modal-content" onclick={(e) => e.stopPropagation()}>
+			<h3 id="add-lore-title">Add Lore Skill</h3>
+			<label for="lore-name">Lore Name</label>
+			<input
+				id="lore-name"
+				type="text"
+				bind:value={newLoreName}
+				placeholder="e.g., Academia, Sailing, Pathfinder Society"
+				onkeydown={(e) => {
+					if (e.key === 'Enter') {
+						handleAddLore();
+					} else if (e.key === 'Escape') {
+						showAddLoreModal = false;
+						newLoreName = '';
+						loreNameError = '';
+					}
+				}}
+			/>
+			<p class="help-text">
+				" Lore" will be added automatically if not included
+			</p>
+			{#if loreNameError}
+				<p class="error-text">{loreNameError}</p>
+			{/if}
+			<div class="modal-actions">
+				<button onclick={() => { showAddLoreModal = false; newLoreName = ''; loreNameError = ''; }}>Cancel</button>
+				<button onclick={handleAddLore} disabled={!newLoreName.trim()}>
+					Add
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.page-content {
@@ -617,5 +756,164 @@
 		.stat-row {
 			transition: none;
 		}
+	}
+
+	/* Section Header with Action */
+	.section-header-with-action {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+	}
+
+	/* Add Lore Button */
+	.add-lore-button {
+		padding: 0.5rem 1rem;
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--transition-fast);
+	}
+
+	.add-lore-button:hover {
+		background-color: var(--link-hover-color, #4c63d2);
+	}
+
+	.add-lore-button:focus {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	/* Delete Lore Button */
+	.delete-lore {
+		margin-left: 0.5rem;
+		padding: 0 0.375rem;
+		background-color: var(--surface-3, #e0e0e0);
+		color: var(--text-secondary, #666666);
+		border: none;
+		border-radius: 4px;
+		font-size: 1.125rem;
+		line-height: 1;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.delete-lore:hover {
+		background-color: #ff6b6b;
+		color: white;
+	}
+
+	.delete-lore:focus {
+		outline: 2px solid var(--focus-color, #5c7cfa);
+		outline-offset: 2px;
+	}
+
+	/* Modal Overlay */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 1000;
+	}
+
+	/* Modal Content */
+	.modal-content {
+		background-color: var(--surface-1, #ffffff);
+		padding: 2rem;
+		border-radius: 12px;
+		width: 90%;
+		max-width: 500px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	}
+
+	.modal-content h3 {
+		margin: 0 0 1.5rem 0;
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.modal-content label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.modal-content input {
+		width: 100%;
+		padding: 0.75rem;
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-size: 1rem;
+		font-family: inherit;
+		margin-bottom: 0.5rem;
+	}
+
+	.modal-content input:focus {
+		outline: none;
+		border-color: var(--focus-color, #5c7cfa);
+	}
+
+	.help-text {
+		margin: 0 0 1rem 0;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #666666);
+	}
+
+	.error-text {
+		margin: 0 0 1rem 0;
+		font-size: 0.875rem;
+		color: #ff6b6b;
+		font-weight: 600;
+	}
+
+	.modal-actions {
+		display: flex;
+		gap: 0.75rem;
+		justify-content: flex-end;
+	}
+
+	.modal-actions button {
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 6px;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.modal-actions button:first-child {
+		background-color: var(--surface-2, #f5f5f5);
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.modal-actions button:first-child:hover {
+		background-color: var(--surface-3, #e0e0e0);
+	}
+
+	.modal-actions button:last-child {
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+	}
+
+	.modal-actions button:last-child:hover:not(:disabled) {
+		background-color: var(--link-hover-color, #4c63d2);
+	}
+
+	.modal-actions button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 </style>
