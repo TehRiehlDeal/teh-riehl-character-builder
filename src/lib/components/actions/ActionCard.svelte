@@ -31,7 +31,18 @@
 	// Extract short description (first 150 chars)
 	const shortDescription = $derived.by(() => {
 		// Strip HTML tags
-		const text = action.description.replace(/<[^>]*>/g, '');
+		let text = action.description.replace(/<[^>]*>/g, '');
+
+		// Remove UUID references like @UUID[Compendium.pf2e.actionspf2e.Item.abc123]{Display Name}
+		// Replace with just the display name
+		text = text.replace(/@UUID\[Compendium\.pf2e\.[^\]]+\]\{([^}]+)\}/g, '$1');
+
+		// Remove any remaining UUID references without display names
+		text = text.replace(/@UUID\[Compendium\.pf2e\.[^\]]+\]/g, '');
+
+		// Clean up any double spaces
+		text = text.replace(/\s+/g, ' ').trim();
+
 		if (text.length <= 150) return text;
 		return text.slice(0, 150) + '...';
 	});
