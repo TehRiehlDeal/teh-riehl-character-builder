@@ -106,7 +106,9 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: 0.875rem;
-		margin: 0.375rem 0;
+		margin: 0.75rem 0;
+		min-height: 110px;
+		height: 110px;
 		background-color: var(--surface-1, #ffffff);
 		border: 1px solid var(--border-color, #e0e0e0);
 		border-radius: 8px;
@@ -114,6 +116,7 @@
 		transition: all var(--transition-fast, 0.15s ease);
 		text-align: left;
 		width: 100%;
+		overflow: hidden;
 	}
 
 	.action-card:hover {
@@ -226,6 +229,13 @@
 		font-size: 0.875rem;
 		line-height: 1.5;
 		color: var(--text-secondary, #666666);
+		flex: 1;
+		overflow: hidden;
+		display: -webkit-box;
+		line-clamp: 2;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		text-overflow: ellipsis;
 	}
 
 	.action-footer {
