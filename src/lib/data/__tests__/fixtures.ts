@@ -246,6 +246,7 @@ export function createMockBackground(overrides?: Partial<Background>): Backgroun
 			{ index: 1, options: ['str', 'dex', 'con', 'int', 'wis', 'cha'], free: true }
 		],
 		trainedSkills: ['athletics'],
+		trainedLore: [],
 		traits: ['background'],
 		rarity: 'common',
 		source: {
