@@ -220,7 +220,7 @@
 			<div class="virtual-list-wrapper">
 				<VirtualList
 					items={actionsWithAvailability}
-					itemHeight={156}
+					itemHeight={130}
 					height={600}
 					getKey={(item) => item.action.id}
 				>

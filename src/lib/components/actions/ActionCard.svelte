@@ -60,28 +60,34 @@
 >
 	<div class="action-header">
 		<div class="action-title-row">
-			<span class="action-icon" aria-label="{action.actionType}">
-				{getActionIcon(action.actionType, action.actions)}
-			</span>
-			<h3 class="action-name">{action.name}</h3>
-		</div>
+			<div class="title-left">
+				<span class="action-icon" aria-label="{action.actionType}">
+					{getActionIcon(action.actionType, action.actions)}
+				</span>
+				<h3 class="action-name">{action.name}</h3>
+			</div>
 
-		<div class="action-badges">
-			<!-- Skill badges -->
-			{#each skills as skill}
-				<span class="badge skill-badge">{capitalizeSkill(skill)}</span>
-			{/each}
-
-			<!-- Category badge -->
-			{#if action.category}
-				<span class="badge category-badge">{action.category}</span>
-			{/if}
-
-			<!-- Rarity badge -->
-			{#if action.rarity && action.rarity !== 'common'}
-				<span class="badge rarity-badge rarity-{action.rarity}">{action.rarity}</span>
+			<!-- Skill badges in top-right corner -->
+			{#if skills.length > 0}
+				<div class="skill-badges">
+					{#each skills as skill}
+						<span class="badge skill-badge">{capitalizeSkill(skill)}</span>
+					{/each}
+				</div>
 			{/if}
 		</div>
+
+		<!-- Category and rarity badges on second row if present -->
+		{#if action.category || (action.rarity && action.rarity !== 'common')}
+			<div class="meta-badges">
+				{#if action.category}
+					<span class="badge category-badge">{action.category}</span>
+				{/if}
+				{#if action.rarity && action.rarity !== 'common'}
+					<span class="badge rarity-badge rarity-{action.rarity}">{action.rarity}</span>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	<p class="action-description">{shortDescription}</p>
@@ -98,9 +104,9 @@
 	.action-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
-		padding: 1rem;
-		margin: 0.5rem 0;
+		gap: 0.5rem;
+		padding: 0.875rem;
+		margin: 0.375rem 0;
 		background-color: var(--surface-1, #ffffff);
 		border: 1px solid var(--border-color, #e0e0e0);
 		border-radius: 8px;
@@ -129,8 +135,17 @@
 
 	.action-title-row {
 		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.title-left {
+		display: flex;
 		align-items: center;
 		gap: 0.5rem;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.action-icon {
@@ -147,9 +162,20 @@
 		font-weight: 600;
 		color: var(--text-primary, #1a1a1a);
 		line-height: 1.3;
+		flex: 1;
+		min-width: 0;
 	}
 
-	.action-badges {
+	.skill-badges {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
+		justify-content: flex-end;
+		align-items: flex-start;
+		flex-shrink: 0;
+	}
+
+	.meta-badges {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.375rem;
