@@ -6,7 +6,7 @@
  */
 
 import { getContext, setContext } from 'svelte';
-import type { Ancestry, Heritage, Background, Class, Feat } from '$lib/data/types/app';
+import type { Ancestry, Heritage, Background, Class, Feat, Action } from '$lib/data/types/app';
 
 export interface BuilderData {
 	// Data arrays
@@ -15,6 +15,7 @@ export interface BuilderData {
 	backgrounds: Background[];
 	classes: Class[];
 	feats: Feat[];
+	actions: Action[];
 
 	// Single loading state (SQLite loads all data quickly)
 	loading: boolean;

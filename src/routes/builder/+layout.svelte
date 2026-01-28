@@ -14,9 +14,9 @@
 	import Drawer from '$lib/components/common/Drawer.svelte';
 	import ActiveEffectsPanel from '$lib/components/features/ActiveEffectsPanel.svelte';
 	import VariantRulesSettingsModal from '$lib/components/settings/VariantRulesSettingsModal.svelte';
-	import { ancestryLoader, heritageLoader, backgroundLoader, classLoader, featLoader } from '$lib/data/loaders';
+	import { ancestryLoader, heritageLoader, backgroundLoader, classLoader, featLoader, actionLoader } from '$lib/data/loaders';
 	import { setBuilderDataContext, type BuilderData } from '$lib/contexts/builderDataContext.svelte';
-	import type { Ancestry, Heritage, Background, Class, Feat } from '$lib/data/types/app';
+	import type { Ancestry, Heritage, Background, Class, Feat, Action } from '$lib/data/types/app';
 
 	let { children } = $props();
 
@@ -30,6 +30,7 @@
 	let backgrounds = $state<Background[]>([]);
 	let classes = $state<Class[]>([]);
 	let feats = $state<Feat[]>([]);
+	let actions = $state<Action[]>([]);
 
 	// Single loading state for all data
 	let loading = $state(true);
@@ -44,12 +45,13 @@
 
 		try {
 			// Load all data in parallel - SQLite makes this fast
-			const [ancestryData, heritageData, backgroundData, classData, featData] = await Promise.all([
+			const [ancestryData, heritageData, backgroundData, classData, featData, actionData] = await Promise.all([
 				ancestryLoader.loadAll(),
 				heritageLoader.loadAll(),
 				backgroundLoader.loadAll(),
 				classLoader.loadAll(),
-				featLoader.loadAll()
+				featLoader.loadAll(),
+				actionLoader.loadAll()
 			]);
 
 			ancestries = ancestryData;
@@ -57,6 +59,7 @@
 			backgrounds = backgroundData;
 			classes = classData;
 			feats = featData;
+			actions = actionData;
 			loading = false;
 		} catch (error) {
 			console.error('Failed to load builder data:', error);
@@ -78,6 +81,7 @@
 		get backgrounds() { return backgrounds; },
 		get classes() { return classes; },
 		get feats() { return feats; },
+		get actions() { return actions; },
 		get loading() { return loading; },
 		// Legacy loading states - all point to same loading state for backward compatibility
 		get criticalDataLoading() { return loading; },
@@ -102,6 +106,7 @@
 		{ label: 'Feats', href: '/builder/feats', description: 'Class feats and general feats' },
 		{ label: 'Equipment', href: '/builder/equipment', description: 'Weapons, armor, and gear' },
 		{ label: 'Spells', href: '/builder/spells', description: 'Spellcasting and spells known' },
+		{ label: 'Actions', href: '/builder/actions', description: 'Basic and skill actions' },
 		{ label: 'Planning', href: '/builder/planning', description: 'Level progression planning' }
 	];
 
