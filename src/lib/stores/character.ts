@@ -596,6 +596,77 @@ function createCharacterStore() {
 		},
 
 		/**
+		 * Add a lore skill (appends " Lore" if not present)
+		 */
+		addLoreSkill: (loreName: string, initialRank: number = 0) => {
+			if (!loreName.trim()) {
+				throw new Error('Lore skill name cannot be empty');
+			}
+
+			// Auto-append " Lore" if not present
+			if (!loreName.endsWith(' Lore')) {
+				loreName = loreName.trim() + ' Lore';
+			}
+
+			update((char) => {
+				// Check if lore skill already exists (case-insensitive)
+				const existingLore = Object.keys(char.skills).find(
+					(skill) => skill.toLowerCase() === loreName.toLowerCase()
+				);
+
+				if (existingLore) {
+					// Update existing lore skill rank (use the higher rank)
+					const currentRank = char.skills[existingLore] || 0;
+					const newRank = Math.max(currentRank, Math.max(0, Math.min(4, initialRank)));
+					return {
+						...char,
+						skills: {
+							...char.skills,
+							[existingLore]: newRank
+						}
+					};
+				}
+
+				return {
+					...char,
+					skills: {
+						...char.skills,
+						[loreName]: Math.max(0, Math.min(4, initialRank))
+					}
+				};
+			});
+		},
+
+		/**
+		 * Remove a lore skill
+		 */
+		removeLoreSkill: (loreName: string) => {
+			update((char) => {
+				const newSkills = { ...char.skills };
+				delete newSkills[loreName];
+				return {
+					...char,
+					skills: newSkills
+				};
+			});
+		},
+
+		/**
+		 * Get all lore skills
+		 */
+		getLoreSkills: (): string[] => {
+			const char = get({ subscribe });
+			return Object.keys(char.skills).filter((skill) => skill.endsWith(' Lore')).sort();
+		},
+
+		/**
+		 * Check if a skill is a lore skill
+		 */
+		isLoreSkill: (skillName: string): boolean => {
+			return skillName.endsWith(' Lore');
+		},
+
+		/**
 		 * Add a feat
 		 */
 		addFeat: (
@@ -1321,7 +1392,6 @@ function createCharacterStore() {
 					deception: 0,
 					diplomacy: 0,
 					intimidation: 0,
-					lore: 0,
 					medicine: 0,
 					nature: 0,
 					occultism: 0,
