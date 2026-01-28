@@ -7,6 +7,7 @@ import {
 	getActionSkills,
 	isBasicAction,
 	isSkillAction,
+	isCoreAction,
 	getAllSkills,
 	ACTION_SKILL_MAP
 } from './actionSkillMappings';
@@ -39,6 +40,20 @@ describe('actionSkillMappings', () => {
 		});
 	});
 
+	describe('isCoreAction', () => {
+		it('should return true for actions in our curated list', () => {
+			expect(isCoreAction('Stride')).toBe(true);
+			expect(isCoreAction('Climb')).toBe(true);
+			expect(isCoreAction('Hide')).toBe(true);
+		});
+
+		it('should return false for actions not in our list', () => {
+			expect(isCoreAction('Unknown Action')).toBe(false);
+			expect(isCoreAction('Rage')).toBe(false);
+			expect(isCoreAction('Flurry of Blows')).toBe(false);
+		});
+	});
+
 	describe('isBasicAction', () => {
 		it('should return true for basic actions', () => {
 			expect(isBasicAction('Stride')).toBe(true);
@@ -52,8 +67,9 @@ describe('actionSkillMappings', () => {
 			expect(isBasicAction('Demoralize')).toBe(false);
 		});
 
-		it('should return true for unknown actions (default to basic)', () => {
-			expect(isBasicAction('Unknown Action')).toBe(true);
+		it('should return false for unknown actions (not in core list)', () => {
+			expect(isBasicAction('Unknown Action')).toBe(false);
+			expect(isBasicAction('Rage')).toBe(false);
 		});
 	});
 
@@ -70,8 +86,9 @@ describe('actionSkillMappings', () => {
 			expect(isSkillAction('Seek')).toBe(false);
 		});
 
-		it('should return false for unknown actions', () => {
+		it('should return false for unknown actions (not in core list)', () => {
 			expect(isSkillAction('Unknown Action')).toBe(false);
+			expect(isSkillAction('Rage')).toBe(false);
 		});
 	});
 

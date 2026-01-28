@@ -133,9 +133,17 @@ export function getActionSkills(actionIdOrName: string): string[] {
 }
 
 /**
+ * Check if an action is in our curated list (either basic or skill)
+ */
+export function isCoreAction(actionName: string): boolean {
+	return actionName in ACTION_SKILL_MAP;
+}
+
+/**
  * Check if an action is a basic action (no skill requirement)
  */
 export function isBasicAction(actionIdOrName: string): boolean {
+	if (!isCoreAction(actionIdOrName)) return false;
 	const skills = getActionSkills(actionIdOrName);
 	return skills.length === 0;
 }
@@ -144,6 +152,7 @@ export function isBasicAction(actionIdOrName: string): boolean {
  * Check if an action is a skill action
  */
 export function isSkillAction(actionIdOrName: string): boolean {
+	if (!isCoreAction(actionIdOrName)) return false;
 	const skills = getActionSkills(actionIdOrName);
 	return skills.length > 0;
 }

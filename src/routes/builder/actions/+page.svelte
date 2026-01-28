@@ -3,7 +3,7 @@
 	import { character } from '$lib/stores/character';
 	import ActionList from '$lib/components/actions/ActionList.svelte';
 	import ActionDetailModal from '$lib/components/common/ActionDetailModal.svelte';
-	import { isBasicAction, isSkillAction } from '$lib/data/mappings/actionSkillMappings';
+	import { isCoreAction } from '$lib/data/mappings/actionSkillMappings';
 	import type { Action } from '$lib/data/types/app';
 
 	// Get data from context
@@ -12,8 +12,8 @@
 	// Filter to only basic and skill actions (74 total)
 	const filteredActions = $derived.by(() => {
 		return builderData.actions.filter((action) => {
-			// Include basic actions (26) and skill actions (48)
-			return isBasicAction(action.name) || isSkillAction(action.name);
+			// Include only actions in our curated list (26 basic + 48 skill actions)
+			return isCoreAction(action.name);
 		});
 	});
 

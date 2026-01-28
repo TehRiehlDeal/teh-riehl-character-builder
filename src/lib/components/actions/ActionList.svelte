@@ -217,20 +217,22 @@
 				{/if}
 			</div>
 		{:else}
-			<VirtualList
-				items={actionsWithAvailability}
-				itemHeight={100}
-				height={600}
-				getKey={(item) => item.action.id}
-			>
-				{#snippet renderItem(item)}
-					<ActionCard
-						action={item.action}
-						availability={item.availability}
-						onclick={() => onActionClick?.(item.action)}
-					/>
-				{/snippet}
-			</VirtualList>
+			<div class="virtual-list-wrapper">
+				<VirtualList
+					items={actionsWithAvailability}
+					itemHeight={140}
+					height={600}
+					getKey={(item) => item.action.id}
+				>
+					{#snippet renderItem(item)}
+						<ActionCard
+							action={item.action}
+							availability={item.availability}
+							onclick={() => onActionClick?.(item.action)}
+						/>
+					{/snippet}
+				</VirtualList>
+			</div>
 		{/if}
 	</div>
 </div>
@@ -368,6 +370,29 @@
 	.clear-filters-link:hover {
 		background-color: var(--link-color, #5c7cfa);
 		color: white;
+	}
+
+	/* Override VirtualList item styles to work with ActionCard */
+	.virtual-list-wrapper :global(.virtual-list-item) {
+		padding: 0;
+		cursor: default;
+		border-bottom: none;
+		background: transparent;
+	}
+
+	.virtual-list-wrapper :global(.virtual-list-item:hover) {
+		background: transparent;
+	}
+
+	.virtual-list-wrapper :global(.virtual-list-item:focus) {
+		background: transparent;
+		box-shadow: none;
+		outline: none;
+	}
+
+	/* Add spacing between action cards */
+	.virtual-list-wrapper :global(.virtual-list-item) {
+		padding: 0.5rem 1rem;
 	}
 
 	@media (max-width: 768px) {

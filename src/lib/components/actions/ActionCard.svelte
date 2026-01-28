@@ -45,11 +45,18 @@
 	}
 </script>
 
-<button
+<div
 	class="action-card"
+	role="button"
+	tabindex="0"
 	onclick={onclick}
+	onkeydown={(e) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			onclick?.();
+		}
+	}}
 	aria-label={`View details for ${action.name}`}
-	type="button"
 >
 	<div class="action-header">
 		<div class="action-title-row">
@@ -85,7 +92,7 @@
 			{getStatusLabel(availability.status)}
 		</span>
 	</div>
-</button>
+</div>
 
 <style>
 	.action-card {
