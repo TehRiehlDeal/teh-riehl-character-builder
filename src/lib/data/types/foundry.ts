@@ -178,6 +178,7 @@ export interface FoundryBackground extends FoundryItemBase {
 		>;
 		trainedSkills: {
 			value: string[];
+			lore?: string[];
 		};
 	};
 }
