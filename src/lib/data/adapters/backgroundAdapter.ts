@@ -25,7 +25,8 @@ export function adaptBackground(foundryBackground: FoundryBackground): Backgroun
 		name: foundryBackground.name,
 		description: foundryBackground.system.description.value,
 		boosts: extractBoosts(foundryBackground),
-		trainedSkills: foundryBackground.system.trainedSkills.value,
+		trainedSkills: foundryBackground.system.trainedSkills.value || [],
+		trainedLore: foundryBackground.system.trainedSkills.lore || [],
 		traits: foundryBackground.system.traits.value,
 		rarity: foundryBackground.system.traits.rarity,
 		source: {
