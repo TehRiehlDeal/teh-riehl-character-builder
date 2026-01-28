@@ -220,7 +220,7 @@
 			<div class="virtual-list-wrapper">
 				<VirtualList
 					items={actionsWithAvailability}
-					itemHeight={140}
+					itemHeight={156}
 					height={600}
 					getKey={(item) => item.action.id}
 				>
@@ -374,7 +374,7 @@
 
 	/* Override VirtualList item styles to work with ActionCard */
 	.virtual-list-wrapper :global(.virtual-list-item) {
-		padding: 0;
+		padding: 0 1rem;
 		cursor: default;
 		border-bottom: none;
 		background: transparent;
@@ -388,11 +388,6 @@
 		background: transparent;
 		box-shadow: none;
 		outline: none;
-	}
-
-	/* Add spacing between action cards */
-	.virtual-list-wrapper :global(.virtual-list-item) {
-		padding: 0.5rem 1rem;
 	}
 
 	@media (max-width: 768px) {

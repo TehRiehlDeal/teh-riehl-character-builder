@@ -100,6 +100,7 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		padding: 1rem;
+		margin: 0.5rem 0;
 		background-color: var(--surface-1, #ffffff);
 		border: 1px solid var(--border-color, #e0e0e0);
 		border-radius: 8px;
