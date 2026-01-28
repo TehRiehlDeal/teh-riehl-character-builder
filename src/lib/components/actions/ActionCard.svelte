@@ -133,6 +133,8 @@
 		gap: 0.75rem;
 		padding: 1rem;
 		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
 		background-color: var(--surface-1, #ffffff);
 		border: 1px solid var(--border-color, #e0e0e0);
 		border-radius: 8px;
@@ -159,6 +161,7 @@
 		justify-content: space-between;
 		align-items: flex-start;
 		gap: 1rem;
+		max-width: 100%;
 	}
 
 	.title-section {
@@ -167,6 +170,8 @@
 		gap: 0.5rem;
 		flex: 1;
 		min-width: 0;
+		max-width: 100%;
+		overflow: hidden;
 	}
 
 	.action-icon {
@@ -184,6 +189,9 @@
 		color: var(--text-primary, #1a1a1a);
 		line-height: 1.3;
 		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.skill-badges {
@@ -249,18 +257,26 @@
 		line-height: 1.5;
 		color: var(--text-secondary, #666666);
 		flex: 1;
-		overflow: hidden;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+		max-width: 100%;
 	}
 
 	/* Style RichDescription content within cards */
 	.action-description :global(.action-description-content) {
 		font-size: 0.875rem;
 		line-height: 1.5;
+		max-width: 100%;
+		overflow-wrap: break-word;
+		word-wrap: break-word;
 	}
 
 	.action-description :global(.action-description-content p) {
 		margin: 0;
 		color: var(--text-secondary, #666666);
+		max-width: 100%;
+		overflow-wrap: break-word;
+		word-wrap: break-word;
 	}
 
 	/* Make UUID links work within cards */
