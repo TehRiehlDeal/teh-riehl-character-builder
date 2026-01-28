@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Background, Class } from '$lib/data/types/app';
+	import { character } from '$lib/stores/character';
 
 	interface Props {
 		/** Selected background */
@@ -225,6 +226,69 @@
 	const allSkillsSelected = $derived.by(() => {
 		return remainingSelections === 0;
 	});
+
+	// Get lore skills from background
+	const backgroundLoreSkills = $derived.by(() => {
+		if (!background || !background.trainedLore) return [];
+		return background.trainedLore;
+	});
+
+	// Get all lore skills from character
+	const allLoreSkills = $derived.by(() => {
+		return Object.keys($character.skills)
+			.filter(skill => skill.endsWith(' Lore'))
+			.sort();
+	});
+
+	// Add Lore modal state
+	let showAddLoreModal = $state(false);
+	let newLoreName = $state('');
+	let loreNameError = $state('');
+
+	// Handle adding a lore skill
+	function handleAddLore() {
+		loreNameError = '';
+
+		if (!newLoreName.trim()) {
+			loreNameError = 'Lore name cannot be empty';
+			return;
+		}
+
+		// Check for duplicate (case-insensitive)
+		const loreName = newLoreName.trim().endsWith(' Lore')
+			? newLoreName.trim()
+			: newLoreName.trim() + ' Lore';
+
+		const existingLore = Object.keys($character.skills).find(
+			skill => skill.toLowerCase() === loreName.toLowerCase()
+		);
+
+		if (existingLore) {
+			loreNameError = 'This Lore skill already exists';
+			return;
+		}
+
+		character.addLoreSkill(newLoreName.trim(), 0); // Start untrained
+		showAddLoreModal = false;
+		newLoreName = '';
+	}
+
+	// Handle deleting a lore skill (only custom ones, not from background)
+	function handleDeleteLore(loreName: string) {
+		// Don't allow deleting background-granted lore
+		if (backgroundLoreSkills.includes(loreName)) {
+			return;
+		}
+
+		if (confirm(`Remove ${loreName}? This will delete all proficiency data for this skill.`)) {
+			character.removeLoreSkill(loreName);
+		}
+	}
+
+	// Check if a lore skill is from the background
+	function isBackgroundLore(loreName: string): boolean {
+		return backgroundLoreSkills.includes(loreName);
+	}
 </script>
 
 <div class="skill-selector">
@@ -308,6 +372,56 @@
 		{/each}
 	</div>
 
+	<!-- Lore Skills Section -->
+	{#if allLoreSkills.length > 0 || background}
+		<div class="lore-section">
+			<div class="lore-header">
+				<h3>Lore Skills</h3>
+				<button
+					class="add-lore-button"
+					onclick={() => showAddLoreModal = true}
+					type="button"
+				>
+					+ Add Lore Skill
+				</button>
+			</div>
+
+			{#if allLoreSkills.length > 0}
+				<div class="lore-list">
+					{#each allLoreSkills as lore}
+						{@const isFromBackground = isBackgroundLore(lore)}
+						{@const proficiency = $character.skills[lore] || 0}
+						<div class="lore-item">
+							<div class="lore-name">
+								{lore}
+								{#if !isFromBackground}
+									<button
+										class="delete-lore"
+										onclick={() => handleDeleteLore(lore)}
+										aria-label="Remove {lore}"
+										type="button"
+									>
+										×
+									</button>
+								{/if}
+							</div>
+							<div class="lore-info">
+								<span class="lore-proficiency">
+									{proficiency === 0 ? 'Untrained' : proficiency === 1 ? 'Trained' : proficiency === 2 ? 'Expert' : proficiency === 3 ? 'Master' : 'Legendary'}
+								</span>
+								{#if isFromBackground}
+									<span class="lore-source">(from Background)</span>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{:else}
+				<p class="lore-empty">No lore skills yet. Click "Add Lore Skill" to add one.</p>
+			{/if}
+		</div>
+	{/if}
+
 	{#if !allSkillsSelected && additionalSkillCount > 0}
 		<div class="validation-message">
 			<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -321,6 +435,43 @@
 	{/if}
 
 </div>
+
+<!-- Add Lore Skill Modal -->
+{#if showAddLoreModal}
+	<div class="modal-overlay" onclick={() => { showAddLoreModal = false; newLoreName = ''; loreNameError = ''; }} role="dialog" aria-modal="true" aria-labelledby="add-lore-title">
+		<div class="modal-content" onclick={(e) => e.stopPropagation()}>
+			<h3 id="add-lore-title">Add Lore Skill</h3>
+			<label for="lore-name-input">Lore Name</label>
+			<input
+				id="lore-name-input"
+				type="text"
+				bind:value={newLoreName}
+				placeholder="e.g., Academia, Sailing, Pathfinder Society"
+				onkeydown={(e) => {
+					if (e.key === 'Enter') {
+						handleAddLore();
+					} else if (e.key === 'Escape') {
+						showAddLoreModal = false;
+						newLoreName = '';
+						loreNameError = '';
+					}
+				}}
+			/>
+			<p class="help-text">
+				" Lore" will be added automatically if not included
+			</p>
+			{#if loreNameError}
+				<p class="error-text">{loreNameError}</p>
+			{/if}
+			<div class="modal-actions">
+				<button type="button" onclick={() => { showAddLoreModal = false; newLoreName = ''; loreNameError = ''; }}>Cancel</button>
+				<button type="button" onclick={handleAddLore} disabled={!newLoreName.trim()}>
+					Add
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.skill-selector {
@@ -570,5 +721,213 @@
 		.skill-card.selectable:hover:not(:disabled) {
 			transform: none;
 		}
+	}
+
+	/* Lore Skills Section */
+	.lore-section {
+		margin-top: 2rem;
+		padding-top: 1.5rem;
+		border-top: 2px solid var(--border-color, #e0e0e0);
+	}
+
+	.lore-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+	}
+
+	.lore-header h3 {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.add-lore-button {
+		padding: 0.5rem 1rem;
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--transition-fast);
+	}
+
+	.add-lore-button:hover {
+		background-color: var(--link-hover-color, #4c63d2);
+	}
+
+	.lore-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.lore-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.75rem 1rem;
+		background-color: var(--surface-2, #f5f5f5);
+		border-radius: 8px;
+	}
+
+	.lore-name {
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.delete-lore {
+		padding: 0 0.375rem;
+		background-color: var(--surface-3, #e0e0e0);
+		color: var(--text-secondary, #666666);
+		border: none;
+		border-radius: 4px;
+		font-size: 1.125rem;
+		line-height: 1;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.delete-lore:hover {
+		background-color: #ff6b6b;
+		color: white;
+	}
+
+	.lore-info {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+	}
+
+	.lore-proficiency {
+		padding: 0.25rem 0.5rem;
+		background-color: var(--surface-1, #ffffff);
+		border-radius: 4px;
+		font-weight: 500;
+	}
+
+	.lore-source {
+		color: var(--text-secondary, #666666);
+		font-style: italic;
+	}
+
+	.lore-empty {
+		color: var(--text-secondary, #666666);
+		font-style: italic;
+		padding: 1rem;
+		text-align: center;
+	}
+
+	/* Modal Overlay */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 1000;
+	}
+
+	/* Modal Content */
+	.modal-content {
+		background-color: var(--surface-1, #ffffff);
+		padding: 2rem;
+		border-radius: 12px;
+		width: 90%;
+		max-width: 500px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	}
+
+	.modal-content h3 {
+		margin: 0 0 1.5rem 0;
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.modal-content label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 600;
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.modal-content input {
+		width: 100%;
+		padding: 0.75rem;
+		border: 2px solid var(--border-color, #e0e0e0);
+		border-radius: 6px;
+		font-size: 1rem;
+		font-family: inherit;
+		margin-bottom: 0.5rem;
+	}
+
+	.modal-content input:focus {
+		outline: none;
+		border-color: var(--focus-color, #5c7cfa);
+	}
+
+	.help-text {
+		margin: 0 0 1rem 0;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #666666);
+	}
+
+	.error-text {
+		margin: 0 0 1rem 0;
+		font-size: 0.875rem;
+		color: #ff6b6b;
+		font-weight: 600;
+	}
+
+	.modal-actions {
+		display: flex;
+		gap: 0.75rem;
+		justify-content: flex-end;
+	}
+
+	.modal-actions button {
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 6px;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.modal-actions button:first-child {
+		background-color: var(--surface-2, #f5f5f5);
+		color: var(--text-primary, #1a1a1a);
+	}
+
+	.modal-actions button:first-child:hover {
+		background-color: var(--surface-3, #e0e0e0);
+	}
+
+	.modal-actions button:last-child {
+		background-color: var(--link-color, #5c7cfa);
+		color: white;
+	}
+
+	.modal-actions button:last-child:hover:not(:disabled) {
+		background-color: var(--link-hover-color, #4c63d2);
+	}
+
+	.modal-actions button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 </style>
